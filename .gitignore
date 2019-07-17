@@ -1,0 +1,9 @@
+node_modules
+coverage
+dist
+api_docs
+index.js
+index.d.ts
+
+# webstorm dir
+.idea

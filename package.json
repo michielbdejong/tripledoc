@@ -1,0 +1,40 @@
+{
+  "name": "tripledoc",
+  "version": "0.0.1",
+  "description": "Library to read, create and update documents on a Solid Pod",
+  "scripts": {
+    "test": "jest",
+    "build": "tsc",
+    "docs": "typedoc --theme markdown --readme none --mode file --exclude \"**/*+(.test|.spec|.e2e).ts\" --out api_docs; cp README.md api_docs/INTRO.md; concat-md api_docs | sed --expression='s/> \\*\\*\\[.*\\]\\(.*\\)\\*\\*/## API/g' > README.md;",
+    "prepublishOnly": "yarn run build"
+  },
+  "keywords": [
+    "rdf"
+  ],
+  "homepage": "https://gitlab.com/Vinnl/tripledoc",
+  "bugs": "https://gitlab.com/Vinnl/tripledoc/issues",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "author": "Vincent Tunru <npm@vincenttunru.com> (https://VincentTunru.com)",
+  "repository": {
+    "type": "git",
+    "url": "https://gitlab.com/Vinnl/tripledoc.git"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@types/http-link-header": "^1.0.0",
+    "@types/jest": "^23.3.10",
+    "@types/rdflib": "^0.20.0",
+    "concat-md": "^0.3.0",
+    "jest": "^23.6.0",
+    "jest-junit": "^6.0.1",
+    "ts-jest": "^23.10.5",
+    "typedoc": "^0.14.2",
+    "typedoc-plugin-markdown": "^2.0.10",
+    "typescript": "^3.2.4"
+  },
+  "dependencies": {
+    "http-link-header": "^1.0.2",
+    "rdflib": "^0.20.1"
+  }
+}
