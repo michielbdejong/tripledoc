@@ -11,11 +11,13 @@ import { TripleSubject, getSubject } from './subject';
  * @param url URL where this document should live
  * @param statements Initial statements to be included in this document
  */
-export async function createDocument(url: string, statements: Statement[] = []) {
+export async function createDocument(url: string, statements: Statement[] = []): Promise<TripleDocument> {
   const store = getStore();
   const updater = getUpdater();
   const doc = store.sym(url);
-  return await updater.put(doc, statements, 'text/turtle', () => undefined);
+  const response = await updater.put(doc, statements, 'text/turtle', () => undefined);
+  console.log('CreateDocument', { response });
+  return getLocalDocument(url);
 }
 
 export interface TripleDocument {
@@ -37,27 +39,32 @@ export interface TripleDocument {
  * @returns Representation of triples in the document at `uri`
  */
 export async function fetchDocument(uri: string): Promise<TripleDocument> {
-  const store = getStore();
   const fetcher = getFetcher();
-  const updater = getUpdater();
   const response = await fetcher.load(uri);
 
-  const getAcl: () => NamedNode | null = () => {
-    const linkHeader = response.headers.get('Link');
-    if (!linkHeader) {
-      return null;
-    }
+  let aclUri;
+  const linkHeader = response.headers.get('Link');
+  if(linkHeader) {
     const parsedLinks = LinkHeader.parse(linkHeader);
     const aclLinks = parsedLinks.get('rel', 'acl');
-    if (aclLinks.length !== 1) {
-      return null;
+    if (aclLinks.length === 1) {
+      aclUri = aclLinks[0].uri;
     }
-    return store.sym(aclLinks[0].uri);
-  };
+  }
+
+  return getLocalDocument(uri, aclUri);
+}
+
+function getLocalDocument(uri: string, aclUri?: string): TripleDocument {
+  const store = getStore();
+  const updater = getUpdater();
   const docUrl = new URL(uri);
   // Remove fragment identifiers (e.g. `#me`) from the URI:
   const documentNode = store.sym(docUrl.origin + docUrl.pathname + docUrl.search);
 
+  const getAcl: () => NamedNode | null = () => {
+    return aclUri ? store.sym(aclUri) : null;
+  };
 
   const tripleDocument: TripleDocument = {
     getSubject: (subjectNode: NamedNode | string) => getSubject(documentNode, subjectNode),
