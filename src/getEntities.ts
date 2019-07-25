@@ -1,5 +1,5 @@
 import { IndexedFormula, Node, NamedNode } from 'rdflib';
-import { NodeRef, asNamedNode } from '.';
+import { NodeRef, asNamedNode } from './index';
 
 export type FindEntityInStore = (
   store: IndexedFormula,

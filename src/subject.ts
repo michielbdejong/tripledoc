@@ -1,7 +1,7 @@
 import { NamedNode, Statement, Node } from 'rdflib';
+import { asNamedNode } from './index';
 import { getStore } from './store';
 import { findObjectInStore, findObjectsInStore } from './getEntities';
-import { asNamedNode } from '.';
 
 export interface TripleSubject {
   getStatements: () => Statement[];
