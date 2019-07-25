@@ -1,35 +1,30 @@
-import { Node, NamedNode, Statement } from 'rdflib';
+import { Statement } from 'rdflib';
 import LinkHeader from 'http-link-header';
 import { getFetcher, getStore, getUpdater } from './store';
-import { findSubjectInStore, findPredicateInStore, findObjectInStore, FindEntityInStore, FindEntitiesInStore, findSubjectsInStore, findPredicatesInStore, findObjectsInStore } from './getEntities';
-import { deleteStatementsFromStore, DeleteStatementsFromStore } from './deleteStatements';
-import { TripleSubject, getSubject } from './subject';
+import { findSubjectInStore, FindEntityInStore, FindEntitiesInStore, findSubjectsInStore, findPredicatesInStore, findObjectsInStore } from './getEntities';
+import { TripleSubject, initialiseSubject } from './subject';
+import { NodeRef } from '.';
 
 /**
  * Initialise a new Turtle document
  *
- * @param url URL where this document should live
+ * @param ref URL where this document should live
  * @param statements Initial statements to be included in this document
  */
-export async function createDocument(url: string, statements: Statement[] = []): Promise<TripleDocument> {
+export async function createDocument(ref: NodeRef, statements: Statement[] = []): Promise<TripleDocument> {
   const store = getStore();
   const updater = getUpdater();
-  const doc = store.sym(url);
+  const doc = store.sym(ref);
+  // TODO: Try not making a PUT request until `.save()` is called on the document
   const response = await updater.put(doc, statements, 'text/turtle', () => undefined);
-  console.log('CreateDocument', { response });
-  return getLocalDocument(url);
+  return getLocalDocument(ref);
 }
 
 export interface TripleDocument {
-  findSubject: (predicateNode: NamedNode, object: NamedNode) => Node | null;
-  findSubjects: (predicate: NamedNode, object: NamedNode) => Node[];
-  findPredicate: (subject: NamedNode, object: NamedNode) => Node | null;
-  findPredicates: (subject: NamedNode, object: NamedNode) => Node[];
-  findObject: (subject: NamedNode, predicate: NamedNode) => Node | null;
-  findObjects: (subject: NamedNode, predicate: NamedNode) => Node[];
-  getSubject: (subjectNode: NamedNode | string) => TripleSubject;
-  deleteStatements: (statements: Statement[]) => Promise<Statement[]>;
-  getAcl: () => NamedNode | null;
+  findSubject: (predicateRef: NodeRef, objectRef: NodeRef) => TripleSubject | null;
+  getSubject: (subjectRef: NodeRef) => TripleSubject;
+  getAcl: () => NodeRef | null;
+  getIri: () => NodeRef;
 };
 
 /**
@@ -55,38 +50,46 @@ export async function fetchDocument(uri: string): Promise<TripleDocument> {
   return getLocalDocument(uri, aclUri);
 }
 
-function getLocalDocument(uri: string, aclUri?: string): TripleDocument {
-  const store = getStore();
-  const updater = getUpdater();
+function getLocalDocument(uri: NodeRef, aclUri?: NodeRef): TripleDocument {
   const docUrl = new URL(uri);
   // Remove fragment identifiers (e.g. `#me`) from the URI:
-  const documentNode = store.sym(docUrl.origin + docUrl.pathname + docUrl.search);
+  const documentRef: NodeRef = docUrl.origin + docUrl.pathname + docUrl.search;
 
-  const getAcl: () => NamedNode | null = () => {
-    return aclUri ? store.sym(aclUri) : null;
+  const getAcl: () => NodeRef | null = () => {
+    return aclUri || null;
+  };
+
+  const accessedSubjects: { [iri: string]: TripleSubject } = {};
+  const getSubject = (subjectRef: NodeRef) => {
+    if (accessedSubjects[subjectRef]) {
+      accessedSubjects[subjectRef] = initialiseSubject(tripleDocument, subjectRef);
+    }
+    return accessedSubjects[subjectRef];
   };
 
   const tripleDocument: TripleDocument = {
-    getSubject: (subjectNode: NamedNode | string) => getSubject(documentNode, subjectNode),
-    findSubject: withDocumentSingular(findSubjectInStore, documentNode),
-    findSubjects: withDocumentPlural(findSubjectsInStore, documentNode),
-    findPredicate: withDocumentSingular(findPredicateInStore, documentNode),
-    findPredicates: withDocumentPlural(findPredicatesInStore, documentNode),
-    findObject: withDocumentSingular(findObjectInStore, documentNode),
-    findObjects: withDocumentPlural(findObjectsInStore, documentNode),
-    deleteStatements: (statements: Statement[]) => deleteStatementsFromStore(store, updater, statements),
+    getSubject: getSubject,
+    findSubject: (predicateRef, objectRef) => {
+      const findSubjectRef = withDocumentSingular(findSubjectInStore, documentRef);
+      const subjectRef = findSubjectRef(predicateRef, objectRef);
+      if (!subjectRef) {
+        return null;
+      }
+      return getSubject(subjectRef);
+    },
     getAcl: getAcl,
+    getIri: () => uri,
   };
   return tripleDocument;
 }
 
-const withDocumentSingular = (getEntityFromStore: FindEntityInStore, document: NamedNode) => {
+const withDocumentSingular = (getEntityFromStore: FindEntityInStore, document: NodeRef) => {
   const store = getStore();
-  return (knownEntity1: NamedNode, knownEntity2: NamedNode) =>
+  return (knownEntity1: NodeRef, knownEntity2: NodeRef) =>
     getEntityFromStore(store, knownEntity1, knownEntity2, document);
 };
-const withDocumentPlural = (getEntitiesFromStore: FindEntitiesInStore, document: NamedNode) => {
+const withDocumentPlural = (getEntitiesFromStore: FindEntitiesInStore, document: NodeRef) => {
   const store = getStore();
-  return (knownEntity1: NamedNode, knownEntity2: NamedNode) =>
+  return (knownEntity1: NodeRef, knownEntity2: NodeRef) =>
     getEntitiesFromStore(store, knownEntity1, knownEntity2, document);
 };

@@ -1,68 +1,68 @@
-import { IndexedFormula, Node, NamedNode } from 'rdflib';
-import { NodeRef, asNamedNode } from './index';
+import { IndexedFormula, NamedNode, sym } from 'rdflib';
+import { NodeRef } from './index';
 
 export type FindEntityInStore = (
   store: IndexedFormula,
   knownEntity1: NodeRef,
   knownEntity2: NodeRef,
   document: NodeRef
-) => Node | null;
+) => NodeRef | null;
 export type FindEntitiesInStore = (
   store: IndexedFormula,
   knownEntity1: NodeRef,
   knownEntity2: NodeRef,
   document: NodeRef
-) => Node[];
+) => NodeRef[];
 
-export const findSubjectInStore: FindEntityInStore = (store, predicateNode, objectNode, documentNode) => {
-  return findEntityInStore(store, 'subject', null, predicateNode, objectNode, documentNode);
+export const findSubjectInStore: FindEntityInStore = (store, predicateRef, objectRef, documentNode) => {
+  return findEntityInStore(store, 'subject', null, predicateRef, objectRef, documentNode);
 }
-export const findSubjectsInStore: FindEntitiesInStore = (store, predicateNode, objectNode, documentNode) => {
-  return findEntitiesInStore(store, 'subject', null, predicateNode, objectNode, documentNode);
-}
-
-export const findPredicateInStore: FindEntityInStore = (store, subjectNode, objectNode, documentNode) => {
-  return findEntityInStore(store, 'predicate', subjectNode, null, objectNode, documentNode);
-}
-export const findPredicatesInStore: FindEntitiesInStore = (store, subjectNode, objectNode, documentNode) => {
-  return findEntitiesInStore(store, 'predicate', subjectNode, null, objectNode, documentNode);
+export const findSubjectsInStore: FindEntitiesInStore = (store, predicateRef, objectRef, documentNode) => {
+  return findEntitiesInStore(store, 'subject', null, predicateRef, objectRef, documentNode);
 }
 
-export const findObjectInStore: FindEntityInStore = (store, subjectNode, predicateNode, documentNode) => {
-  return findEntityInStore(store, 'object', subjectNode, predicateNode, null, documentNode);
+export const findPredicateInStore: FindEntityInStore = (store, subjectRef, objectRef, documentNode) => {
+  return findEntityInStore(store, 'predicate', subjectRef, null, objectRef, documentNode);
 }
-export const findObjectsInStore: FindEntitiesInStore = (store, subjectNode, predicateNode, documentNode) => {
-  return findEntitiesInStore(store, 'object', subjectNode, predicateNode, null, documentNode);
+export const findPredicatesInStore: FindEntitiesInStore = (store, subjectRef, objectRef, documentNode) => {
+  return findEntitiesInStore(store, 'predicate', subjectRef, null, objectRef, documentNode);
+}
+
+export const findObjectInStore: FindEntityInStore = (store, subjectRef, predicateRef, documentNode) => {
+  return findEntityInStore(store, 'object', subjectRef, predicateRef, null, documentNode);
+}
+export const findObjectsInStore: FindEntitiesInStore = (store, subjectRef, predicateRef, documentNode) => {
+  return findEntitiesInStore(store, 'object', subjectRef, predicateRef, null, documentNode);
 }
 
 export function findEntityInStore(
   store: IndexedFormula,
   type: 'subject' | 'predicate' | 'object',
-  subjectNode: null | NodeRef,
-  predicateNode: null | NodeRef,
-  objectNode: null | NodeRef,
+  subjectRef: null | NodeRef,
+  predicateRef: null | NodeRef,
+  objectRef: null | NodeRef,
   documentNode: null | NodeRef,
-): Node | null {
-  const targetSubject = subjectNode ? asNamedNode(subjectNode) : null;
-  const targetPredicate = predicateNode ? asNamedNode(predicateNode) : null;
-  const targetObject = objectNode ? asNamedNode(objectNode) : null;
-  const targetDocument = documentNode ? asNamedNode(documentNode) : null;
+): NodeRef | null {
+  const targetSubject = subjectRef ? sym(subjectRef) : null;
+  const targetPredicate = predicateRef ? sym(predicateRef) : null;
+  const targetObject = objectRef ? sym(objectRef) : null;
+  const targetDocument = documentNode ? sym(documentNode) : null;
   const [ statement ] = store.statementsMatching(targetSubject, targetPredicate, targetObject, targetDocument, true);
-  return (statement) ? statement[type] : null;
+  return (statement) ? (statement[type] as NamedNode).uri : null;
 }
 
 export function findEntitiesInStore(
   store: IndexedFormula,
   type: 'subject' | 'predicate' | 'object',
-  subjectNode: null | NodeRef,
-  predicateNode: null | NodeRef,
-  objectNode: null | NodeRef,
+  subjectRef: null | NodeRef,
+  predicateRef: null | NodeRef,
+  objectRef: null | NodeRef,
   documentNode: null | NodeRef,
-): Node[] {
-  const targetSubject = subjectNode ? asNamedNode(subjectNode) : null;
-  const targetPredicate = predicateNode ? asNamedNode(predicateNode) : null;
-  const targetObject = objectNode ? asNamedNode(objectNode) : null;
-  const targetDocument = documentNode ? asNamedNode(documentNode) : null;
+): NodeRef[] {
+  const targetSubject = subjectRef ? sym(subjectRef) : null;
+  const targetPredicate = predicateRef ? sym(predicateRef) : null;
+  const targetObject = objectRef ? sym(objectRef) : null;
+  const targetDocument = documentNode ? sym(documentNode) : null;
   const statements = store.statementsMatching(targetSubject, targetPredicate, targetObject, targetDocument, false);
-  return statements.map(statement => statement[type]);
+  return statements.map(statement => (statement[type] as NamedNode).uri);
 }

@@ -16,7 +16,4 @@ export function isLiteral<T>(param: T | Literal): param is Literal {
     (param as Literal).termType === 'Literal';
 }
 
-export type NodeRef = string | NamedNode;
-export function asNamedNode(uriOrNamedNode: NodeRef): NamedNode {
-  return (typeof uriOrNamedNode === 'string') ? sym(uriOrNamedNode) : uriOrNamedNode;
-}
+export type NodeRef = string;

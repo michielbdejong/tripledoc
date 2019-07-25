@@ -1,39 +1,40 @@
-import { NamedNode, Statement, Node, Literal, st } from 'rdflib';
-import { asNamedNode, NodeRef, isLiteral } from './index';
-import { getStore, getUpdater, update } from './store';
+import { Statement, Literal, st, sym } from 'rdflib';
+import { NodeRef, isLiteral } from './index';
+import { getStore, update } from './store';
 import { findObjectInStore, findObjectsInStore } from './getEntities';
-import { fetchDocument } from './document';
+import { fetchDocument, TripleDocument } from './document';
 
 export interface TripleSubject {
+  getDocument: () => TripleDocument;
   getStatements: () => Statement[];
-  get: (predicate: NodeRef) => Node | null;
-  getAll: (predicate: NodeRef) => Node[];
+  get: (predicate: NodeRef) => NodeRef | Literal | null;
+  getAll: (predicate: NodeRef) => Array<NodeRef | Literal>;
   has: (predicate: NodeRef) => boolean;
   add: (predicate: NodeRef, object: NodeRef | Literal) => void;
   save: () => Promise<boolean>;
   // TODO: set, remove
 };
 
-export async function fetchSubject(uri: string): Promise<TripleSubject> {
-  const document = await fetchDocument(uri);
-  return document.getSubject(uri);
+export async function fetchSubject(subjectRef: NodeRef): Promise<TripleSubject> {
+  const document = await fetchDocument(subjectRef);
+  return document.getSubject(subjectRef);
 }
 
-export function getSubject(documentNode: NamedNode, subjectRef: NodeRef): TripleSubject {
+export function initialiseSubject(document: TripleDocument, subjectRef: NodeRef): TripleSubject {
   const store = getStore();
-  const subjectNode = asNamedNode(subjectRef);
 
   const unsavedAdditions: Statement[] = [];
   const unsavedDeletions: Statement[] = [];
 
   const subject: TripleSubject = {
-    getStatements: () => store.statementsMatching(subjectNode, null, null, documentNode),
-    get: (predicateNode) => findObjectInStore(store, subjectNode, predicateNode, documentNode),
-    getAll: (predicateNode) => findObjectsInStore(store, subjectNode, predicateNode, documentNode),
-    has: (predicateNode) => findObjectInStore(store, subjectNode, predicateNode, documentNode) !== null,
-    add: (predicateNode, object) => {
-      const objectNode = isLiteral(object) ? object : asNamedNode(object);
-      unsavedAdditions.push(st(subjectNode, asNamedNode(predicateNode), objectNode, documentNode));
+    getDocument: () => document,
+    getStatements: () => store.statementsMatching(sym(subjectRef), null, null, sym(document.getIri())),
+    get: (predicateNode) => findObjectInStore(store, subjectRef, predicateNode, document.getIri()),
+    getAll: (predicateNode) => findObjectsInStore(store, subjectRef, predicateNode, document.getIri()),
+    has: (predicateRef) => findObjectInStore(store, subjectRef, predicateRef, document.getIri()) !== null,
+    add: (predicateRef, object) => {
+      const objectNode = isLiteral(object) ? object : sym(object);
+      unsavedAdditions.push(st(sym(subjectRef), sym(predicateRef), objectNode, sym(document.getIri())));
     },
     save: async () => {
       try {

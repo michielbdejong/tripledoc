@@ -8,27 +8,27 @@ import {
   findObjectsInStore,
 } from './getEntities';
 
-const mockDocument = sym('https://document.com');
-const unusedSubject = sym('https://unused-subject.com');
-const mockSubject1 = sym('https://subject1.com');
-const mockSubject2 = sym('https://subject2.com');
-const unusedPredicate = sym('https://unused-predicate.com');
-const mockPredicate1 = sym('https://predicate1.com');
-const mockPredicate2 = sym('https://predicate2.com');
-const unusedObject = sym('https://unused-object.com');
-const mockObject1 = sym('https://object1.com');
-const mockObject2 = sym('https://object2.com');
+const mockDocument = 'https://document.com';
+const unusedSubject = 'https://unused-subject.com';
+const mockSubject1 = 'https://subject1.com';
+const mockSubject2 = 'https://subject2.com';
+const unusedPredicate = 'https://unused-predicate.com';
+const mockPredicate1 = 'https://predicate1.com';
+const mockPredicate2 = 'https://predicate2.com';
+const unusedObject = 'https://unused-object.com';
+const mockObject1 = 'https://object1.com';
+const mockObject2 = 'https://object2.com';
 function getMockStore() {
   const store = graph();
   store.addAll([
-    st(mockSubject1, mockPredicate1, mockObject1, mockDocument),
-    st(mockSubject1, mockPredicate1, mockObject2, mockDocument),
-    st(mockSubject1, mockPredicate2, mockObject1, mockDocument),
-    st(mockSubject1, mockPredicate2, mockObject2, mockDocument),
-    st(mockSubject2, mockPredicate1, mockObject1, mockDocument),
-    st(mockSubject2, mockPredicate1, mockObject2, mockDocument),
-    st(mockSubject2, mockPredicate2, mockObject1, mockDocument),
-    st(mockSubject2, mockPredicate2, mockObject2, mockDocument),
+    st(sym(mockSubject1), sym(mockPredicate1), sym(mockObject1), sym(mockDocument)),
+    st(sym(mockSubject1), sym(mockPredicate1), sym(mockObject2), sym(mockDocument)),
+    st(sym(mockSubject1), sym(mockPredicate2), sym(mockObject1), sym(mockDocument)),
+    st(sym(mockSubject1), sym(mockPredicate2), sym(mockObject2), sym(mockDocument)),
+    st(sym(mockSubject2), sym(mockPredicate1), sym(mockObject1), sym(mockDocument)),
+    st(sym(mockSubject2), sym(mockPredicate1), sym(mockObject2), sym(mockDocument)),
+    st(sym(mockSubject2), sym(mockPredicate2), sym(mockObject1), sym(mockDocument)),
+    st(sym(mockSubject2), sym(mockPredicate2), sym(mockObject2), sym(mockDocument)),
   ]);
   return store;
 }
