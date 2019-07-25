@@ -2,7 +2,13 @@ import { NamedNode, sym } from 'rdflib';
 
 type Namespace = (identifier: string) => NamedNode;
 
-function generateNamespace(prefix: string): Namespace {
+/**
+ * This function can be used to generate helpers for namespaces that will be commonly used in an app.
+ *
+ * @param prefix The general prefix used for this namespace, e.g. `http://www.w3.org/2006/vcard/ns#`
+ * @return A helper function that can be used to refer to terms in that namespace, e.g. `vcard('role')` to generate a reference to `http://www.w3.org/2006/vcard/ns#role`.
+ */
+export function generateNamespace(prefix: string): Namespace {
   return (identifier: string) => sym(prefix + identifier);
 }
 export const acl: Namespace = generateNamespace('http://www.w3.org/ns/auth/acl#');

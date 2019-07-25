@@ -1,16 +1,17 @@
 import { IndexedFormula, Node, NamedNode } from 'rdflib';
+import { NodeRef, asNamedNode } from '.';
 
 export type FindEntityInStore = (
   store: IndexedFormula,
-  knownEntity1: NamedNode,
-  knownEntity2: NamedNode,
-  document: NamedNode
+  knownEntity1: NodeRef,
+  knownEntity2: NodeRef,
+  document: NodeRef
 ) => Node | null;
 export type FindEntitiesInStore = (
   store: IndexedFormula,
-  knownEntity1: NamedNode,
-  knownEntity2: NamedNode,
-  document: NamedNode
+  knownEntity1: NodeRef,
+  knownEntity2: NodeRef,
+  document: NodeRef
 ) => Node[];
 
 export const findSubjectInStore: FindEntityInStore = (store, predicateNode, objectNode, documentNode) => {
@@ -37,23 +38,31 @@ export const findObjectsInStore: FindEntitiesInStore = (store, subjectNode, pred
 export function findEntityInStore(
   store: IndexedFormula,
   type: 'subject' | 'predicate' | 'object',
-  subjectNode: null | NamedNode,
-  predicateNode: null | NamedNode,
-  objectNode: null | NamedNode,
-  documentNode: null | NamedNode,
+  subjectNode: null | NodeRef,
+  predicateNode: null | NodeRef,
+  objectNode: null | NodeRef,
+  documentNode: null | NodeRef,
 ): Node | null {
-  const [ statement ] = store.statementsMatching(subjectNode, predicateNode, objectNode, documentNode, true);
+  const targetSubject = subjectNode ? asNamedNode(subjectNode) : null;
+  const targetPredicate = predicateNode ? asNamedNode(predicateNode) : null;
+  const targetObject = objectNode ? asNamedNode(objectNode) : null;
+  const targetDocument = documentNode ? asNamedNode(documentNode) : null;
+  const [ statement ] = store.statementsMatching(targetSubject, targetPredicate, targetObject, targetDocument, true);
   return (statement) ? statement[type] : null;
 }
 
 export function findEntitiesInStore(
   store: IndexedFormula,
   type: 'subject' | 'predicate' | 'object',
-  subjectNode: null | Node,
-  predicateNode: null | Node,
-  objectNode: null | Node,
-  documentNode: null | Node,
+  subjectNode: null | NodeRef,
+  predicateNode: null | NodeRef,
+  objectNode: null | NodeRef,
+  documentNode: null | NodeRef,
 ): Node[] {
-  const statements = store.statementsMatching(subjectNode, predicateNode, objectNode, documentNode, false);
+  const targetSubject = subjectNode ? asNamedNode(subjectNode) : null;
+  const targetPredicate = predicateNode ? asNamedNode(predicateNode) : null;
+  const targetObject = objectNode ? asNamedNode(objectNode) : null;
+  const targetDocument = documentNode ? asNamedNode(documentNode) : null;
+  const statements = store.statementsMatching(targetSubject, targetPredicate, targetObject, targetDocument, false);
   return statements.map(statement => statement[type]);
 }
