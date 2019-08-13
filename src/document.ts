@@ -97,7 +97,7 @@ function getLocalDocument(uri: NodeRef, aclUri?: NodeRef): TripleDocument {
       return getSubject(subjectRef);
     },
     getAcl: getAcl,
-    getIri: () => uri,
+    getIri: () => documentRef,
   };
   return tripleDocument;
 }
