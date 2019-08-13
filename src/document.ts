@@ -69,7 +69,7 @@ function getLocalDocument(uri: NodeRef, aclUri?: NodeRef): TripleDocument {
 
   const accessedSubjects: { [iri: string]: TripleSubject } = {};
   const getSubject = (subjectRef: NodeRef) => {
-    if (accessedSubjects[subjectRef]) {
+    if (!accessedSubjects[subjectRef]) {
       accessedSubjects[subjectRef] = initialiseSubject(tripleDocument, subjectRef);
     }
     return accessedSubjects[subjectRef];
