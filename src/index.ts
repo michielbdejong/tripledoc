@@ -12,6 +12,7 @@ export function asLiteral(literal: LiteralTypes): Literal {
 
 export function isLiteral<T>(param: T | Literal): param is Literal {
   return (typeof param === 'object') &&
+    (param !== null) &&
     (typeof (param as Literal).termType === 'string') &&
     (param as Literal).termType === 'Literal';
 }
