@@ -1,4 +1,4 @@
-import { NamedNode, sym, lit, Literal } from 'rdflib';
+import { NamedNode, Node, sym, lit, Literal } from 'rdflib';
 
 export * from './document';
 export * from './subject';
@@ -14,6 +14,12 @@ export function isLiteral<T>(param: T | Literal): param is Literal {
   return (typeof param === 'object') &&
     (typeof (param as Literal).termType === 'string') &&
     (param as Literal).termType === 'Literal';
+}
+/**
+ * @ignore
+ */
+export function isNamedNode(node: Node): node is NamedNode {
+  return typeof (node as NamedNode).uri === 'string';
 }
 
 export type NodeRef = string;

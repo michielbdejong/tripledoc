@@ -3,7 +3,7 @@ import LinkHeader from 'http-link-header';
 import { getFetcher, getStore, getUpdater } from './store';
 import { findSubjectInStore, FindEntityInStore, FindEntitiesInStore, findSubjectsInStore, findPredicatesInStore, findObjectsInStore } from './getEntities';
 import { TripleSubject, initialiseSubject } from './subject';
-import { NodeRef } from '.';
+import { NodeRef, isNamedNode, isLiteral } from '.';
 
 /**
  * Initialise a new Turtle document
@@ -91,7 +91,7 @@ function getLocalDocument(uri: NodeRef, aclUri?: NodeRef): TripleDocument {
     findSubject: (predicateRef, objectRef) => {
       const findSubjectRef = withDocumentSingular(findSubjectInStore, documentRef);
       const subjectRef = findSubjectRef(predicateRef, objectRef);
-      if (!subjectRef) {
+      if (!subjectRef || isLiteral(subjectRef)) {
         return null;
       }
       return getSubject(subjectRef);

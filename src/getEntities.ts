@@ -1,18 +1,18 @@
-import { IndexedFormula, NamedNode, sym } from 'rdflib';
-import { NodeRef } from './index';
+import { IndexedFormula, Node, sym, Literal } from 'rdflib';
+import { NodeRef, isNamedNode, isLiteral } from './index';
 
 export type FindEntityInStore = (
   store: IndexedFormula,
   knownEntity1: NodeRef,
   knownEntity2: NodeRef,
   document: NodeRef
-) => NodeRef | null;
+) => NodeRef | Literal | null;
 export type FindEntitiesInStore = (
   store: IndexedFormula,
   knownEntity1: NodeRef,
   knownEntity2: NodeRef,
   document: NodeRef
-) => NodeRef[];
+) => Array<NodeRef | Literal>;
 
 export const findSubjectInStore: FindEntityInStore = (store, predicateRef, objectRef, documentNode) => {
   return findEntityInStore(store, 'subject', null, predicateRef, objectRef, documentNode);
@@ -42,13 +42,16 @@ export function findEntityInStore(
   predicateRef: null | NodeRef,
   objectRef: null | NodeRef,
   documentNode: null | NodeRef,
-): NodeRef | null {
+): NodeRef | Literal | null {
   const targetSubject = subjectRef ? sym(subjectRef) : null;
   const targetPredicate = predicateRef ? sym(predicateRef) : null;
   const targetObject = objectRef ? sym(objectRef) : null;
   const targetDocument = documentNode ? sym(documentNode) : null;
   const [ statement ] = store.statementsMatching(targetSubject, targetPredicate, targetObject, targetDocument, true);
-  return (statement) ? (statement[type] as NamedNode).uri : null;
+  if (!statement || !statement[type]) {
+    return null;
+  }
+  return normaliseEntity(statement[type]);
 }
 
 export function findEntitiesInStore(
@@ -58,11 +61,24 @@ export function findEntitiesInStore(
   predicateRef: null | NodeRef,
   objectRef: null | NodeRef,
   documentNode: null | NodeRef,
-): NodeRef[] {
+): Array<NodeRef | Literal> {
   const targetSubject = subjectRef ? sym(subjectRef) : null;
   const targetPredicate = predicateRef ? sym(predicateRef) : null;
   const targetObject = objectRef ? sym(objectRef) : null;
   const targetDocument = documentNode ? sym(documentNode) : null;
   const statements = store.statementsMatching(targetSubject, targetPredicate, targetObject, targetDocument, false);
-  return statements.map(statement => (statement[type] as NamedNode).uri);
+  return statements.map(statement => normaliseEntity(statement[type])).filter(isEntity);
+}
+
+function normaliseEntity(entity: Node): NodeRef | Literal | null {
+  if (isNamedNode(entity)) {
+    return entity.uri;
+  }
+  if (isLiteral(entity)) {
+    return entity;
+  }
+  return null;
+}
+function isEntity(node: NodeRef | Literal | null): node is NodeRef | Literal {
+  return (node !== null);
 }
