@@ -19,6 +19,12 @@ export function isLiteral<T>(param: T | Literal): param is Literal {
 /**
  * @ignore
  */
+export function isNodeRef(node: NodeRef | Literal): node is NodeRef {
+  return typeof node === 'string' && !isLiteral(node);
+}
+/**
+ * @ignore
+ */
 export function isNamedNode(node: Node): node is NamedNode {
   return typeof (node as NamedNode).uri === 'string';
 }

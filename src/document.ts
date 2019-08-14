@@ -1,9 +1,10 @@
 import { Statement } from 'rdflib';
 import LinkHeader from 'http-link-header';
 import { getFetcher, getStore, getUpdater } from './store';
-import { findSubjectInStore, FindEntityInStore, FindEntitiesInStore, findSubjectsInStore, findPredicatesInStore, findObjectsInStore } from './getEntities';
+import { findSubjectInStore, FindEntityInStore, FindEntitiesInStore, findSubjectsInStore } from './getEntities';
 import { TripleSubject, initialiseSubject } from './subject';
-import { NodeRef, isNamedNode, isLiteral } from '.';
+import { rdf } from './namespace';
+import { NodeRef, isLiteral, isNodeRef } from '.';
 
 /**
  * Initialise a new Turtle document
@@ -31,6 +32,7 @@ export interface TripleDocument {
   addSubject: (options?: NewSubjectOptions) => TripleSubject;
   findSubject: (predicateRef: NodeRef, objectRef: NodeRef) => TripleSubject | null;
   getSubject: (subjectRef: NodeRef) => TripleSubject;
+  getSubjectsOfType: (typeRef: NodeRef) => TripleSubject[];
   getAcl: () => NodeRef | null;
   getIri: () => NodeRef;
 };
@@ -74,6 +76,15 @@ function getLocalDocument(uri: NodeRef, aclUri?: NodeRef): TripleDocument {
     }
     return accessedSubjects[subjectRef];
   };
+  const getSubjectsOfType = (typeRef: NodeRef) => {
+    const findSubjectRefs = withDocumentPlural(findSubjectsInStore, documentRef);
+    const subjectRefs = findSubjectRefs(rdf('type'), typeRef);
+    const subjects = subjectRefs
+      .filter(isNodeRef)
+      .map((subjectRef) => getSubject(subjectRef));
+
+    return subjects;
+  };
 
   const addSubject = (
     {
@@ -88,6 +99,7 @@ function getLocalDocument(uri: NodeRef, aclUri?: NodeRef): TripleDocument {
   const tripleDocument: TripleDocument = {
     addSubject: addSubject,
     getSubject: getSubject,
+    getSubjectsOfType: getSubjectsOfType,
     findSubject: (predicateRef, objectRef) => {
       const findSubjectRef = withDocumentSingular(findSubjectInStore, documentRef);
       const subjectRef = findSubjectRef(predicateRef, objectRef);
