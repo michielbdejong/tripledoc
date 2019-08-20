@@ -14,6 +14,7 @@ export interface TripleSubject {
   has: (predicate: NodeRef) => boolean;
   add: (predicate: NodeRef, object: NodeRef | Literal) => void;
   save: () => Promise<boolean>;
+  getIri: () => NodeRef;
   // TODO: set, remove
 };
 
@@ -64,6 +65,7 @@ export function initialiseSubject(document: TripleDocument, subjectRef: NodeRef)
         return false;
       }
     },
+    getIri: () => subjectRef,
   };
 
   return subject;
