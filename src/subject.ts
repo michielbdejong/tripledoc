@@ -13,6 +13,10 @@ export interface TripleSubject {
   getAll: (predicate: NodeRef) => Array<NodeRef | Literal>;
   has: (predicate: NodeRef) => boolean;
   add: (predicate: NodeRef, object: NodeRef | Literal) => void;
+  /**
+   * @ignore
+   */
+  getUnsavedSatements: () => [Statement[], Statement[]];
   save: () => Promise<boolean>;
   getIri: () => NodeRef;
   // TODO: set, remove
@@ -57,6 +61,7 @@ export function initialiseSubject(document: TripleDocument, subjectRef: NodeRef)
       const objectNode = isLiteral(object) ? object : sym(object);
       unsavedAdditions.push(st(sym(subjectRef), sym(predicateRef), objectNode, sym(document.getIri())));
     },
+    getUnsavedSatements: () => [unsavedDeletions, unsavedAdditions],
     save: async () => {
       try {
         await update(unsavedDeletions, unsavedAdditions);

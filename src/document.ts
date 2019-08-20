@@ -1,6 +1,6 @@
 import { Statement } from 'rdflib';
 import LinkHeader from 'http-link-header';
-import { getFetcher, getStore, getUpdater } from './store';
+import { getFetcher, getStore, getUpdater, update } from './store';
 import { findSubjectInStore, FindEntityInStore, FindEntitiesInStore, findSubjectsInStore } from './getEntities';
 import { TripleSubject, initialiseSubject } from './subject';
 import { rdf } from './namespace';
@@ -35,6 +35,7 @@ export interface TripleDocument {
   getSubjectsOfType: (typeRef: NodeRef) => TripleSubject[];
   getAcl: () => NodeRef | null;
   getIri: () => NodeRef;
+  save: (subjects?: TripleSubject[]) => Promise<Array<TripleSubject>>;
 };
 
 /**
@@ -96,6 +97,21 @@ function getLocalDocument(uri: NodeRef, aclUri?: NodeRef): TripleDocument {
     return getSubject(subjectRef);
   };
 
+  const save = async (subjects = Object.values(accessedSubjects)) => {
+    const relevantSubjects = subjects.filter(subject => subject.getDocument().getIri() === documentRef);
+    type UpdateStatements = [Statement[], Statement[]];
+    const [allDeletions, allAdditions] = relevantSubjects.reduce<UpdateStatements>(
+      ([deletionsSoFar, additionsSoFar], subject) => {
+        const [deletions, additions] = subject.getUnsavedSatements();
+        return [deletionsSoFar.concat(deletions), additionsSoFar.concat(additions)];
+      },
+      [[], []],
+    );
+
+    await update(allDeletions, allAdditions);
+    return relevantSubjects;
+  };
+
   const tripleDocument: TripleDocument = {
     addSubject: addSubject,
     getSubject: getSubject,
@@ -110,6 +126,7 @@ function getLocalDocument(uri: NodeRef, aclUri?: NodeRef): TripleDocument {
     },
     getAcl: getAcl,
     getIri: () => documentRef,
+    save: save,
   };
   return tripleDocument;
 }
