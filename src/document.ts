@@ -31,6 +31,7 @@ export interface TripleDocument {
    */
   addSubject: (options?: NewSubjectOptions) => TripleSubject;
   findSubject: (predicateRef: NodeRef, objectRef: NodeRef) => TripleSubject | null;
+  findSubjects: (predicateRef: NodeRef, objectRef: NodeRef) => TripleSubject[];
   getSubject: (subjectRef: NodeRef) => TripleSubject;
   getSubjectsOfType: (typeRef: NodeRef) => TripleSubject[];
   getAcl: () => NodeRef | null;
@@ -124,6 +125,11 @@ function getLocalDocument(uri: NodeRef, aclUri?: NodeRef): TripleDocument {
         return null;
       }
       return getSubject(subjectRef);
+    },
+    findSubjects: (predicateRef, objectRef) => {
+      const findSubjectRefs = withDocumentPlural(findSubjectsInStore, documentRef);
+      const subjectRefs = findSubjectRefs(predicateRef, objectRef);
+      return subjectRefs.filter(isNodeRef).map(getSubject);
     },
     getAcl: getAcl,
     getIri: () => documentRef,
