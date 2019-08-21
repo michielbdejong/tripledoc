@@ -16,8 +16,11 @@ export interface TripleSubject {
   /**
    * @ignore
    */
-  getUnsavedSatements: () => [Statement[], Statement[]];
-  save: () => Promise<boolean>;
+  getPendingStatements: () => [Statement[], Statement[]];
+  /**
+   * @ignore
+   */
+  onSave: () => void;
   getIri: () => NodeRef;
   // TODO: set, remove
 };
@@ -30,8 +33,8 @@ export async function fetchSubject(subjectRef: NodeRef): Promise<TripleSubject> 
 export function initialiseSubject(document: TripleDocument, subjectRef: NodeRef): TripleSubject {
   const store = getStore();
 
-  const unsavedAdditions: Statement[] = [];
-  const unsavedDeletions: Statement[] = [];
+  let pendingAdditions: Statement[] = [];
+  let pendingDeletions: Statement[] = [];
 
   const get = (predicateNode: NodeRef) => findObjectInStore(store, subjectRef, predicateNode, document.getIri());
   const getLiteral = (predicateNode: NodeRef) => {
@@ -59,16 +62,12 @@ export function initialiseSubject(document: TripleDocument, subjectRef: NodeRef)
     has: (predicateRef) => findObjectInStore(store, subjectRef, predicateRef, document.getIri()) !== null,
     add: (predicateRef, object) => {
       const objectNode = isLiteral(object) ? object : sym(object);
-      unsavedAdditions.push(st(sym(subjectRef), sym(predicateRef), objectNode, sym(document.getIri())));
+      pendingAdditions.push(st(sym(subjectRef), sym(predicateRef), objectNode, sym(document.getIri())));
     },
-    getUnsavedSatements: () => [unsavedDeletions, unsavedAdditions],
-    save: async () => {
-      try {
-        await update(unsavedDeletions, unsavedAdditions);
-        return true;
-      } catch(e) {
-        return false;
-      }
+    getPendingStatements: () => [pendingDeletions, pendingAdditions],
+    onSave: () => {
+      pendingDeletions = [];
+      pendingAdditions = [];
     },
     getIri: () => subjectRef,
   };

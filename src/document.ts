@@ -102,13 +102,14 @@ function getLocalDocument(uri: NodeRef, aclUri?: NodeRef): TripleDocument {
     type UpdateStatements = [Statement[], Statement[]];
     const [allDeletions, allAdditions] = relevantSubjects.reduce<UpdateStatements>(
       ([deletionsSoFar, additionsSoFar], subject) => {
-        const [deletions, additions] = subject.getUnsavedSatements();
+        const [deletions, additions] = subject.getPendingStatements();
         return [deletionsSoFar.concat(deletions), additionsSoFar.concat(additions)];
       },
       [[], []],
     );
 
     await update(allDeletions, allAdditions);
+    relevantSubjects.forEach(subject => subject.onSave());
     return relevantSubjects;
   };
 
