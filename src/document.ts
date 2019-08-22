@@ -1,9 +1,9 @@
 import { Statement } from 'rdflib';
 import LinkHeader from 'http-link-header';
+import { rdf } from 'rdf-namespaces';
 import { getFetcher, getStore, getUpdater, update } from './store';
 import { findSubjectInStore, FindEntityInStore, FindEntitiesInStore, findSubjectsInStore } from './getEntities';
 import { TripleSubject, initialiseSubject } from './subject';
-import { rdf } from './namespace';
 import { NodeRef, isLiteral, isNodeRef } from '.';
 
 /**
@@ -80,7 +80,7 @@ function getLocalDocument(uri: NodeRef, aclUri?: NodeRef): TripleDocument {
   };
   const getSubjectsOfType = (typeRef: NodeRef) => {
     const findSubjectRefs = withDocumentPlural(findSubjectsInStore, documentRef);
-    const subjectRefs = findSubjectRefs(rdf('type'), typeRef);
+    const subjectRefs = findSubjectRefs(rdf.type, typeRef);
     const subjects = subjectRefs
       .filter(isNodeRef)
       .map((subjectRef) => getSubject(subjectRef));
