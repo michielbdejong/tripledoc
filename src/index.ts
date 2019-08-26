@@ -11,9 +11,6 @@ export function isLiteral<T>(param: T | Literal): param is Literal {
     (typeof (param as Literal).termType === 'string') &&
     (param as Literal).termType === 'Literal';
 }
-/**
- * @ignore
- */
 export function isNodeRef(node: NodeRef | Literal): node is NodeRef {
   return typeof node === 'string' && !isLiteral(node);
 }

@@ -2,7 +2,7 @@ import { graph, st, sym, lit } from 'rdflib';
 import {
   initialiseSubject
 } from './subject';
-import { getLocalDocument } from './document';
+import { createDocument } from './document';
 
 const mockDocument = 'https://document.com/';
 const mockSubjectWithLiteralThenNode = 'https://subject1.com/';
@@ -41,7 +41,7 @@ jest.mock('./store', () => ({
 }));
 
 function getMockTripleDocument() {
-  const mockTripleDocument = getLocalDocument(mockDocument);
+  const mockTripleDocument = createDocument(mockDocument);
   return mockTripleDocument;
 }
 
