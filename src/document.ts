@@ -6,6 +6,9 @@ import { findSubjectInStore, FindEntityInStore, FindEntitiesInStore, findSubject
 import { TripleSubject, initialiseSubject } from './subject';
 import { NodeRef, isLiteral, isNodeRef } from '.';
 
+/**
+ * @ignore This is documented on use.
+ */
 export interface NewSubjectOptions {
   identifier?: string;
   identifierPrefix?: string;
@@ -89,8 +92,8 @@ export function createDocument(ref: NodeRef): TripleDocument {
 /**
  * Retrieve a document containing RDF triples
  *
- * Note that if you fetch the same document twice, only one network request will
- * be performed.
+ * Note that if you fetch the same document twice, it will be cached; only one
+ * network request will be performed.
  *
  * @param uri Where the document lives.
  * @returns Representation of triples in the document at `uri`.
