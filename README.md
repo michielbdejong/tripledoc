@@ -2,22 +2,22 @@ tripledoc
 ======
 Read, create and edit [Turtle](https://en.wikipedia.org/wiki/Turtle_(syntax)) documents on [Solid](https://solid.inrupt.com/) Pods.
 
-## Installation
+# Installation
 
 ```bash
 npm install tripledoc
 ```
 
-## Usage
+# Usage
 
 ```javascript
 // TODO
 ```
 
-## Changelog
+# Changelog
 
 See [CHANGELOG](https://gitlab.com/Vinnl/tripledoc/blob/master/CHANGELOG.md).
 
-## License
+# License
 
 MIT © [Inrupt](https://inrupt.com)

@@ -5,7 +5,7 @@
   "scripts": {
     "test": "jest",
     "build": "tsc",
-    "docs": "rm -r api_docs; typedoc --theme markdown --hideSources --hideProjectTitle --options typedoc.json --out api_docs; cp README.md api_docs/INTRO.md; echo \"\n##API\" >> api_docs/INTRO.md; concat-md api_docs > README.md;",
+    "docs": "rm -r api_docs; typedoc --theme markdown --hideSources --hideProjectTitle --options typedoc.json --out api_docs; cp README.md api_docs/INTRO.md; echo \"\n#API\" >> api_docs/INTRO.md; concat-md api_docs > README.md;",
     "prepublishOnly": "yarn run build"
   },
   "keywords": [
