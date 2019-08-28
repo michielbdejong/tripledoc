@@ -3,6 +3,7 @@
   "mode": "file",
   "excludeNotExported": true,
   "exclude": [
-    "**/*+(.test|.spec|.e2e).ts"
+    "**/*+(.test|.spec|.e2e).ts",
+    "node_modules/**/*"
   ]
 }
