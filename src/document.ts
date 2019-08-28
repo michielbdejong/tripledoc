@@ -29,16 +29,16 @@ export interface TripleDocument {
    */
   addSubject: (options?: NewSubjectOptions) => TripleSubject;
   /**
-   * Find a Subject which has the value of [[objectRef]] for the Predicate [[predicateRef]].
+   * Find a Subject which has the value of `objectRef` for the Predicate `predicateRef`.
    *
    * @param predicateRef The Predicate that must match for the desired Subject.
    * @param objectRef The Object that must match for the desired Subject.
-   * @returns `null` if no Subject matching [[predicateRef]] and [[objectRef]] is found,
+   * @returns `null` if no Subject matching `predicateRef` and `objectRef` is found,
    *          a random one of the matching Subjects otherwise.
    */
   findSubject: (predicateRef: NodeRef, objectRef: NodeRef) => TripleSubject | null;
   /**
-   * Find Subjects which have the value of [[objectRef]] for the Predicate [[predicateRef]].
+   * Find Subjects which have the value of `objectRef` for the Predicate `predicateRef`.
    *
    * @param predicateRef The Predicate that must match for the desired Subjects.
    * @param objectRef The Object that must match for the desired Subjects.
@@ -49,7 +49,7 @@ export interface TripleDocument {
    * Given the IRI of a Subject, return an instantiated object representing its values
    *
    * @param subjectRef IRI of the Subject to inspect.
-   * @returns Instantiation of the Subject at [[subjectRef]], ready for inspection.
+   * @returns Instantiation of the Subject at `subjectRef`, ready for inspection.
    */
   getSubject: (subjectRef: NodeRef) => TripleSubject;
   /**
