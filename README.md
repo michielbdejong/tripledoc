@@ -20,4 +20,4 @@ See [CHANGELOG](https://gitlab.com/Vinnl/tripledoc/blob/master/CHANGELOG.md).
 
 ## License
 
-MIT © [Vincent Tunru](https://vincenttunru.com)
+MIT © [Inrupt](https://inrupt.com)
