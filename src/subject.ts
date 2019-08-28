@@ -84,6 +84,11 @@ export interface TripleSubject {
   // TODO: set, remove
 };
 
+/**
+ * @ignore Only to be called by the Document containing this subject; not a public API.
+ * @param document The Document this Subject is defined in.
+ * @param subjectRef The URL that identifies this subject.
+ */
 export function initialiseSubject(document: TripleDocument, subjectRef: NodeRef): TripleSubject {
   const store = getStore();
   let pendingAdditions: Statement[] = [];
