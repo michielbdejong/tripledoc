@@ -1,5 +1,5 @@
-import { IndexedFormula, Node, sym, Literal } from 'rdflib';
-import { NodeRef, isNamedNode, isLiteral } from './index';
+import { IndexedFormula, Node, sym, Literal, NamedNode } from 'rdflib';
+import { NodeRef, isLiteral } from './index';
 
 /**
  * @ignore This is a utility type for other parts of the code, and not part of the public API.
@@ -113,4 +113,12 @@ function normaliseEntity(entity: Node): NodeRef | Literal | null {
 }
 function isEntity(node: NodeRef | Literal | null): node is NodeRef | Literal {
   return (node !== null);
+}
+
+/**
+ * @ignore Utility function for working with rdflib, which the library consumer should not need to
+ *         be exposed to.
+ */
+function isNamedNode(node: Node): node is NamedNode {
+  return typeof (node as NamedNode).uri === 'string';
 }
