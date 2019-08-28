@@ -5,7 +5,7 @@
   "scripts": {
     "test": "jest",
     "build": "tsc",
-    "docs": "rm -r api_docs; typedoc --theme markdown --hideSources --options typedoc.json --out api_docs; cp README.md api_docs/INTRO.md; concat-md api_docs | sed --expression='s/> \\*\\*\\[.*\\]\\(.*\\)\\*\\*/## API/g' > README.md;",
+    "docs": "rm -r api_docs; typedoc --theme markdown --hideSources --hideProjectTitle --options typedoc.json --out api_docs; cp README.md api_docs/INTRO.md; echo \"\n##API\" >> api_docs/INTRO.md; concat-md api_docs > README.md;",
     "prepublishOnly": "yarn run build"
   },
   "keywords": [
@@ -28,7 +28,7 @@
     "jest-junit": "^6.0.1",
     "ts-jest": "^23.10.5",
     "typedoc": "^0.14.2",
-    "typedoc-plugin-markdown": "^2.0.10",
+    "typedoc-plugin-markdown": "^2.1.4",
     "typescript": "^3.2.4"
   },
   "dependencies": {
