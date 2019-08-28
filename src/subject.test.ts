@@ -3,6 +3,7 @@ import {
   initialiseSubject
 } from './subject';
 import { createDocument } from './document';
+import { rdf } from 'rdf-namespaces';
 
 const mockDocument = 'https://document.com/';
 const mockSubjectWithLiteralThenNode = 'https://subject1.com/';
@@ -11,6 +12,7 @@ const mockSubjectWithLiteral = 'https://subject3.com/';
 const mockSubjectWithNode = 'https://subject4.com/';
 const mockSubjectWithTwoLiterals = 'https://subject5.com/';
 const mockSubjectWithTwoNodes = 'https://subject6.com/';
+const mockTypedSubject = 'https://subject7.com/';
 const mockEmptySubject = 'https://empty-subject.com/';
 const mockPredicate = 'https://mock-predicate.com/';
 const mockObjectNode = 'https://mock-object.com/';
@@ -20,6 +22,7 @@ const mockLiteralValue = 'Arbitrary literal value';
 const mockObjectLiteral = lit(mockLiteralValue, 'en', mockDataType);
 const mockLiteralValue2 = 'Another arbitrary literal value';
 const mockObjectLiteral2 = lit(mockLiteralValue2, 'en', mockDataType);
+const mockTypeObject = 'https://mock-type-object.com/';
 const mockStatements = [
   st(sym(mockSubjectWithLiteralThenNode), sym(mockPredicate), mockObjectLiteral, sym(mockDocument)),
   st(sym(mockSubjectWithLiteralThenNode), sym(mockPredicate), sym(mockObjectNode), sym(mockDocument)),
@@ -33,6 +36,7 @@ const mockStatements = [
   st(sym(mockSubjectWithTwoNodes), sym(mockPredicate), sym(mockObjectNode), sym(mockDocument)),
   st(sym(mockSubjectWithTwoNodes), sym(mockPredicate), sym(mockObjectNode2), sym(mockDocument)),
   st(sym(mockSubjectWithTwoNodes), sym(mockPredicate), mockObjectLiteral, sym(mockDocument)),
+  st(sym(mockTypedSubject), sym(rdf.type), sym(mockTypeObject), sym(mockDocument)),
 ];
 const store = graph();
 store.addAll(mockStatements);
@@ -173,6 +177,20 @@ describe('getNodeRef', () => {
     const subject = initialiseSubject(mockTripleDocument, mockSubjectWithTwoNodes);
     expect(subject.getNodeRef(mockPredicate))
       .toBe(mockObjectNode);
+  });
+});
+
+describe('getType', () => {
+  it('should return a Subject\'s type', () => {
+    const mockTripleDocument = getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockTypedSubject);
+    expect(subject.getType()).toEqual(mockTypeObject);
+  });
+
+  it('should return null if no type was defined', () => {
+    const mockTripleDocument = getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockEmptySubject);
+    expect(subject.getType()).toBeNull();
   });
 });
 

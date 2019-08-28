@@ -3,6 +3,7 @@ import { NodeRef, isLiteral, LiteralTypes, isNodeRef } from './index';
 import { getStore } from './store';
 import { findObjectsInStore } from './getEntities';
 import { TripleDocument } from './document';
+import { rdf } from 'rdf-namespaces';
 
 export interface TripleSubject {
   /**
@@ -35,6 +36,10 @@ export interface TripleSubject {
    * @returns The IRI of the first Node satisfying [[predicate]], if any, and `null` otherwise.
    */
   getNodeRef: (predicate: NodeRef) => NodeRef | null;
+  /**
+   * @returns The type of this Subject, if known.
+   */
+  getType: () => NodeRef | null;
   /**
    * @param predicate Which property of this Subject you want the values of.
    * @returns IRIs of all Nodes satisfying [[predicate]].
@@ -112,6 +117,10 @@ export function initialiseSubject(document: TripleDocument, subjectRef: NodeRef)
     return nodeRefs;
   };
 
+  const getType = () => {
+    return getNodeRef(rdf.type);
+  }
+
   const subject: TripleSubject = {
     getDocument: () => document,
     getStatements: () => store.statementsMatching(sym(subjectRef), null, null, sym(document.asNodeRef())),
@@ -119,6 +128,7 @@ export function initialiseSubject(document: TripleDocument, subjectRef: NodeRef)
     getAllLiterals: getAllLiterals,
     getNodeRef: getNodeRef,
     getAllNodeRefs: getAllNodeRefs,
+    getType: getType,
     addLiteral: (predicateRef, literal) => {
       pendingAdditions.push(st(sym(subjectRef), sym(predicateRef), asLiteral(literal), sym(document.asNodeRef())));
     },
