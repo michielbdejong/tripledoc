@@ -5,7 +5,7 @@
   "scripts": {
     "test": "jest",
     "build": "tsc",
-    "docs": "typedoc --theme markdown --readme none --mode file --exclude \"**/*+(.test|.spec|.e2e).ts\" --out api_docs; cp README.md api_docs/INTRO.md; concat-md api_docs | sed --expression='s/> \\*\\*\\[.*\\]\\(.*\\)\\*\\*/## API/g' > README.md;",
+    "docs": "rm -r api_docs; typedoc --theme markdown --options typedoc.json --out api_docs; cp README.md api_docs/INTRO.md; concat-md api_docs | sed --expression='s/> \\*\\*\\[.*\\]\\(.*\\)\\*\\*/## API/g' > README.md;",
     "prepublishOnly": "yarn run build"
   },
   "keywords": [

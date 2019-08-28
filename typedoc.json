@@ -1,0 +1,8 @@
+{
+  "readme": "none",
+  "mode": "file",
+  "excludeNotExported": true,
+  "exclude": [
+    "**/*+(.test|.spec|.e2e).ts"
+  ]
+}
