@@ -1,7 +1,7 @@
 node_modules
 coverage
 dist
-api_docs
+docs/api
 ./index.js
 ./index.d.ts
 

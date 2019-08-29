@@ -9,6 +9,8 @@ cache:
 pages:
   stage: build
   script:
+    - yarn
+    - yarn run api-docs
     - cd website
     - yarn
     - yarn run build
