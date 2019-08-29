@@ -1,3 +1,20 @@
 include:
   - project: 'vincenttunru/ci-templates'
     file: '/npm-node10.gitlab-ci.yml'
+
+cache:
+  paths:
+    - website/node_modules
+
+pages:
+  stage: build
+  script:
+    - cd website
+    - yarn
+    - yarn run build
+    - mv build/tripledoc ../public/
+  artifacts:
+    paths:
+    - public
+  only:
+    - master
