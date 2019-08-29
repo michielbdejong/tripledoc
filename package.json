@@ -11,14 +11,14 @@
   "keywords": [
     "rdf"
   ],
-  "homepage": "https://gitlab.com/Vinnl/tripledoc",
-  "bugs": "https://gitlab.com/Vinnl/tripledoc/issues",
+  "homepage": "https://gitlab.com/vincenttunru/tripledoc",
+  "bugs": "https://gitlab.com/vincenttunru/tripledoc/issues",
   "main": "index.js",
   "types": "index.d.ts",
   "author": "Vincent Tunru <npm@vincenttunru.com> (https://VincentTunru.com)",
   "repository": {
     "type": "git",
-    "url": "https://gitlab.com/Vinnl/tripledoc.git"
+    "url": "https://gitlab.com/vincenttunru/tripledoc.git"
   },
   "license": "MIT",
   "devDependencies": {
