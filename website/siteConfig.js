@@ -30,6 +30,7 @@ const siteConfig = {
   // For no header links in the top nav bar -> headerLinks: [],
   headerLinks: [
     {doc: 'getting-started', label: 'Getting started'},
+    {doc: 'api/index', label: 'API reference'},
   ],
 
   // If you have users set above, you add it here:

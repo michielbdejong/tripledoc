@@ -28,7 +28,7 @@
     "jest-junit": "^6.0.1",
     "ts-jest": "^23.10.5",
     "typedoc": "^0.14.2",
-    "typedoc-plugin-markdown": "^2.1.4",
+    "typedoc-plugin-markdown": "^2.1.7",
     "typescript": "^3.2.4"
   },
   "dependencies": {

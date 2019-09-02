@@ -5,7 +5,7 @@ class Footer extends React.Component {
     const baseUrl = this.props.config.baseUrl;
     const docsUrl = this.props.config.docsUrl;
     const docsPart = `${docsUrl ? `${docsUrl}/` : ''}`;
-    const langPart = `${language ? `${language}/` : ''}`;
+    const langPart = `${(language && language !== 'en') ? `${language}/` : ''}`;
     return `${baseUrl}${docsPart}${langPart}${doc}`;
   }
 
@@ -30,10 +30,10 @@ class Footer extends React.Component {
           </a>
           <div>
             <h5>Docs</h5>
-            <a href={this.docUrl('getting-started.html', this.props.language)}>
+            <a href={this.docUrl('getting-started', this.props.language)}>
               Getting Started
             </a>
-            <a href={this.docUrl('api.html', this.props.language)}>
+            <a href={this.docUrl('api', this.props.language)}>
               API Reference
             </a>
           </div>
