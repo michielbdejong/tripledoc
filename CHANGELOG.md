@@ -4,6 +4,8 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+## [1.1.0] - 2019-09-03
+
 ### New features
 
 - It is now possible to store and retrieve Date objects to and from a Pod.
