@@ -16,7 +16,6 @@ pages:
     - yarn run build
     - mv build/tripledoc ../public/
   artifacts:
-    paths:
-    - public
+    untracked: true
   only:
     - master
