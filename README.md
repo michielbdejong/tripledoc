@@ -38,7 +38,7 @@ fetchDocument('https://www.w3.org/People/Berners-Lee/card')
 
 # Changelog
 
-See [CHANGELOG](https://gitlab.com/Vinnl/tripledoc/blob/master/CHANGELOG.md).
+See [CHANGELOG](https://gitlab.com/vincenttunru/tripledoc/blob/master/CHANGELOG.md).
 
 # License
 

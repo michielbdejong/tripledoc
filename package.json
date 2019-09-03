@@ -5,20 +5,20 @@
   "scripts": {
     "test": "jest",
     "build": "tsc",
-    "docs": "rm -r api_docs; typedoc --theme markdown --hideSources --hideProjectTitle --hideBreadcrumbs --options typedoc.json --out api_docs; cp README.md api_docs/INTRO.md; echo \"\n#API\" >> api_docs/INTRO.md; concat-md api_docs > README.md;",
+    "api-docs": "rm -r docs/api; typedoc --theme markdown --platform docusaurus --out docs/api --hideSources --options typedoc.json;",
     "prepublishOnly": "yarn run build"
   },
   "keywords": [
     "rdf"
   ],
-  "homepage": "https://gitlab.com/Vinnl/tripledoc",
-  "bugs": "https://gitlab.com/Vinnl/tripledoc/issues",
+  "homepage": "https://gitlab.com/vincenttunru/tripledoc",
+  "bugs": "https://gitlab.com/vincenttunru/tripledoc/issues",
   "main": "index.js",
   "types": "index.d.ts",
   "author": "Vincent Tunru <npm@vincenttunru.com> (https://VincentTunru.com)",
   "repository": {
     "type": "git",
-    "url": "https://gitlab.com/Vinnl/tripledoc.git"
+    "url": "https://gitlab.com/vincenttunru/tripledoc.git"
   },
   "license": "MIT",
   "devDependencies": {
@@ -28,7 +28,7 @@
     "jest-junit": "^6.0.1",
     "ts-jest": "^23.10.5",
     "typedoc": "^0.14.2",
-    "typedoc-plugin-markdown": "^2.1.4",
+    "typedoc-plugin-markdown": "^2.1.9",
     "typescript": "^3.2.4"
   },
   "dependencies": {
