@@ -16,6 +16,9 @@ pages:
     - yarn run build
     - mv build/tripledoc ../public/
   artifacts:
-    untracked: true
+    paths:
+    - public
+    - website/sidebars.json
+    - website/i18n/
   only:
     - master
