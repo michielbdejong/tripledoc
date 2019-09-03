@@ -5,7 +5,7 @@
   "scripts": {
     "test": "jest",
     "build": "tsc",
-    "api-docs": "rm -r docs/api; typedoc --theme markdown --platform docusaurus --out docs/api --hideSources --hideProjectTitle --hideBreadcrumbs --options typedoc.json;",
+    "api-docs": "rm -r docs/api; typedoc --theme markdown --platform docusaurus --out docs/api --hideSources --options typedoc.json;",
     "prepublishOnly": "yarn run build"
   },
   "keywords": [

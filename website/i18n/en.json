@@ -5,19 +5,42 @@
     "previous": "Previous",
     "tagline": "The easiest way to get started writing Solid apps",
     "docs": {
+      "api/index": {
+        "title": "'tripledoc'",
+        "sidebar_label": "'Globals'"
+      },
+      "api/interfaces/tripledocument": {
+        "title": "'TripleDocument'",
+        "sidebar_label": "'TripleDocument'"
+      },
+      "api/interfaces/triplesubject": {
+        "title": "'TripleSubject'",
+        "sidebar_label": "'TripleSubject'"
+      },
       "getting-started": {
-        "title": "Getting started with Solid",
-        "sidebar_label": "Getting started with Solid"
+        "title": "Getting started with Solid"
+      },
+      "writing-a-solid-app/1-authentication": {
+        "title": "Step 1: identifying the user"
+      },
+      "writing-a-solid-app/2-understanding-solid": {
+        "title": "Step 2: Understanding Solid"
+      },
+      "writing-a-solid-app/3-reading-data": {
+        "title": "Step 3: Reading data"
+      },
+      "writing-a-solid-app/4-data-model": {
+        "title": "Step 4: Setting up a Data Model"
       }
     },
     "links": {
       "Getting started": "Getting started",
-      "API": "API"
+      "API reference": "API reference"
     },
     "categories": {
-      "Docusaurus": "Docusaurus",
-      "First Category": "First Category",
-      "Second Category": "Second Category"
+      "Writing a Solid App": "Writing a Solid App",
+      "Introduction": "Introduction",
+      "Interfaces": "Interfaces"
     }
   },
   "pages-strings": {
