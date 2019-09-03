@@ -31,6 +31,12 @@
       },
       "writing-a-solid-app/4-data-model": {
         "title": "Step 4: Setting up a Data Model"
+      },
+      "writing-a-solid-app/5-writing-data": {
+        "title": "Step 5: Writing data"
+      },
+      "writing-a-solid-app/writing-a-solid-app": {
+        "title": "Writing a Solid App"
       }
     },
     "links": {
@@ -38,9 +44,7 @@
       "API reference": "API reference"
     },
     "categories": {
-      "Writing a Solid App": "Writing a Solid App",
-      "Introduction": "Introduction",
-      "Interfaces": "Interfaces"
+      "Writing a Solid App": "Writing a Solid App"
     }
   },
   "pages-strings": {
