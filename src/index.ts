@@ -7,7 +7,7 @@ export * from './store';
 /**
  * Literal values, i.e. values that do not point to other nodes in the Linked Data graph.
  */
-export type LiteralTypes = string | number;
+export type LiteralTypes = string | number | Date;
 /**
  * A URL that points to a node in the Linked Data graph.
  */

@@ -1,4 +1,4 @@
-import { graph, st, sym, lit } from 'rdflib';
+import { graph, st, sym, lit, Literal } from 'rdflib';
 import {
   initialiseSubject
 } from './subject';
@@ -12,6 +12,9 @@ const mockSubjectWithLiteral = 'https://subject3.com/';
 const mockSubjectWithNode = 'https://subject4.com/';
 const mockSubjectWithTwoLiterals = 'https://subject5.com/';
 const mockSubjectWithTwoNodes = 'https://subject6.com/';
+const mockSubjectWithDateLiteral = 'https://subject7.com/';
+const mockSubjectWithIntegerLiteral = 'https://subject8.com/';
+const mockSubjectWithDecimalLiteral = 'https://subject9.com/';
 const mockTypedSubject = 'https://subject7.com/';
 const mockEmptySubject = 'https://empty-subject.com/';
 const mockPredicate = 'https://mock-predicate.com/';
@@ -22,6 +25,12 @@ const mockLiteralValue = 'Arbitrary literal value';
 const mockObjectLiteral = lit(mockLiteralValue, 'en', mockDataType);
 const mockLiteralValue2 = 'Another arbitrary literal value';
 const mockObjectLiteral2 = lit(mockLiteralValue2, 'en', mockDataType);
+const mockLiteralDate = new Date(0);
+const mockObjectDateLiteral = Literal.fromDate(mockLiteralDate);
+const mockLiteralInteger = 1337;
+const mockObjectIntegerLiteral = Literal.fromNumber(mockLiteralInteger);
+const mockLiteralDecimal = 4.2;
+const mockObjectDecimalLiteral = Literal.fromNumber(mockLiteralDecimal);
 const mockTypeObject = 'https://mock-type-object.com/';
 const mockStatements = [
   st(sym(mockSubjectWithLiteralThenNode), sym(mockPredicate), mockObjectLiteral, sym(mockDocument)),
@@ -37,6 +46,9 @@ const mockStatements = [
   st(sym(mockSubjectWithTwoNodes), sym(mockPredicate), sym(mockObjectNode2), sym(mockDocument)),
   st(sym(mockSubjectWithTwoNodes), sym(mockPredicate), mockObjectLiteral, sym(mockDocument)),
   st(sym(mockTypedSubject), sym(rdf.type), sym(mockTypeObject), sym(mockDocument)),
+  st(sym(mockSubjectWithDateLiteral), sym(mockPredicate), mockObjectDateLiteral, sym(mockDocument)),
+  st(sym(mockSubjectWithDecimalLiteral), sym(mockPredicate), mockObjectDecimalLiteral, sym(mockDocument)),
+  st(sym(mockSubjectWithIntegerLiteral), sym(mockPredicate), mockObjectIntegerLiteral, sym(mockDocument)),
 ];
 const store = graph();
 store.addAll(mockStatements);
@@ -82,6 +94,28 @@ describe('getLiteral', () => {
     const subject = initialiseSubject(mockTripleDocument, mockSubjectWithLiteral);
     expect(subject.getLiteral(mockPredicate))
       .toBe(mockLiteralValue);
+  });
+
+  it('should return a found Integer Literal', () => {
+    const mockTripleDocument = getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithIntegerLiteral);
+    expect(typeof subject.getLiteral(mockPredicate)).toBe('number');
+    expect((subject.getLiteral(mockPredicate))).toBe(mockLiteralInteger);
+  });
+
+  it('should return a found Decimal Literal', () => {
+    const mockTripleDocument = getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithDecimalLiteral);
+    expect(typeof subject.getLiteral(mockPredicate)).toBe('number');
+    expect((subject.getLiteral(mockPredicate))).toBe(mockLiteralDecimal);
+  });
+
+  it('should return a found Date Literal', () => {
+    const mockTripleDocument = getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithDateLiteral);
+    expect(subject.getLiteral(mockPredicate)).toBeInstanceOf(Date);
+    expect((subject.getLiteral(mockPredicate) as Date).getTime())
+      .toEqual(mockLiteralDate.getTime());
   });
 
   it('should return null if a Node is found instead of a Literal', () => {
@@ -218,7 +252,50 @@ describe('addLiteral', () => {
     const [pendingDeletions, pendingAdditions] = subject.getPendingStatements();
     expect(pendingDeletions).toEqual([]);
     expect(pendingAdditions.length).toBe(1);
+    expect(pendingAdditions[0].object.termType).toBe('Literal');
     expect(pendingAdditions[0].object.value).toBe('Some literal value');
+  });
+
+  it('should properly represent an integer, if given', () => {
+    const mockTripleDocument = getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithLiteral);
+    const someInteger = 1337;
+    subject.addLiteral(mockPredicate, someInteger);
+    const [pendingDeletions, pendingAdditions] = subject.getPendingStatements();
+    expect(pendingDeletions).toEqual([]);
+    expect(pendingAdditions.length).toBe(1);
+    expect(pendingAdditions[0].object.termType).toBe('Literal');
+    expect((pendingAdditions[0].object as Literal).datatype.uri)
+      .toBe('http://www.w3.org/2001/XMLSchema#integer');
+    expect(pendingAdditions[0].object.value).toBe('1337');
+  });
+
+  it('should properly represent an decimal, if given', () => {
+    const mockTripleDocument = getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithLiteral);
+    const someDecimal = 4.2;
+    subject.addLiteral(mockPredicate, someDecimal);
+    const [pendingDeletions, pendingAdditions] = subject.getPendingStatements();
+    expect(pendingDeletions).toEqual([]);
+    expect(pendingAdditions.length).toBe(1);
+    expect(pendingAdditions[0].object.termType).toBe('Literal');
+    expect((pendingAdditions[0].object as Literal).datatype.uri)
+      .toBe('http://www.w3.org/2001/XMLSchema#decimal');
+    expect(pendingAdditions[0].object.value).toBe('4.2');
+  });
+
+  it('should properly represent a Date, if given', () => {
+    const mockTripleDocument = getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithLiteral);
+    const someDate = new Date(71697398400000);
+    subject.addLiteral(mockPredicate, someDate);
+    const [pendingDeletions, pendingAdditions] = subject.getPendingStatements();
+    expect(pendingDeletions).toEqual([]);
+    expect(pendingAdditions.length).toBe(1);
+    expect(pendingAdditions[0].object.termType).toBe('Literal');
+    expect((pendingAdditions[0].object as Literal).datatype.uri)
+      .toBe('http://www.w3.org/2001/XMLSchema#dateTime');
+    expect(pendingAdditions[0].object.value).toBe('4242-01-01T00:00:00Z');
   });
 });
 

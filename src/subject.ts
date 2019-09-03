@@ -101,12 +101,12 @@ export function initialiseSubject(document: TripleDocument, subjectRef: NodeRef)
     if (typeof firstLiteral === 'undefined') {
       return null;
     }
-    return firstLiteral.value;
+    return fromLiteral(firstLiteral);
   };
   const getAllLiterals = (predicateNode: NodeRef) => {
     const objects = get(predicateNode);
     const literals = objects.filter(isLiteral);
-    return literals.map(literal => literal.value);
+    return literals.map(fromLiteral);
   };
   const getNodeRef = (predicateNode: NodeRef) => {
     const objects = get(predicateNode);
@@ -151,7 +151,38 @@ export function initialiseSubject(document: TripleDocument, subjectRef: NodeRef)
   return subject;
 }
 
+function fromLiteral(literal: Literal): LiteralTypes {
+  if (literal.datatype.uri === 'http://www.w3.org/2001/XMLSchema#dateTime') {
+    // See https://github.com/linkeddata/rdflib.js/blob/d84af88f367b8b5f617c753d8241c5a2035458e8/src/literal.js#L87
+    const utcFullYear = parseInt(literal.value.substring(0, 4), 10);
+    const utcMonth = parseInt(literal.value.substring(5, 7), 10) - 1;
+    const utcDate = parseInt(literal.value.substring(8, 10), 10);
+    const utcHours = parseInt(literal.value.substring(11, 13), 10);
+    const utcMinutes = parseInt(literal.value.substring(14, 16), 10);
+    const utcSeconds = parseInt(literal.value.substring(17, literal.value.indexOf('Z')), 10);
+    const date = new Date(0);
+    date.setUTCFullYear(utcFullYear);
+    date.setUTCMonth(utcMonth);
+    date.setUTCDate(utcDate);
+    date.setUTCHours(utcHours);
+    date.setUTCMinutes(utcMinutes);
+    date.setUTCSeconds(utcSeconds);
+    return date;
+  }
+  if (literal.datatype.uri === 'http://www.w3.org/2001/XMLSchema#integer') {
+    return parseInt(literal.value, 10);
+  }
+  if (literal.datatype.uri === 'http://www.w3.org/2001/XMLSchema#decimal') {
+    return parseFloat(literal.value);
+  }
+  return literal.value;
+}
 function asLiteral(literal: LiteralTypes): Literal {
-  // Unfortunately the typings are really incomplete, so we have to do some casting here:
-  return new Literal(literal as string, undefined as any, undefined as any);
+  if (literal instanceof Date) {
+    return Literal.fromDate(literal);
+  }
+  if (typeof literal === 'number') {
+    return Literal.fromNumber(literal);
+  }
+  return new Literal(literal, undefined as any, undefined as any);
 }
