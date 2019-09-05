@@ -4,6 +4,8 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+## [1.2.0] - 2019-09-05
+
 ### New features
 
 - It is now possible to remove properties from a Subject using [`removeLiteral`](https://vincenttunru.gitlab.io/tripledoc/docs/api/interfaces/triplesubject/#removeliteral), [`removeNodeRef`](https://vincenttunru.gitlab.io/tripledoc/docs/api/interfaces/triplesubject/#removenoderef), and [`removeAll`](https://vincenttunru.gitlab.io/tripledoc/docs/api/interfaces/triplesubject/#removeall), and to replace existing values with a new one using [`setLiteral`](https://vincenttunru.gitlab.io/tripledoc/docs/api/interfaces/triplesubject/#setliteral) and [`setNodeRef`](https://vincenttunru.gitlab.io/tripledoc/docs/api/interfaces/triplesubject/#setnoderef).
