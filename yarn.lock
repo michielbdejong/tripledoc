@@ -4584,10 +4584,10 @@ typedoc-default-themes@^0.5.0:
   resolved "https://registry.yarnpkg.com/typedoc-default-themes/-/typedoc-default-themes-0.5.0.tgz#6dc2433e78ed8bea8e887a3acde2f31785bd6227"
   integrity sha1-bcJDPnjti+qOiHo6zeLzF4W9Yic=
 
-typedoc-plugin-markdown@^2.1.9:
-  version "2.1.9"
-  resolved "https://registry.yarnpkg.com/typedoc-plugin-markdown/-/typedoc-plugin-markdown-2.1.9.tgz#b5bb162deab00429a54411493592db88dae04b96"
-  integrity sha512-fWpbmAsFdayFnkfSCqAvkDdLrEWsrIfbD7KQtcMeRAyvPI5NBesYEOksN9d9PXQnmyUbJ+rbG9+hubh+OceVAA==
+typedoc-plugin-markdown@^2.1.10:
+  version "2.1.10"
+  resolved "https://registry.yarnpkg.com/typedoc-plugin-markdown/-/typedoc-plugin-markdown-2.1.10.tgz#b5d409be796503dc5fa008736c8c6b49133bc9e7"
+  integrity sha512-TLf4SmO5ujohoyw7B7ax1HITwb4mY8CVZC5A5EGlUkQAETiK4UMLBOsoOaOKWc/ZJcaU2ybMTVEw0Db/9ROELQ==
 
 typedoc@^0.14.2:
   version "0.14.2"
