@@ -48,3 +48,7 @@ async function getFriends(profile) {
   return friendsDocument.getSubjectsOfType(foaf.Person);
 }
 ```
+
+For a more thorough introduction, read our [**guide to writing Solid Apps**](writing-a-solid-app/writing-a-solid-app).
+
+For more examples of common operations in Tripledoc and other libraries, take a look at the [Cheatsheet](cheatsheet).

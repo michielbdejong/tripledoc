@@ -17,6 +17,9 @@
         "title": "'TripleSubject'",
         "sidebar_label": "'TripleSubject'"
       },
+      "cheatsheet": {
+        "title": "Cheatsheet"
+      },
       "getting-started": {
         "title": "Getting started with Solid"
       },
