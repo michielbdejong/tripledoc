@@ -64,6 +64,42 @@ export interface TripleSubject {
    */
   addNodeRef: (predicate: NodeRef, object: NodeRef) => void;
   /**
+   * Remove a Literal value for a property of this Subject.
+   *
+   * Note that this value is not removed from the user's Pod until you save the containing Document.
+   *
+   * @param predicate The property you want to remove a value of.
+   * @param object The Literal value you want to remove, the type of which is one of [[LiteralTypes]].
+   */
+  removeLiteral: (predicate: NodeRef, object: LiteralTypes) => void;
+  /**
+   * No longer point a property of this Subject to a given Node.
+   *
+   * Note that this pointer is not removed from the user's Pod until you save the containing Document.
+   *
+   * @param predicate The property you no longer want to point to the given Node.
+   * @param object The IRI of the Node you want to remove.
+   */
+  removeNodeRef: (predicate: NodeRef, object: NodeRef) => void;
+  /**
+   * Set a property of this Subject to a Literal value, clearing all existing values.
+   *
+   * Note that this change is not saved to the user's Pod until you save the containing Document.
+   *
+   * @param predicate The property you want to set the value of.
+   * @param object The Literal value you want to set, the type of which is one of [[LiteralTypes]].
+   */
+  setLiteral: (predicate: NodeRef, object: LiteralTypes) => void;
+  /**
+   * Set a property of this Subject to a Node, clearing all existing values.
+   *
+   * Note that this change is not saved to the user's Pod until you save the containing Document.
+   *
+   * @param predicate The property you want to set the value of.
+   * @param object The IRI of the Node you want to add.
+   */
+  setNodeRef: (predicate: NodeRef, object: NodeRef) => void;
+  /**
    * @ignore Pending Statements are only provided so the Document can access them in order to save
    *         them - this is not part of the public API and can thus break in a minor release.
    * @returns A tuple with the first element being a list of Statements that should be deleted from
@@ -81,7 +117,6 @@ export interface TripleSubject {
    * @returns The IRI of this specific Subject.
    */
   asNodeRef: () => NodeRef;
-  // TODO: set, remove
 };
 
 /**
@@ -138,6 +173,20 @@ export function initialiseSubject(document: TripleDocument, subjectRef: NodeRef)
       pendingAdditions.push(st(sym(subjectRef), sym(predicateRef), asLiteral(literal), sym(document.asNodeRef())));
     },
     addNodeRef: (predicateRef, nodeRef) => {
+      pendingAdditions.push(st(sym(subjectRef), sym(predicateRef), sym(nodeRef), sym(document.asNodeRef())));
+    },
+    removeLiteral: (predicateRef, literal) => {
+      pendingDeletions.push(st(sym(subjectRef), sym(predicateRef), asLiteral(literal), sym(document.asNodeRef())));
+    },
+    removeNodeRef: (predicateRef, nodeRef) => {
+      pendingDeletions.push(st(sym(subjectRef), sym(predicateRef), sym(nodeRef), sym(document.asNodeRef())));
+    },
+    setLiteral: (predicateRef, literal) => {
+      pendingDeletions.push(...store.statementsMatching(sym(subjectRef), sym(predicateRef), null, sym(document.asNodeRef())));
+      pendingAdditions.push(st(sym(subjectRef), sym(predicateRef), asLiteral(literal), sym(document.asNodeRef())));
+    },
+    setNodeRef: (predicateRef, nodeRef) => {
+      pendingDeletions.push(...store.statementsMatching(sym(subjectRef), sym(predicateRef), null, sym(document.asNodeRef())));
       pendingAdditions.push(st(sym(subjectRef), sym(predicateRef), sym(nodeRef), sym(document.asNodeRef())));
     },
     getPendingStatements: () => [pendingDeletions, pendingAdditions],

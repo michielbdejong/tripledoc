@@ -270,7 +270,7 @@ describe('addLiteral', () => {
     expect(pendingAdditions[0].object.value).toBe('1337');
   });
 
-  it('should properly represent an decimal, if given', () => {
+  it('should properly represent a decimal, if given', () => {
     const mockTripleDocument = getMockTripleDocument();
     const subject = initialiseSubject(mockTripleDocument, mockSubjectWithLiteral);
     const someDecimal = 4.2;
@@ -299,6 +299,84 @@ describe('addLiteral', () => {
   });
 });
 
+describe('removeLiteral', () => {
+  it('should produce Statements that the Document can apply to the user\'s Pod', () => {
+    const mockTripleDocument = getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithTwoLiterals);
+    subject.removeLiteral(mockPredicate, mockLiteralValue2);
+    const [pendingDeletions, pendingAdditions] = subject.getPendingStatements();
+    expect(pendingAdditions).toEqual([]);
+    expect(pendingDeletions.length).toBe(1);
+    expect(pendingDeletions[0].object.termType).toBe('Literal');
+    expect(pendingDeletions[0].object.value).toBe(mockLiteralValue2);
+  });
+
+  it('should properly remove an integer, if given', () => {
+    const mockTripleDocument = getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithIntegerLiteral);
+    subject.removeLiteral(mockPredicate, mockLiteralInteger);
+    const [pendingDeletions, pendingAdditions] = subject.getPendingStatements();
+    expect(pendingAdditions).toEqual([]);
+    expect(pendingDeletions.length).toBe(1);
+    expect(pendingDeletions[0].object.termType).toBe('Literal');
+    expect((pendingDeletions[0].object as Literal).datatype.uri)
+      .toBe('http://www.w3.org/2001/XMLSchema#integer');
+    expect(pendingDeletions[0].object.value).toBe(mockLiteralInteger.toString());
+  });
+
+  it('should properly remove a decimal, if given', () => {
+    const mockTripleDocument = getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithDecimalLiteral);
+    subject.removeLiteral(mockPredicate, mockLiteralDecimal);
+    const [pendingDeletions, pendingAdditions] = subject.getPendingStatements();
+    expect(pendingAdditions).toEqual([]);
+    expect(pendingDeletions.length).toBe(1);
+    expect(pendingDeletions[0].object.termType).toBe('Literal');
+    expect((pendingDeletions[0].object as Literal).datatype.uri)
+      .toBe('http://www.w3.org/2001/XMLSchema#decimal');
+    expect(pendingDeletions[0].object.value).toBe(mockLiteralDecimal.toString());
+  });
+
+  it('should properly remove a Date, if given', () => {
+    const mockTripleDocument = getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithDateLiteral);
+    subject.removeLiteral(mockPredicate, mockLiteralDate);
+    const [pendingDeletions, pendingAdditions] = subject.getPendingStatements();
+    expect(pendingAdditions).toEqual([]);
+    expect(pendingDeletions.length).toBe(1);
+    expect(pendingDeletions[0].object.termType).toBe('Literal');
+    expect((pendingDeletions[0].object as Literal).datatype.uri)
+      .toBe('http://www.w3.org/2001/XMLSchema#dateTime');
+    expect(pendingDeletions[0].object.value).toBe(Literal.fromDate(mockLiteralDate).value);
+  });
+});
+
+describe('setLiteral', () => {
+  it('should remove all existing values, whether Literal or NodeRef', () => {
+    const mockTripleDocument = getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithLiteralThenNode);
+    subject.setLiteral(mockPredicate, mockLiteralValue2);
+    const [pendingDeletions, pendingAdditions] = subject.getPendingStatements();
+    expect(pendingDeletions).toEqual([
+      st(
+        sym(mockSubjectWithLiteralThenNode),
+        sym(mockPredicate),
+        mockObjectLiteral,
+        sym(mockTripleDocument.asNodeRef()),
+      ),
+      st(
+        sym(mockSubjectWithLiteralThenNode),
+        sym(mockPredicate),
+        sym(mockObjectNode),
+        sym(mockTripleDocument.asNodeRef()),
+      ),
+    ]);
+    expect(pendingAdditions.length).toBe(1);
+    expect(pendingAdditions[0].object.termType).toBe('Literal');
+    expect(pendingAdditions[0].object.value).toBe(mockLiteralValue2);
+  });
+});
+
 describe('addNodeRef', () => {
   it('should produce Statements that the Document can store in the user\'s Pod', () => {
     const mockTripleDocument = getMockTripleDocument();
@@ -309,6 +387,53 @@ describe('addNodeRef', () => {
     expect(pendingAdditions)
       .toEqual([st(
         sym(mockSubjectWithNode),
+        sym(mockPredicate),
+        sym(mockObjectNode2),
+        sym(mockTripleDocument.asNodeRef()),
+      )]);
+  });
+});
+
+describe('removeNodeRef', () => {
+  it('should produce Statements that the Document can apply to the user\'s Pod', () => {
+    const mockTripleDocument = getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithNode);
+    subject.removeNodeRef(mockPredicate, mockObjectNode);
+    const [pendingDeletions, pendingAdditions] = subject.getPendingStatements();
+    expect(pendingAdditions).toEqual([]);
+    expect(pendingDeletions)
+      .toEqual([st(
+        sym(mockSubjectWithNode),
+        sym(mockPredicate),
+        sym(mockObjectNode),
+        sym(mockTripleDocument.asNodeRef()),
+      )]);
+  });
+});
+
+describe('setNodeRef', () => {
+  it('should remove all existing values, whether Literal or NodeRef', () => {
+    const mockTripleDocument = getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithLiteralThenNode);
+    subject.setNodeRef(mockPredicate, mockObjectNode2);
+    const [pendingDeletions, pendingAdditions] = subject.getPendingStatements();
+    expect(pendingDeletions).toEqual([
+      st(
+        sym(mockSubjectWithLiteralThenNode),
+        sym(mockPredicate),
+        mockObjectLiteral,
+        sym(mockTripleDocument.asNodeRef()),
+      ),
+      st(
+        sym(mockSubjectWithLiteralThenNode),
+        sym(mockPredicate),
+        sym(mockObjectNode),
+        sym(mockTripleDocument.asNodeRef()),
+      ),
+    ]);
+    expect(pendingAdditions)
+      .toEqual([st(
+        sym(mockSubjectWithLiteralThenNode),
         sym(mockPredicate),
         sym(mockObjectNode2),
         sym(mockTripleDocument.asNodeRef()),
