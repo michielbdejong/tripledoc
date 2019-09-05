@@ -1,4 +1,5 @@
 ---
+id: cheatsheet
 title: Cheatsheet
 ---
 
