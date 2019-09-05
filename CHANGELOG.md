@@ -6,7 +6,7 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
 
 ### New features
 
-- It is now possible to remove properties from a Subject using `removeLiteral`, `removeNodeRef`, and to replace existing values with a new one using `setLiteral` and `setNodeRef`.
+- It is now possible to remove properties from a Subject using `removeLiteral`, `removeNodeRef`, and `removeAll`, and to replace existing values with a new one using `setLiteral` and `setNodeRef`.
 
 ## [1.1.0] - 2019-09-03
 

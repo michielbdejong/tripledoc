@@ -82,6 +82,14 @@ export interface TripleSubject {
    */
   removeNodeRef: (predicate: NodeRef, object: NodeRef) => void;
   /**
+   * Remove all values for a property of this Subject.
+   *
+   * Note that these values are not removed from the user's Pod until you save the containing Document.
+   *
+   * @param predicate The property you want to remove the values of.
+   */
+  removeAll: (predicate: NodeRef) => void;
+  /**
    * Set a property of this Subject to a Literal value, clearing all existing values.
    *
    * Note that this change is not saved to the user's Pod until you save the containing Document.
@@ -161,6 +169,16 @@ export function initialiseSubject(document: TripleDocument, subjectRef: NodeRef)
     return getNodeRef(rdf.type);
   }
 
+  const addLiteral = (predicateRef: NodeRef, literal: LiteralTypes) => {
+    pendingAdditions.push(st(sym(subjectRef), sym(predicateRef), asLiteral(literal), sym(document.asNodeRef())));
+  };
+  const addNodeRef = (predicateRef: NodeRef, nodeRef: NodeRef) => {
+    pendingAdditions.push(st(sym(subjectRef), sym(predicateRef), sym(nodeRef), sym(document.asNodeRef())));
+  };
+  const removeAll = (predicateRef: NodeRef) => {
+    pendingDeletions.push(...store.statementsMatching(sym(subjectRef), sym(predicateRef), null, sym(document.asNodeRef())));
+  }
+
   const subject: TripleSubject = {
     getDocument: () => document,
     getStatements: () => store.statementsMatching(sym(subjectRef), null, null, sym(document.asNodeRef())),
@@ -169,12 +187,9 @@ export function initialiseSubject(document: TripleDocument, subjectRef: NodeRef)
     getNodeRef: getNodeRef,
     getAllNodeRefs: getAllNodeRefs,
     getType: getType,
-    addLiteral: (predicateRef, literal) => {
-      pendingAdditions.push(st(sym(subjectRef), sym(predicateRef), asLiteral(literal), sym(document.asNodeRef())));
-    },
-    addNodeRef: (predicateRef, nodeRef) => {
-      pendingAdditions.push(st(sym(subjectRef), sym(predicateRef), sym(nodeRef), sym(document.asNodeRef())));
-    },
+    addLiteral: addLiteral,
+    addNodeRef: addNodeRef,
+    removeAll: removeAll,
     removeLiteral: (predicateRef, literal) => {
       pendingDeletions.push(st(sym(subjectRef), sym(predicateRef), asLiteral(literal), sym(document.asNodeRef())));
     },
@@ -182,12 +197,12 @@ export function initialiseSubject(document: TripleDocument, subjectRef: NodeRef)
       pendingDeletions.push(st(sym(subjectRef), sym(predicateRef), sym(nodeRef), sym(document.asNodeRef())));
     },
     setLiteral: (predicateRef, literal) => {
-      pendingDeletions.push(...store.statementsMatching(sym(subjectRef), sym(predicateRef), null, sym(document.asNodeRef())));
-      pendingAdditions.push(st(sym(subjectRef), sym(predicateRef), asLiteral(literal), sym(document.asNodeRef())));
+      removeAll(predicateRef);
+      addLiteral(predicateRef, literal);
     },
     setNodeRef: (predicateRef, nodeRef) => {
-      pendingDeletions.push(...store.statementsMatching(sym(subjectRef), sym(predicateRef), null, sym(document.asNodeRef())));
-      pendingAdditions.push(st(sym(subjectRef), sym(predicateRef), sym(nodeRef), sym(document.asNodeRef())));
+      removeAll(predicateRef);
+      addNodeRef(predicateRef, nodeRef);
     },
     getPendingStatements: () => [pendingDeletions, pendingAdditions],
     onSave: () => {

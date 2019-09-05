@@ -441,6 +441,30 @@ describe('setNodeRef', () => {
   });
 });
 
+describe('removeAll', () => {
+  it('should remove all existing values, whether Literal or NodeRef', () => {
+    const mockTripleDocument = getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithLiteralThenNode);
+    subject.removeAll(mockPredicate);
+    const [pendingDeletions, pendingAdditions] = subject.getPendingStatements();
+    expect(pendingAdditions).toEqual([]);
+    expect(pendingDeletions).toEqual([
+      st(
+        sym(mockSubjectWithLiteralThenNode),
+        sym(mockPredicate),
+        mockObjectLiteral,
+        sym(mockTripleDocument.asNodeRef()),
+      ),
+      st(
+        sym(mockSubjectWithLiteralThenNode),
+        sym(mockPredicate),
+        sym(mockObjectNode),
+        sym(mockTripleDocument.asNodeRef()),
+      ),
+    ]);
+  });
+});
+
 describe('The callback handler for when the Document saves this Subject', () => {
   it('should clear pending Statements', () => {
     const mockTripleDocument = getMockTripleDocument();
