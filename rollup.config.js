@@ -17,6 +17,11 @@ export default {
         typescript({
           // Use our own version of TypeScript, rather than the one bundled with the plugin:
           typescript: require('typescript'),
+          tsconfigOverride: {
+            "compilerOptions": {
+              "module": "es2015",
+            },
+          },
         })
     ]
 }
