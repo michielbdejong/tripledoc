@@ -4,6 +4,12 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+## [1.3.0] - 2019-09-06
+
+### New features
+
+- Tripledoc now also publishes a version that exports ES Modules - find it in the `module` field in `package.json`. This should allow bundles to only import the modules that are needed, theoretically significantly reducing the bundled size.
+
 ## [1.2.0] - 2019-09-05
 
 ### New features
