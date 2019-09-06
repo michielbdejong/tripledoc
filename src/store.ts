@@ -1,8 +1,8 @@
-import $rdf from 'rdflib';
+import { graph, Fetcher, UpdateManager, Statement } from 'rdflib';
 
-const store = $rdf.graph();
-const fetcher = new $rdf.Fetcher(store, undefined);
-const updater = new $rdf.UpdateManager(store);
+const store = graph();
+const fetcher = new Fetcher(store, undefined);
+const updater = new UpdateManager(store);
 
 /**
  * Single instance of an rdflib store, caches all fetched data
@@ -46,7 +46,7 @@ export function getUpdater() {
  * @ignore Should not be used by library consumers directly.
  */
 /* istanbul ignore next Just a thin wrapper around rdflib, yet cumbersome to test due to side effects */
-export function update(statementsToDelete: $rdf.Statement[], statementsToAdd: $rdf.Statement[]) {
+export function update(statementsToDelete: Statement[], statementsToAdd: Statement[]) {
   const promise = new Promise((resolve, reject) => {
     const updater = getUpdater();
     updater.update(statementsToDelete, statementsToAdd, (_uri, success, errorBody) => {

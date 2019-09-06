@@ -4,7 +4,7 @@
   "description": "Library to read, create and update documents on a Solid Pod",
   "scripts": {
     "test": "jest",
-    "build": "tsc",
+    "build": "rollup --config rollup.config.js",
     "api-docs": "rm -r docs/api; typedoc --theme markdown --platform docusaurus --out docs/api --hideSources --options typedoc.json;",
     "prepublishOnly": "yarn run build"
   },
@@ -13,8 +13,9 @@
   ],
   "homepage": "https://gitlab.com/vincenttunru/tripledoc",
   "bugs": "https://gitlab.com/vincenttunru/tripledoc/issues",
-  "main": "index.js",
-  "types": "index.d.ts",
+  "main": "dist/index.js",
+  "module": "dist/index.es.js",
+  "types": "dist/index.d.ts",
   "author": "Vincent Tunru <npm@vincenttunru.com> (https://VincentTunru.com)",
   "repository": {
     "type": "git",
@@ -26,6 +27,8 @@
     "concat-md": "^0.3.0",
     "jest": "^23.6.0",
     "jest-junit": "^6.0.1",
+    "rollup": "^1.20.3",
+    "rollup-plugin-typescript2": "^0.24.0",
     "ts-jest": "^23.10.5",
     "typedoc": "^0.14.2",
     "typedoc-plugin-markdown": "^2.1.10",
