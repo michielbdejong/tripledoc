@@ -11,6 +11,7 @@ pages:
   script:
     - yarn
     - yarn run api-docs
+    - cp CHANGELOG.md docs/changelog.md
     - cd website
     - yarn
     - yarn run build
