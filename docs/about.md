@@ -17,9 +17,11 @@ Tripledoc aims to solve the following problems:
 - Having to convert a conceptual model of Documents, and entities with properties set to a value, to
   a model of nodes in a graph.
 - The clunckiness of having to keep wrapping/unwrapping RDF Nodes.
+- Existing libraries being relatively vulnerable to regressions due to lack of unit test coverage.
 
 It is expressly _not_ designed to solve:
 
 - The difficulty of combining data from many different sources and traversing a Linked Data graph.
 - Teaching users about Linked Data and RDF to a greater extent than is necessary to start writing
   Solid Web Apps.
+- Teaching people how to write Web Apps in the first place. It is assumed that people know how to write proper Web Apps, and Tripledoc should enable those apps to store their data on a Pod.
