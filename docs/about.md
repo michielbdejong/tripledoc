@@ -17,7 +17,6 @@ Tripledoc aims to solve the following problems:
 - Having to convert a conceptual model of Documents, and entities with properties set to a value, to
   a model of nodes in a graph.
 - The clunckiness of having to keep wrapping/unwrapping RDF Nodes.
-- Existing libraries being relatively vulnerable to regressions due to lack of unit test coverage.
 
 It is expressly _not_ designed to solve:
 
