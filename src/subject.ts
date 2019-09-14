@@ -7,14 +7,14 @@ import { rdf } from 'rdf-namespaces';
 
 export interface TripleSubject {
   /**
-   * @returns The Document that contains this Subject.
+   * @returns The [[TripleDocument]] that contains this Subject.
    */
   getDocument: () => TripleDocument;
   /**
    * @deprecated
    * @ignore This is mostly a convenience function to make it easy to work with rdflib and tripledoc
    *         simultaneously. If you rely on this, it's probably best to either file an issue
-   *         describing what you want to do that tripledoc can't do directly, or to just use rdflib
+   *         describing what you want to do that Tripledoc can't do directly, or to just use rdflib
    *         directly.
    * @returns The Statements pertaining to this Subject that are stored on the user's Pod. Note that
    *          this does not return Statements that have not been saved yet - see
@@ -22,18 +22,18 @@ export interface TripleSubject {
    */
   getStatements: () => Statement[];
   /**
-   * @param predicate Which property of this Subject you want the value of.
-   * @returns The first literal value satisfying [[predicate]], if any, and `null` otherwise.
+   * @param getLiteral.predicate Which property of this Subject you want the value of.
+   * @returns The first literal value satisfying `predicate`, if any, and `null` otherwise.
    */
   getLiteral: (predicate: NodeRef) => LiteralTypes | null;
   /**
-   * @param predicate Which property of this Subject you want the values of.
-   * @returns All literal values satisfying [[predicate]].
+   * @param getAllLiterals.predicate Which property of this Subject you want the values of.
+   * @returns All literal values satisfying `predicate`.
    */
-  getAllLiterals: (predicate: NodeRef) => Array<LiteralTypes>;
+  getAllLiterals: (predicate: NodeRef) => LiteralTypes[];
   /**
-   * @param predicate Which property of this Subject you want the value of.
-   * @returns The IRI of the first Node satisfying [[predicate]], if any, and `null` otherwise.
+   * @param getNodeRef.predicate Which property of this Subject you want the value of.
+   * @returns The IRI of the first Node satisfying `predicate`, if any, and `null` otherwise.
    */
   getNodeRef: (predicate: NodeRef) => NodeRef | null;
   /**
@@ -41,8 +41,8 @@ export interface TripleSubject {
    */
   getType: () => NodeRef | null;
   /**
-   * @param predicate Which property of this Subject you want the values of.
-   * @returns IRIs of all Nodes satisfying [[predicate]].
+   * @param getAllNodeRefs.predicate Which property of this Subject you want the values of.
+   * @returns IRIs of all Nodes satisfying `predicate`.
    */
   getAllNodeRefs: (predicate: NodeRef) => Array<NodeRef>;
   /**
@@ -50,8 +50,8 @@ export interface TripleSubject {
    *
    * Note that this value is not saved to the user's Pod until you save the containing Document.
    *
-   * @param predicate The property you want to add another value of.
-   * @param object The Literal value you want to add, the type of which is one of [[LiteralTypes]].
+   * @param addLiteral.predicate The property you want to add another value of.
+   * @param addLiteral.object The Literal value you want to add, the type of which is one of [[LiteralTypes]].
    */
   addLiteral: (predicate: NodeRef, object: LiteralTypes) => void;
   /**
@@ -59,8 +59,8 @@ export interface TripleSubject {
    *
    * Note that this value is not saved to the user's Pod until you save the containing Document.
    *
-   * @param predicate The property you want to add another value of.
-   * @param object The IRI of the Node you want to add.
+   * @param addNodeRef.predicate The property you want to add another value of.
+   * @param addNodeRef.object The IRI of the Node you want to add.
    */
   addNodeRef: (predicate: NodeRef, object: NodeRef) => void;
   /**
@@ -68,8 +68,8 @@ export interface TripleSubject {
    *
    * Note that this value is not removed from the user's Pod until you save the containing Document.
    *
-   * @param predicate The property you want to remove a value of.
-   * @param object The Literal value you want to remove, the type of which is one of [[LiteralTypes]].
+   * @param removeLiteral.predicate The property you want to remove a value of.
+   * @param removeLiteral.object The Literal value you want to remove, the type of which is one of [[LiteralTypes]].
    */
   removeLiteral: (predicate: NodeRef, object: LiteralTypes) => void;
   /**
@@ -77,16 +77,17 @@ export interface TripleSubject {
    *
    * Note that this pointer is not removed from the user's Pod until you save the containing Document.
    *
-   * @param predicate The property you no longer want to point to the given Node.
-   * @param object The IRI of the Node you want to remove.
+   * @param removeNodeRef.predicate The property you no longer want to point to the given Node.
+   * @param removeNodeRef.object The IRI of the Node you want to remove.
    */
   removeNodeRef: (predicate: NodeRef, object: NodeRef) => void;
   /**
    * Remove all values for a property of this Subject.
    *
-   * Note that these values are not removed from the user's Pod until you save the containing Document.
+   * Note that these values are not removed from the user's Pod until you save the containing
+   * Document.
    *
-   * @param predicate The property you want to remove the values of.
+   * @param removeAll.predicate The property you want to remove the values of.
    */
   removeAll: (predicate: NodeRef) => void;
   /**
@@ -94,8 +95,8 @@ export interface TripleSubject {
    *
    * Note that this change is not saved to the user's Pod until you save the containing Document.
    *
-   * @param predicate The property you want to set the value of.
-   * @param object The Literal value you want to set, the type of which is one of [[LiteralTypes]].
+   * @param setLiteral.predicate The property you want to set the value of.
+   * @param setLiteral.object The Literal value you want to set, the type of which is one of [[LiteralTypes]].
    */
   setLiteral: (predicate: NodeRef, object: LiteralTypes) => void;
   /**
@@ -103,8 +104,8 @@ export interface TripleSubject {
    *
    * Note that this change is not saved to the user's Pod until you save the containing Document.
    *
-   * @param predicate The property you want to set the value of.
-   * @param object The IRI of the Node you want to add.
+   * @param setNodeRef.predicate The property you want to set the value of.
+   * @param setNodeRef.object The IRI of the Node you want to add.
    */
   setNodeRef: (predicate: NodeRef, object: NodeRef) => void;
   /**
