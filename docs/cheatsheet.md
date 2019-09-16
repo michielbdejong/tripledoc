@@ -394,3 +394,63 @@ async function removeNickname(webId, nickname) {
 ### rdf-ext
 
 TODO
+
+## Create a new Document
+
+Note: the examples below assume the user [is logged in](writing-a-solid-app/1-authentication) and is allowed to
+write to their profile.
+
+### Tripledoc
+
+```javascript
+import { createDocument } from "tripledoc";
+
+async function createEmptyDocument(location) {
+  const document = createDocument(location);
+  await document.save();
+}
+```
+
+### rdflib
+
+```javascript
+import { graph, sym, UpdateManager } from "rdflib";
+
+async function createEmptyDocument(location) {
+  const store = graph();
+  const updater = new UpdateManager(store);
+  const creationPromise = new Promise((resolve, reject) => {
+    updater.put(sym(location), [], 'text/turtle', (_url, success, message) => {
+      if (success) {
+        resolve();
+      } else {
+        reject(new Error(message));
+      }
+    });
+  });
+  await creationPromise;
+}
+```
+
+### ldflex
+
+```javascript
+// Note: this is not ldflex-specific, as ldflex has no specific functionality for this use case.
+// We manually send the required HTTP request.
+async function createEmptyDocument(location) {
+  const options = {
+    body: '',
+    // Make sure to include credentials with the request, set by solid-auth-client:
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'text/turtle'
+    },
+    method: 'PUT',
+  };
+  await fetch(location, options);
+};
+```
+
+### rdf-ext
+
+TODO
