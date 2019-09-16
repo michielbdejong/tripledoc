@@ -3,8 +3,9 @@ id: getting-started
 title: Getting started with Solid
 ---
 
-If you're already familiar with how Solid works, the [Quick start](#quick-start) below should give you a
-feel of what working with Tripledoc looks like.
+If you're already familiar with how [Solid](https://solidproject.org) works, the
+[Quick start](#quick-start) below should give you a feel of what working with
+Tripledoc looks like.
 
 If not, follow our [guide to writing Solid Apps](writing-a-solid-app/writing-a-solid-app).
 
