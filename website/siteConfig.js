@@ -31,6 +31,7 @@ const siteConfig = {
   headerLinks: [
     {doc: 'getting-started', label: 'Getting started'},
     {doc: 'api/index', label: 'API reference'},
+    {doc: 'cheatsheet', label: 'Cheatsheet'},
   ],
 
   // If you have users set above, you add it here:
