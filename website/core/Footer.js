@@ -42,7 +42,7 @@ class Footer extends React.Component {
           </div>
           <div>
             <h5>More</h5>
-            <a href="https://gitlab.com/vincenttunru/tripledoc">GitLab</a>
+            <a href="https://gitlab.com/vincenttunru/tripledoc">Source code</a>
           </div>
         </section>
 
