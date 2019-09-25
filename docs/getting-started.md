@@ -35,7 +35,7 @@ import { foaf, rdfs } from 'rdf-namespaces';
 
 async function getTimblProfile() {
   const profileDocument = await fetchDocument('https://www.w3.org/People/Berners-Lee/card');
-  const profile = profileDoc.getSubject('https://www.w3.org/People/Berners-Lee/card#i');
+  const profile = profileDocument.getSubject('https://www.w3.org/People/Berners-Lee/card#i');
   return profile;
 }
 
