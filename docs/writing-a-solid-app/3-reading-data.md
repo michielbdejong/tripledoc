@@ -28,9 +28,9 @@ async function getName(webId) {
   /* 1. Fetch the Document at `webId`: */
   const webIdDoc = await fetchDocument(webId);
   /* 2. Read the Subject representing the current user: */
-  const profile = webIdDoc.getSubject(webId);
+  const user = webIdDoc.getSubject(webId);
   /* 3. Get their foaf:name: */
-  return profile.getLiteral('http://xmlns.com/foaf/0.1/name')
+  return user.getLiteral('http://xmlns.com/foaf/0.1/name')
 }
 ```
 
@@ -46,9 +46,9 @@ async function getName(webId) {
   /* 1. Fetch the Document at `webId`: */
   const webIdDoc = await fetchDocument(webId);
   /* 2. Read the Subject representing the current user: */
-  const profile = webIdDoc.getSubject(webId);
+  const user = webIdDoc.getSubject(webId);
   /* 3. Get their foaf:name: */
-  return profile.getLiteral(foaf.name)
+  return user.getLiteral(foaf.name)
 }
 ```
 
@@ -58,8 +58,8 @@ we could in turn fetch _that_ Document. If that was what we expected, we could h
 `getNodeRef` instead.
 
 The second thing to consider is that we cannot make any assumptions about what data is or is not
-present in the user's Pod. Thus, `profile.getLiteral(foaf.name)` might also return `null`. This
-could happen if the profile does not include the user's name, if the name is stored differently
+present in the user's Pod. Thus, `user.getLiteral(foaf.name)` might also return `null`. This
+could happen if the Document does not include the user's name, if the name is stored differently
 (e.g. using `foaf:firstName` and `foaf:familyName`), or the `foaf:name` is not a Literal.
 
 Now that we're able to read data from the user's WebID, let's find out how we can read arbitrary
