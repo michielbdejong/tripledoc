@@ -22,7 +22,7 @@ import auth from 'solid-auth-client';
 
 async function getWebId() {
   /* 1. Check if we've already got the user's WebID and access to their Pod: */
-  let session = await solid.auth.currentSession();
+  let session = await auth.currentSession();
   if (session) {
     return session.webId;
   }
