@@ -11,7 +11,7 @@
   "keywords": [
     "rdf"
   ],
-  "homepage": "https://gitlab.com/vincenttunru/tripledoc",
+  "homepage": "https://vincenttunru.gitlab.io/tripledoc/",
   "bugs": "https://gitlab.com/vincenttunru/tripledoc/issues",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
