@@ -26,9 +26,9 @@ import { fetchDocument } from 'tripledoc';
 
 async function getName(webId) {
   /* 1. Fetch the Document at `webId`: */
-  const webIdDoc = await fetchDocument(currentSession.webId);
+  const webIdDoc = await fetchDocument(webId);
   /* 2. Read the Subject representing the current user: */
-  const profile = webIdDoc.getSubject(currentSession.webId);
+  const profile = webIdDoc.getSubject(webId);
   /* 3. Get their foaf:name: */
   return profile.getLiteral('http://xmlns.com/foaf/0.1/name')
 }
@@ -44,9 +44,9 @@ import { foaf } from 'rdf-namespaces';
 
 async function getName(webId) {
   /* 1. Fetch the Document at `webId`: */
-  const webIdDoc = await fetchDocument(currentSession.webId);
+  const webIdDoc = await fetchDocument(webId);
   /* 2. Read the Subject representing the current user: */
-  const profile = webIdDoc.getSubject(currentSession.webId);
+  const profile = webIdDoc.getSubject(webId);
   /* 3. Get their foaf:name: */
   return profile.getLiteral(foaf.name)
 }
