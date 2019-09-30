@@ -64,7 +64,7 @@ async function getNotesList(profile) {
   }
 
   /* 3. If it does exist, fetch that Document. */
-  const notesListUrl = notesListIndex.getNodeRef(solid.instance);
+  const notesListUrl = notesListEntry.getNodeRef(solid.instance);
   return await fetchDocument(notesListUrl);
 }
 ```
@@ -89,7 +89,7 @@ Document that will contain the notes, and adds it to the Public Type Index. Let'
 
 ```javascript
 import { createDocument } from 'tripledoc';
-import { space, rdf, solid } from 'rdf-namespaces';
+import { space, rdf, solid, schema } from 'rdf-namespaces';
 
 async function initialiseNotesList(profile, typeIndex) {
   // Get the root URL of the user's Pod:
@@ -98,14 +98,14 @@ async function initialiseNotesList(profile, typeIndex) {
   // Determine at what URL the new Document should be stored:
   const notesListUrl = storage + 'public/notes.ttl';
   // Create the new Document:
-  const notesList = createDocument(notesListRef);
+  const notesList = createDocument(notesListUrl);
   await notesList.save();
 
-  // Store a reference to that Document in the public Type Index;
+  // Store a reference to that Document in the public Type Index for `schema:TextDigitalDocument`:
   const typeRegistration = typeIndex.addSubject();
   typeRegistration.addNodeRef(rdf.type, solid.TypeRegistration)
-  typeRegistration.addNodeRef(solid.instance, document.asNodeRef())
-  typeRegistration.addNodeRef(solid.forClass, forClass)
+  typeRegistration.addNodeRef(solid.instance, notesList.asNodeRef())
+  typeRegistration.addNodeRef(solid.forClass, schema.TextDigitalDocument)
   await typeIndex.save([ typeRegistration ]);
 
   // Then finally return the new Document:
