@@ -4,6 +4,8 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+## [1.3.1] - 2019-10-01
+
 ### Experimental changes
 
 - The `getAcl` method on a TripleDocument did not work for relative ACL URLs (as returned by Node Solid Server). It now has the more consistent name `getAclRef`, and should work with relative URLs. Additionally, it can now also return the location of the ACL for a newly created Document, provided it has been `save`d. Do keep in mind that this method is still experimental and may therefore be changed in a future patch release.

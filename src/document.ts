@@ -61,7 +61,7 @@ export interface TripleDocument {
    */
   getSubjectsOfType: (typeRef: NodeRef) => TripleSubject[];
   /**
-   * @deprecated Replace by [[getAclRef]]
+   * @deprecated Replaced by [[getAclRef]]
    */
   getAcl: () => NodeRef | null;
   /**
