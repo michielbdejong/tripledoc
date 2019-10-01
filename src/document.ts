@@ -61,9 +61,13 @@ export interface TripleDocument {
    */
   getSubjectsOfType: (typeRef: NodeRef) => TripleSubject[];
   /**
-   * @ignore Experimental API, might change in the future to return an instantiated Document
+   * @deprecated Replace by [[getAclRef]]
    */
   getAcl: () => NodeRef | null;
+  /**
+   * @ignore Experimental API, might change in the future to return an instantiated Document
+   */
+  getAclRef: () => NodeRef | null;
   /**
    * @returns The IRI of this Document.
    */
@@ -96,28 +100,33 @@ export function createDocument(ref: NodeRef): TripleDocument {
  * Note that if you fetch the same document twice, it will be cached; only one
  * network request will be performed.
  *
- * @param uri Where the document lives.
+ * @param documentRef Where the document lives.
  * @returns Representation of triples in the document at `uri`.
  */
-export async function fetchDocument(uri: string): Promise<TripleDocument> {
+export async function fetchDocument(documentRef: string): Promise<TripleDocument> {
   const fetcher = getFetcher();
-  const response = await fetcher.load(uri);
+  const response = await fetcher.load(documentRef);
 
-  let aclUri;
+  let aclRef: string | undefined = extractAclRef(response, documentRef);
+
+  return instantiateDocument(documentRef, { aclRef: aclRef, existsOnPod: true });
+}
+
+function extractAclRef(response: Response, documentRef: string) {
+  let aclRef: string | undefined;
   const linkHeader = response.headers.get('Link');
-  if(linkHeader) {
+  if (linkHeader) {
     const parsedLinks = LinkHeader.parse(linkHeader);
     const aclLinks = parsedLinks.get('rel', 'acl');
     if (aclLinks.length === 1) {
-      aclUri = aclLinks[0].uri;
+      aclRef = new URL(aclLinks[0].uri, documentRef).href;
     }
   }
-
-  return instantiateDocument(uri, { aclUri, existsOnPod: true });
+  return aclRef;
 }
 
 interface DocumentMetadata {
-  aclUri?: NodeRef;
+  aclRef?: NodeRef;
   existsOnPod?: boolean;
 };
 function instantiateDocument(uri: NodeRef, metadata: DocumentMetadata): TripleDocument {
@@ -125,8 +134,8 @@ function instantiateDocument(uri: NodeRef, metadata: DocumentMetadata): TripleDo
   // Remove fragment identifiers (e.g. `#me`) from the URI:
   const documentRef: NodeRef = docUrl.origin + docUrl.pathname + docUrl.search;
 
-  const getAcl: () => NodeRef | null = () => {
-    return metadata.aclUri || null;
+  const getAclRef: () => NodeRef | null = () => {
+    return metadata.aclRef || null;
   };
 
   const accessedSubjects: { [iri: string]: TripleSubject } = {};
@@ -180,9 +189,22 @@ function instantiateDocument(uri: NodeRef, metadata: DocumentMetadata): TripleDo
       const store = getStore();
       const updater = getUpdater();
       const doc = store.sym(documentRef);
-      // Since the Document does not exist remotely yet,
-      // `allDeletions` should be empty and can be ignored:
-      await updater.put(doc, allAdditions, 'text/turtle', () => undefined);
+      const updatePromise = new Promise<Response>((resolve, reject) => {
+        // Since the Document does not exist remotely yet,
+        // `allDeletions` should be empty and can be ignored:
+        updater.put(doc, allAdditions, 'text/turtle', (_uri, ok, errorMessage, response) => {
+          if (!ok) {
+            return reject(new Error(errorMessage));
+          }
+          return resolve(response as Response);
+        });
+      });
+      const response = await updatePromise;
+      const aclRef = extractAclRef(response, documentRef);
+      if (aclRef) {
+        metadata.aclRef = aclRef;
+      }
+
       metadata.existsOnPod = true;
     } else {
       await update(allDeletions, allAdditions);
@@ -198,7 +220,8 @@ function instantiateDocument(uri: NodeRef, metadata: DocumentMetadata): TripleDo
     getSubjectsOfType: getSubjectsOfType,
     findSubject: findSubject,
     findSubjects: findSubjects,
-    getAcl: getAcl,
+    getAcl: getAclRef,
+    getAclRef: getAclRef,
     asNodeRef: () => documentRef,
     save: save,
   };

@@ -24,7 +24,15 @@ let mockPutUpdate: jest.Mock;
 let mockFetchLoad: jest.Mock;
 jest.mock('./store', () => {
   mockUpdater = jest.fn(() => Promise.resolve());
-  mockPutUpdate = jest.fn(() => () => Promise.resolve());
+  mockPutUpdate = jest.fn((_url, _additions, _mimetype, callback) => {
+      // Arguments: Document URL, ok, errorMessage, response
+      callback('arbitrary-url', true, null, {
+        headers: {
+          get: () => null,
+        },
+      });
+      return Promise.resolve();
+    });
   mockFetchLoad = jest.fn(() => Promise.resolve({
     headers: new Headers()
   }));
@@ -186,7 +194,28 @@ describe('save', () => {
     (mockPutUpdate.mock.calls[0][3] as () => void)();
   });
 
-  it('should call `update` when modifying an existing', async () => {
+  it('should return the ACL if received after creating a new Document', async () => {
+    const mockTripleDocument = createDocument(mockDocument);
+    const newSubject = mockTripleDocument.addSubject();
+    newSubject.addLiteral(schema.name, 'Arbitrary value');
+    expect(mockTripleDocument.getAclRef()).toBeNull();
+
+    mockPutUpdate.mockImplementationOnce((_url, _additions, _mimetype, callback) => {
+      // Arguments: Document URL, ok, errorMessage, response
+      callback('arbitrary-url', true, null, {
+        headers: {
+          get: () => '<https://some-acl-url.example>; rel="acl"'
+        },
+      });
+      return Promise.resolve();
+    });
+
+    await mockTripleDocument.save();
+
+    expect(mockTripleDocument.getAclRef()).toBe('https://some-acl-url.example/');
+  });
+
+  it('should call `update` when modifying an existing Document', async () => {
     const mockTripleDocument = await fetchDocument(mockDocument);
     const newSubject = mockTripleDocument.addSubject();
     newSubject.addLiteral(schema.name, 'Some value');
@@ -203,10 +232,10 @@ describe('save', () => {
   });
 });
 
-describe('getAcl', () => {
+describe('getAclRef', () => {
   it('should return null if no ACL header was present', async () => {
     const mockTripleDocument = await fetchDocument(mockDocument);
-    expect(mockTripleDocument.getAcl()).toBeNull();
+    expect(mockTripleDocument.getAclRef()).toBeNull();
   });
 
   it('should return the ACL URL if one was given', async () => {
@@ -216,7 +245,17 @@ describe('getAcl', () => {
       }),
     }));
     const mockTripleDocument = await fetchDocument(mockDocument);
-    expect(mockTripleDocument.getAcl()).toBe('https://mock-acl.com');
+    expect(mockTripleDocument.getAclRef()).toBe('https://mock-acl.com/');
+  });
+
+  it('should properly resolve the ACL if its URL is relative', async () => {
+    mockFetchLoad.mockReturnValueOnce(Promise.resolve({
+      headers: new Headers({
+        Link: '<relative-path.ttl.acl>; rel="acl"; title="Mock ACL", ',
+      }),
+    }));
+    const mockTripleDocument = await fetchDocument('https://some-doc.example/relative-path.ttl');
+    expect(mockTripleDocument.getAclRef()).toBe('https://some-doc.example/relative-path.ttl.acl');
   });
 
   it('should return null if more than one ACL was given', async () => {
@@ -227,6 +266,6 @@ describe('getAcl', () => {
       }),
     }));
     const mockTripleDocument = await fetchDocument(mockDocument);
-    expect(mockTripleDocument.getAcl()).toBeNull();
+    expect(mockTripleDocument.getAclRef()).toBeNull();
   });
 });
