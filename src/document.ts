@@ -103,17 +103,17 @@ export function createDocument(ref: NodeRef): TripleDocument {
  * @param documentRef Where the document lives.
  * @returns Representation of triples in the document at `uri`.
  */
-export async function fetchDocument(documentRef: string): Promise<TripleDocument> {
+export async function fetchDocument(documentRef: NodeRef): Promise<TripleDocument> {
   const fetcher = getFetcher();
   const response = await fetcher.load(documentRef);
 
-  let aclRef: string | undefined = extractAclRef(response, documentRef);
+  let aclRef: NodeRef | undefined = extractAclRef(response, documentRef);
 
   return instantiateDocument(documentRef, { aclRef: aclRef, existsOnPod: true });
 }
 
-function extractAclRef(response: Response, documentRef: string) {
-  let aclRef: string | undefined;
+function extractAclRef(response: Response, documentRef: NodeRef) {
+  let aclRef: NodeRef | undefined;
   const linkHeader = response.headers.get('Link');
   if (linkHeader) {
     const parsedLinks = LinkHeader.parse(linkHeader);
