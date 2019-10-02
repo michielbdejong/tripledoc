@@ -4,6 +4,10 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+### Bugfixes
+
+- Saving an existing Document did not work due to [a bug in rdflib](https://github.com/linkeddata/rdflib.js/issues/359). Pending a fix upstream, Tripledoc will temporarily include an older version of rdflib.
+
 ## [1.3.1] - 2019-10-01
 
 ### Experimental changes
