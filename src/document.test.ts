@@ -1,4 +1,4 @@
-import { graph, st, sym, lit, NamedNode, Statement } from 'rdflib';
+import { graph, st, sym, NamedNode, Statement } from 'rdflib';
 import { createDocument, fetchDocument } from './document';
 import { rdf, schema } from 'rdf-namespaces';
 
@@ -20,19 +20,13 @@ const mockStatements = [
 const store = graph();
 store.addAll(mockStatements);
 let mockUpdater: jest.Mock;
-let mockPutUpdate: jest.Mock;
+let mockCreater: jest.Mock;
 let mockFetchLoad: jest.Mock;
 jest.mock('./store', () => {
   mockUpdater = jest.fn(() => Promise.resolve());
-  mockPutUpdate = jest.fn((_url, _additions, _mimetype, callback) => {
-      // Arguments: Document URL, ok, errorMessage, response
-      callback('arbitrary-url', true, null, {
-        headers: {
-          get: () => null,
-        },
-      });
-      return Promise.resolve();
-    });
+  mockCreater = jest.fn(() => Promise.resolve({
+    headers: { get: () => null },
+  }));
   mockFetchLoad = jest.fn(() => Promise.resolve({
     headers: new Headers()
   }));
@@ -41,8 +35,8 @@ jest.mock('./store', () => {
     getFetcher: () => ({
       load: mockFetchLoad,
     }),
-    getUpdater: () => ({ put: mockPutUpdate }),
     update: mockUpdater,
+    create: mockCreater,
   }
 });
 
@@ -171,27 +165,24 @@ describe('save', () => {
     const [_pendingDeletionsForUnsaved, pendingAdditionForUnsaved] = subjectNotToSave.getPendingStatements();
     expect(pendingAdditionForSaved.length).toBe(0);
     expect(pendingAdditionForUnsaved.length).toBe(1);
-    const savedStatements = mockPutUpdate.mock.calls[0][1] as Statement[];
+    const savedStatements = mockCreater.mock.calls[0][1] as Statement[];
     expect(savedStatements.length).toBe(1);
   });
 
-  it('should call `put` when creating a new Document', async () => {
+  it('should call `create` when creating a new Document', async () => {
     const mockTripleDocument = createDocument(mockDocument);
     const newSubject = mockTripleDocument.addSubject();
     newSubject.addLiteral(schema.name, 'Some value');
 
     await mockTripleDocument.save();
 
-    expect(mockPutUpdate.mock.calls.length).toBe(1);
+    expect(mockCreater.mock.calls.length).toBe(1);
     expect(mockUpdater.mock.calls.length).toBe(0);
-    // The Document to be created is the first argument to UpdateManager.put:
-    expect((mockPutUpdate.mock.calls[0][0] as NamedNode).uri).toBe(mockDocument);
+    // The Document to be created is the first argument to `create`:
+    expect(mockCreater.mock.calls[0][0] as string).toBe(mockDocument);
     // The Statements to be inserted are the second argument:
-    expect((mockPutUpdate.mock.calls[0][1] as Statement[]).length).toBe(1);
-    expect((mockPutUpdate.mock.calls[0][1] as Statement[])[0].object.value).toBe('Some value');
-    // The fourth argument is a callback that should be a no-op, and hence run without errors:
-    expect(typeof mockPutUpdate.mock.calls[0][3]).toBe('function');
-    (mockPutUpdate.mock.calls[0][3] as () => void)();
+    expect((mockCreater.mock.calls[0][1] as Statement[]).length).toBe(1);
+    expect((mockCreater.mock.calls[0][1] as Statement[])[0].object.value).toBe('Some value');
   });
 
   it('should return the ACL if received after creating a new Document', async () => {
@@ -200,15 +191,11 @@ describe('save', () => {
     newSubject.addLiteral(schema.name, 'Arbitrary value');
     expect(mockTripleDocument.getAclRef()).toBeNull();
 
-    mockPutUpdate.mockImplementationOnce((_url, _additions, _mimetype, callback) => {
-      // Arguments: Document URL, ok, errorMessage, response
-      callback('arbitrary-url', true, null, {
-        headers: {
-          get: () => '<https://some-acl-url.example>; rel="acl"'
-        },
-      });
-      return Promise.resolve();
-    });
+    mockCreater.mockReturnValueOnce(Promise.resolve({
+      headers: {
+        get: () => '<https://some-acl-url.example>; rel="acl"'
+      },
+    }));
 
     await mockTripleDocument.save();
 
@@ -223,7 +210,7 @@ describe('save', () => {
     await mockTripleDocument.save();
 
     expect(mockUpdater.mock.calls.length).toBe(1);
-    expect(mockPutUpdate.mock.calls.length).toBe(0);
+    expect(mockCreater.mock.calls.length).toBe(0);
     // The Statements to delete are the first argument:
     expect((mockUpdater.mock.calls[0][0] as Statement[]).length).toBe(0);
     // The Statements to add are the second argument:

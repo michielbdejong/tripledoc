@@ -59,3 +59,28 @@ export function update(statementsToDelete: Statement[], statementsToAdd: Stateme
 
   return promise;
 }
+
+/**
+ * Utility function that properly promisifies the RDFLib UpdateManager's `put` function
+ *
+ * @param url URL of the Document that should be created.
+ * @param statementsToAdd Statements that should be added to the Document.
+ * @returns Promise that resolves with the response when the update was executed successfully, and rejects if not.
+ * @ignore Should not be used by library consumers directly.
+ */
+/* istanbul ignore next Just a thin wrapper around rdflib, yet cumbersome to test due to side effects */
+export function create(url: string, statementsToAdd: Statement[]): Promise<Response> {
+  const promise = new Promise<Response>((resolve, reject) => {
+    const store = getStore();
+    const updater = getUpdater();
+    const doc = store.sym(url);
+    updater.put(doc, statementsToAdd, 'text/turtle', (_uri, ok, errorMessage, response) => {
+      if (!ok) {
+        return reject(new Error(errorMessage));
+      }
+      return resolve(response as Response);
+    });
+  });
+
+  return promise;
+}

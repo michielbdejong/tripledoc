@@ -1,7 +1,7 @@
 import { Statement } from 'rdflib';
 import LinkHeader from 'http-link-header';
 import { rdf } from 'rdf-namespaces';
-import { getFetcher, getStore, getUpdater, update } from './store';
+import { getFetcher, getStore, getUpdater, update, create } from './store';
 import { findSubjectInStore, FindEntityInStore, FindEntitiesInStore, findSubjectsInStore } from './getEntities';
 import { TripleSubject, initialiseSubject } from './subject';
 import { NodeRef, isLiteral, isNodeRef } from '.';
@@ -186,20 +186,7 @@ function instantiateDocument(uri: NodeRef, metadata: DocumentMetadata): TripleDo
     );
 
     if (!metadata.existsOnPod) {
-      const store = getStore();
-      const updater = getUpdater();
-      const doc = store.sym(documentRef);
-      const updatePromise = new Promise<Response>((resolve, reject) => {
-        // Since the Document does not exist remotely yet,
-        // `allDeletions` should be empty and can be ignored:
-        updater.put(doc, allAdditions, 'text/turtle', (_uri, ok, errorMessage, response) => {
-          if (!ok) {
-            return reject(new Error(errorMessage));
-          }
-          return resolve(response as Response);
-        });
-      });
-      const response = await updatePromise;
+      const response = await create(documentRef, allAdditions);
       const aclRef = extractAclRef(response, documentRef);
       if (aclRef) {
         metadata.aclRef = aclRef;
