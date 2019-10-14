@@ -4,6 +4,8 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+## [1.4.0] - 2019-10-14
+
 ### Deprecations
 
 - `getLiteral` and `getAllLiterals` have been superseded by their respective type-specific methods (`getString`, `getInteger`, etc.), and are therefore now deprecated - they will be removed in a future major version.
