@@ -4,13 +4,17 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+### Deprecations
+
+- `getLiteral` and `getAllLiterals` have been superseded by their respective type-specific methods (`getString`, `getInteger`, etc.), and are therefore now deprecated - they will be removed in a future major version.
+
 ### New features
 
 - You can now query specifically for string, integer, decimal or DateTime values on a Subject, instead of having to check whether the return value of `getLiteral` (or `getAllLiterals`) is of the type you want.
 
-### Deprecations
+### Bug fixes
 
-- `getLiteral` and `getAllLiterals` have been superseded by their respective type-specific methods (`getString`, `getInteger`, etc.), and are therefore now deprecated - they will be removed in a future major version.
+- The source directory for the website is no longer published along with the package itself to npm, saving you precious bytes on your hard drive.
 
 ## [1.3.2] - 2019-10-02
 

@@ -1,2 +1,3 @@
 # We want to ignore compiled Javascript in .gitignore, but not when publishing to npm. Hence this file.
 coverage
+website
