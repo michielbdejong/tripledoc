@@ -1,4 +1,4 @@
-import { NamedNode, Node, Literal } from 'rdflib';
+import { Literal, sym, NamedNode } from 'rdflib';
 
 export * from './document';
 export * from './subject';
@@ -24,6 +24,54 @@ export function isLiteral<T>(param: T | Literal): param is Literal {
     (param !== null) &&
     (typeof (param as Literal).termType === 'string') &&
     (param as Literal).termType === 'Literal';
+}
+export interface StringLiteral extends Literal {
+  datatype: NamedNode & { uri: 'http://www.w3.org/2001/XMLSchema#string' };
+}
+/**
+ * @ignore Tripledoc's methods should be explicit about whether they return or accept a specific
+ *         type, so this is merely an internal utility function, rather than a public API.
+ * @param param A value that might or might not be an RDFlib string Literal.
+ * @returns Whether `param` is an RDFlib string Literal.
+ */
+export function isStringLiteral<T>(param: T | Literal): param is StringLiteral {
+  return isLiteral(param) && param.datatype.uri === 'http://www.w3.org/2001/XMLSchema#string';
+}
+export interface IntegerLiteral extends Literal {
+  datatype: NamedNode & { uri: 'http://www.w3.org/2001/XMLSchema#integer' };
+}
+/**
+ * @ignore Tripledoc's methods should be explicit about whether they return or accept a specific
+ *         type, so this is merely an internal utility function, rather than a public API.
+ * @param param A value that might or might not be an RDFlib integer Literal.
+ * @returns Whether `param` is an RDFlib integer Literal.
+ */
+export function isIntegerLiteral<T>(param: T | Literal): param is IntegerLiteral {
+  return isLiteral(param) && param.datatype.uri === 'http://www.w3.org/2001/XMLSchema#integer';
+}
+export interface DecimalLiteral extends Literal {
+  datatype: NamedNode & { uri: 'http://www.w3.org/2001/XMLSchema#decimal' };
+}
+/**
+ * @ignore Tripledoc's methods should be explicit about whether they return or accept a specific
+ *         type, so this is merely an internal utility function, rather than a public API.
+ * @param param A value that might or might not be an RDFlib decimal Literal.
+ * @returns Whether `param` is an RDFlib decimal Literal.
+ */
+export function isDecimalLiteral<T>(param: T | Literal): param is DecimalLiteral {
+  return isLiteral(param) && param.datatype.uri === 'http://www.w3.org/2001/XMLSchema#decimal';
+}
+export interface DateTimeLiteral extends Literal {
+  datatype: NamedNode & { uri: 'http://www.w3.org/2001/XMLSchema#dateTime' };
+}
+/**
+ * @ignore Tripledoc's methods should be explicit about whether they return or accept a specific
+ *         type, so this is merely an internal utility function, rather than a public API.
+ * @param param A value that might or might not be an RDFlib DateTime Literal.
+ * @returns Whether `param` is an RDFlib DateTime Literal.
+ */
+export function isDateTimeLiteral<T>(param: T | Literal): param is DateTimeLiteral {
+  return isLiteral(param) && param.datatype.uri === 'http://www.w3.org/2001/XMLSchema#dateTime';
 }
 /**
  * @ignore Tripledoc's methods should be explicit about whether they return or accept a [[NodeRef]],

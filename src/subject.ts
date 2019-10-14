@@ -1,5 +1,18 @@
 import { Statement, Literal, st, sym } from 'rdflib';
-import { NodeRef, isLiteral, LiteralTypes, isNodeRef } from './index';
+import {
+  NodeRef,
+  isLiteral,
+  LiteralTypes,
+  isNodeRef,
+  isStringLiteral,
+  isIntegerLiteral,
+  isDecimalLiteral,
+  DateTimeLiteral,
+  isDateTimeLiteral,
+  IntegerLiteral,
+  DecimalLiteral,
+  StringLiteral,
+} from './index';
 import { getStore } from './store';
 import { findObjectsInStore } from './getEntities';
 import { TripleDocument } from './document';
@@ -22,13 +35,57 @@ export interface TripleSubject {
    */
   getStatements: () => Statement[];
   /**
+   * @param getString.predicate Which property of this Subject you want the value of.
+   * @returns The first literal string value satisfying `predicate`, if any, and `null` otherwise.
+   */
+  getString: (predicate: NodeRef) => string | null;
+  /**
+   * @param getInteger.predicate Which property of this Subject you want the value of.
+   * @returns The first literal integer value satisfying `predicate`, if any, and `null` otherwise.
+   */
+  getInteger: (predicate: NodeRef) => number | null;
+  /**
+   * @param getDecimal.predicate Which property of this Subject you want the value of.
+   * @returns The first literal decimal value satisfying `predicate`, if any, and `null` otherwise.
+   */
+  getDecimal: (predicate: NodeRef) => number | null;
+  /**
+   * @param getDateTime.predicate Which property of this Subject you want the value of.
+   * @returns The first literal Date value satisfying `predicate`, if any, and `null` otherwise.
+   */
+  getDateTime: (predicate: NodeRef) => Date | null;
+  /**
    * @param getLiteral.predicate Which property of this Subject you want the value of.
    * @returns The first literal value satisfying `predicate`, if any, and `null` otherwise.
+   * @deprecated This method has been superseded by the type-specific methods [[getString]],
+   *             [[getNumber]] and [[getDateTime]].
    */
   getLiteral: (predicate: NodeRef) => LiteralTypes | null;
   /**
+   * @param getAllStrings.predicate Which property of this Subject you want the values of.
+   * @returns All literal string values satisfying `predicate`.
+   */
+  getAllStrings: (predicate: NodeRef) => string[];
+  /**
+   * @param getAllIntegers.predicate Which property of this Subject you want the values of.
+   * @returns All literal integer values satisfying `predicate`.
+   */
+  getAllIntegers: (predicate: NodeRef) => number[];
+  /**
+   * @param getAllDecimals.predicate Which property of this Subject you want the values of.
+   * @returns All literal decimal values satisfying `predicate`.
+   */
+  getAllDecimals: (predicate: NodeRef) => number[];
+  /**
+   * @param getAllDateTimes.predicate Which property of this Subject you want the values of.
+   * @returns All literal DateTime values satisfying `predicate`.
+   */
+  getAllDateTimes: (predicate: NodeRef) => Date[];
+  /**
    * @param getAllLiterals.predicate Which property of this Subject you want the values of.
    * @returns All literal values satisfying `predicate`.
+   * @deprecated This method has been superseded by the type-specific methods [[getAllStrings]],
+   *             [[getAllNumbers]] and [[getAllDates]].
    */
   getAllLiterals: (predicate: NodeRef) => LiteralTypes[];
   /**
@@ -139,6 +196,41 @@ export function initialiseSubject(document: TripleDocument, subjectRef: NodeRef)
   let pendingDeletions: Statement[] = [];
 
   const get = (predicateNode: NodeRef) => findObjectsInStore(store, subjectRef, predicateNode, document.asNodeRef());
+  const getString = (predicateNode: NodeRef) => {
+    const objects = get(predicateNode);
+    const firstStringLiteral = objects.find(isStringLiteral);
+    if (typeof firstStringLiteral === 'undefined') {
+      return null;
+    }
+    return firstStringLiteral.value;
+  };
+  const getInteger = (predicateNode: NodeRef) => {
+    const objects = get(predicateNode);
+    const firstIntegerLiteral = objects.find(isIntegerLiteral);
+    if (typeof firstIntegerLiteral === 'undefined') {
+      return null;
+    }
+
+    return fromIntegerLiteral(firstIntegerLiteral);
+  };
+  const getDecimal = (predicateNode: NodeRef) => {
+    const objects = get(predicateNode);
+    const firstDecimalLiteral = objects.find(isDecimalLiteral);
+    if (typeof firstDecimalLiteral === 'undefined') {
+      return null;
+    }
+
+    return fromDecimalLiteral(firstDecimalLiteral);
+  };
+  const getDateTime = (predicateNode: NodeRef) => {
+    const objects = get(predicateNode);
+    const firstDateTimeLiteral = objects.find(isDateTimeLiteral);
+    if (typeof firstDateTimeLiteral === 'undefined') {
+      return null;
+    }
+
+    return fromDateTimeLiteral(firstDateTimeLiteral);
+  };
   const getLiteral = (predicateNode: NodeRef) => {
     const objects = get(predicateNode);
     const firstLiteral = objects.find(isLiteral);
@@ -146,6 +238,26 @@ export function initialiseSubject(document: TripleDocument, subjectRef: NodeRef)
       return null;
     }
     return fromLiteral(firstLiteral);
+  };
+  const getAllStrings = (predicateNode: NodeRef) => {
+    const objects = get(predicateNode);
+    const literals = objects.filter(isStringLiteral);
+    return literals.map(fromStringLiteral);
+  };
+  const getAllIntegers = (predicateNode: NodeRef) => {
+    const objects = get(predicateNode);
+    const literals = objects.filter(isIntegerLiteral);
+    return literals.map(fromIntegerLiteral);
+  };
+  const getAllDecimals = (predicateNode: NodeRef) => {
+    const objects = get(predicateNode);
+    const literals = objects.filter(isDecimalLiteral);
+    return literals.map(fromDecimalLiteral);
+  };
+  const getAllDateTimes = (predicateNode: NodeRef) => {
+    const objects = get(predicateNode);
+    const literals = objects.filter(isDateTimeLiteral);
+    return literals.map(fromDateTimeLiteral);
   };
   const getAllLiterals = (predicateNode: NodeRef) => {
     const objects = get(predicateNode);
@@ -183,7 +295,15 @@ export function initialiseSubject(document: TripleDocument, subjectRef: NodeRef)
   const subject: TripleSubject = {
     getDocument: () => document,
     getStatements: () => store.statementsMatching(sym(subjectRef), null, null, sym(document.asNodeRef())),
+    getString: getString,
+    getInteger: getInteger,
+    getDecimal: getDecimal,
+    getDateTime: getDateTime,
     getLiteral: getLiteral,
+    getAllStrings: getAllStrings,
+    getAllIntegers: getAllIntegers,
+    getAllDecimals: getAllDecimals,
+    getAllDateTimes: getAllDateTimes,
     getAllLiterals: getAllLiterals,
     getNodeRef: getNodeRef,
     getAllNodeRefs: getAllNodeRefs,
@@ -216,29 +336,41 @@ export function initialiseSubject(document: TripleDocument, subjectRef: NodeRef)
   return subject;
 }
 
+function fromDateTimeLiteral(literal: DateTimeLiteral): Date {
+  // See https://github.com/linkeddata/rdflib.js/blob/d84af88f367b8b5f617c753d8241c5a2035458e8/src/literal.js#L87
+  const utcFullYear = parseInt(literal.value.substring(0, 4), 10);
+  const utcMonth = parseInt(literal.value.substring(5, 7), 10) - 1;
+  const utcDate = parseInt(literal.value.substring(8, 10), 10);
+  const utcHours = parseInt(literal.value.substring(11, 13), 10);
+  const utcMinutes = parseInt(literal.value.substring(14, 16), 10);
+  const utcSeconds = parseInt(literal.value.substring(17, literal.value.indexOf('Z')), 10);
+  const date = new Date(0);
+  date.setUTCFullYear(utcFullYear);
+  date.setUTCMonth(utcMonth);
+  date.setUTCDate(utcDate);
+  date.setUTCHours(utcHours);
+  date.setUTCMinutes(utcMinutes);
+  date.setUTCSeconds(utcSeconds);
+  return date;
+}
+function fromIntegerLiteral(literal: IntegerLiteral): number {
+  return parseInt(literal.value, 10);
+}
+function fromDecimalLiteral(literal: DecimalLiteral): number {
+  return parseFloat(literal.value);
+}
+function fromStringLiteral(literal: StringLiteral): string {
+  return literal.value;
+}
 function fromLiteral(literal: Literal): LiteralTypes {
-  if (literal.datatype.uri === 'http://www.w3.org/2001/XMLSchema#dateTime') {
-    // See https://github.com/linkeddata/rdflib.js/blob/d84af88f367b8b5f617c753d8241c5a2035458e8/src/literal.js#L87
-    const utcFullYear = parseInt(literal.value.substring(0, 4), 10);
-    const utcMonth = parseInt(literal.value.substring(5, 7), 10) - 1;
-    const utcDate = parseInt(literal.value.substring(8, 10), 10);
-    const utcHours = parseInt(literal.value.substring(11, 13), 10);
-    const utcMinutes = parseInt(literal.value.substring(14, 16), 10);
-    const utcSeconds = parseInt(literal.value.substring(17, literal.value.indexOf('Z')), 10);
-    const date = new Date(0);
-    date.setUTCFullYear(utcFullYear);
-    date.setUTCMonth(utcMonth);
-    date.setUTCDate(utcDate);
-    date.setUTCHours(utcHours);
-    date.setUTCMinutes(utcMinutes);
-    date.setUTCSeconds(utcSeconds);
-    return date;
+  if (isDateTimeLiteral(literal)) {
+    return fromDateTimeLiteral(literal);
   }
-  if (literal.datatype.uri === 'http://www.w3.org/2001/XMLSchema#integer') {
-    return parseInt(literal.value, 10);
+  if (isIntegerLiteral(literal)) {
+    return fromIntegerLiteral(literal);
   }
-  if (literal.datatype.uri === 'http://www.w3.org/2001/XMLSchema#decimal') {
-    return parseFloat(literal.value);
+  if (isDecimalLiteral(literal)) {
+    return fromDecimalLiteral(literal);
   }
   return literal.value;
 }

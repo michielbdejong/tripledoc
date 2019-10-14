@@ -4,6 +4,16 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+### New features
+
+- You can now query specifically for string, integer, decimal or DateTime values on a Subject, instead of having to check whether the return value of `getLiteral` (or `getAllLiterals`) is of the type you want.
+
+### Deprecations
+
+- `getLiteral` and `getAllLiterals` have been superseded by their respective type-specific methods (`getString`, `getInteger`, etc.), and are therefore now deprecated - they will be removed in a future major version.
+
+## [1.3.2] - 2019-10-02
+
 ### Bugfixes
 
 - Saving an existing Document did not work due to [a bug in rdflib](https://github.com/linkeddata/rdflib.js/issues/359). Pending a fix upstream, Tripledoc will temporarily include an older version of rdflib.
