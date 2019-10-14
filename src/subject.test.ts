@@ -15,18 +15,18 @@ const mockSubjectWithTwoNodes = 'https://subject6.com/';
 const mockSubjectWithDateLiteral = 'https://subject7.com/';
 const mockSubjectWithIntegerLiteral = 'https://subject8.com/';
 const mockSubjectWithDecimalLiteral = 'https://subject9.com/';
+const mockSubjectWithDifferentTypesOfLiterals = 'https://subject10.com/';
 const mockTypedSubject = 'https://subject7.com/';
 const mockEmptySubject = 'https://empty-subject.com/';
 const mockPredicate = 'https://mock-predicate.com/';
 const mockObjectNode = 'https://mock-object.com/';
 const mockObjectNode2 = 'https://mock-object-2.com/';
-const mockDataType = sym('https://data.type/');
 const mockLiteralValue = 'Arbitrary literal value';
-const mockObjectLiteral = lit(mockLiteralValue, 'en', mockDataType);
+const mockObjectLiteral = lit(mockLiteralValue, null as any, null as any);
 const mockLiteralValue2 = 'Another arbitrary literal value';
-const mockObjectLiteral2 = lit(mockLiteralValue2, 'en', mockDataType);
-const mockLiteralDate = new Date(0);
-const mockObjectDateLiteral = Literal.fromDate(mockLiteralDate);
+const mockObjectLiteral2 = lit(mockLiteralValue2, undefined as any, undefined as any);
+const mockLiteralDateTime = new Date(0);
+const mockObjectDateTimeLiteral = Literal.fromDate(mockLiteralDateTime);
 const mockLiteralInteger = 1337;
 const mockObjectIntegerLiteral = Literal.fromNumber(mockLiteralInteger);
 const mockLiteralDecimal = 4.2;
@@ -46,9 +46,14 @@ const mockStatements = [
   st(sym(mockSubjectWithTwoNodes), sym(mockPredicate), sym(mockObjectNode2), sym(mockDocument)),
   st(sym(mockSubjectWithTwoNodes), sym(mockPredicate), mockObjectLiteral, sym(mockDocument)),
   st(sym(mockTypedSubject), sym(rdf.type), sym(mockTypeObject), sym(mockDocument)),
-  st(sym(mockSubjectWithDateLiteral), sym(mockPredicate), mockObjectDateLiteral, sym(mockDocument)),
+  st(sym(mockSubjectWithDateLiteral), sym(mockPredicate), mockObjectDateTimeLiteral, sym(mockDocument)),
   st(sym(mockSubjectWithDecimalLiteral), sym(mockPredicate), mockObjectDecimalLiteral, sym(mockDocument)),
   st(sym(mockSubjectWithIntegerLiteral), sym(mockPredicate), mockObjectIntegerLiteral, sym(mockDocument)),
+  st(sym(mockSubjectWithDifferentTypesOfLiterals), sym(mockPredicate), mockObjectLiteral, sym(mockDocument)),
+  st(sym(mockSubjectWithDifferentTypesOfLiterals), sym(mockPredicate), mockObjectLiteral2, sym(mockDocument)),
+  st(sym(mockSubjectWithDifferentTypesOfLiterals), sym(mockPredicate), mockObjectDateTimeLiteral, sym(mockDocument)),
+  st(sym(mockSubjectWithDifferentTypesOfLiterals), sym(mockPredicate), mockObjectDecimalLiteral, sym(mockDocument)),
+  st(sym(mockSubjectWithDifferentTypesOfLiterals), sym(mockPredicate), mockObjectIntegerLiteral, sym(mockDocument)),
 ];
 const store = graph();
 store.addAll(mockStatements);
@@ -115,7 +120,7 @@ describe('getLiteral', () => {
     const subject = initialiseSubject(mockTripleDocument, mockSubjectWithDateLiteral);
     expect(subject.getLiteral(mockPredicate)).toBeInstanceOf(Date);
     expect((subject.getLiteral(mockPredicate) as Date).getTime())
-      .toEqual(mockLiteralDate.getTime());
+      .toEqual(mockLiteralDateTime.getTime());
   });
 
   it('should return null if a Node is found instead of a Literal', () => {
@@ -151,6 +156,166 @@ describe('getLiteral', () => {
     const subject = initialiseSubject(mockTripleDocument, mockSubjectWithTwoLiterals);
     expect(subject.getLiteral(mockPredicate))
       .toBe(mockLiteralValue);
+  });
+});
+
+describe('getString', () => {
+  it('should return a found string Literal', () => {
+    const mockTripleDocument = getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithDifferentTypesOfLiterals);
+    expect(subject.getString(mockPredicate))
+      .toBe(mockLiteralValue);
+  });
+
+
+  it('should return null if a Node is found instead of a string Literal', () => {
+    const mockTripleDocument = getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithNode);
+    expect(subject.getString(mockPredicate))
+      .toBeNull();
+  });
+
+  it('should return null if a non-string Literal is found', () => {
+    const mockTripleDocument = getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithDateLiteral);
+    expect(subject.getString(mockPredicate))
+      .toBeNull();
+  });
+});
+
+describe('getInteger', () => {
+  it('should return a found integer Literal', () => {
+    const mockTripleDocument = getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithDifferentTypesOfLiterals);
+    expect(subject.getInteger(mockPredicate))
+      .toBe(mockLiteralInteger);
+  });
+
+
+  it('should return null if a Node is found instead of a integer Literal', () => {
+    const mockTripleDocument = getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithNode);
+    expect(subject.getInteger(mockPredicate))
+      .toBeNull();
+  });
+
+  it('should return null if a non-integer Literal is found', () => {
+    const mockTripleDocument = getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithDateLiteral);
+    expect(subject.getString(mockPredicate))
+      .toBeNull();
+  });
+});
+
+describe('getDecimal', () => {
+  it('should return a found decimal Literal', () => {
+    const mockTripleDocument = getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithDifferentTypesOfLiterals);
+    expect(subject.getDecimal(mockPredicate))
+      .toBe(mockLiteralDecimal);
+  });
+
+
+  it('should return null if a Node is found instead of a decimal Literal', () => {
+    const mockTripleDocument = getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithNode);
+    expect(subject.getDecimal(mockPredicate))
+      .toBeNull();
+  });
+
+  it('should return null if a non-decimal Literal is found', () => {
+    const mockTripleDocument = getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithDateLiteral);
+    expect(subject.getDecimal(mockPredicate))
+      .toBeNull();
+  });
+});
+
+describe('getDate', () => {
+  it('should return a found Date Literal', () => {
+    const mockTripleDocument = getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithDifferentTypesOfLiterals);
+    expect(subject.getDateTime(mockPredicate))
+      .toEqual(mockLiteralDateTime);
+  });
+
+
+  it('should return null if a Node is found instead of a Date Literal', () => {
+    const mockTripleDocument = getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithNode);
+    expect(subject.getDateTime(mockPredicate))
+      .toBeNull();
+  });
+
+  it('should return null if a non-Date Literal is found', () => {
+    const mockTripleDocument = getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithDecimalLiteral);
+    expect(subject.getDateTime(mockPredicate))
+      .toBeNull();
+  });
+});
+
+describe('getAllStrings', () => {
+  it('should only return string Literals', () => {
+    const mockTripleDocument = getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithDifferentTypesOfLiterals);
+    expect(subject.getAllStrings(mockPredicate))
+      .toEqual([mockLiteralValue, mockLiteralValue2]);
+  });
+
+  it('should return an empty array if nothing is found', () => {
+    const mockTripleDocument = getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockEmptySubject);
+    expect(subject.getAllStrings(mockPredicate))
+      .toEqual([]);
+  });
+});
+
+describe('getAllIntegers', () => {
+  it('should only return integer Literals', () => {
+    const mockTripleDocument = getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithDifferentTypesOfLiterals);
+    expect(subject.getAllIntegers(mockPredicate))
+      .toEqual([mockLiteralInteger]);
+  });
+
+  it('should return an empty array if nothing is found', () => {
+    const mockTripleDocument = getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockEmptySubject);
+    expect(subject.getAllIntegers(mockPredicate))
+      .toEqual([]);
+  });
+});
+
+describe('getAllDecimals', () => {
+  it('should only return decimal Literals', () => {
+    const mockTripleDocument = getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithDifferentTypesOfLiterals);
+    expect(subject.getAllDecimals(mockPredicate))
+      .toEqual([mockLiteralDecimal]);
+  });
+
+  it('should return an empty array if nothing is found', () => {
+    const mockTripleDocument = getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockEmptySubject);
+    expect(subject.getAllDecimals(mockPredicate))
+      .toEqual([]);
+  });
+});
+
+describe('getAllDateTimes', () => {
+  it('should only return DateTime Literals', () => {
+    const mockTripleDocument = getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithDifferentTypesOfLiterals);
+    expect(subject.getAllDateTimes(mockPredicate))
+      .toEqual([mockLiteralDateTime]);
+  });
+
+  it('should return an empty array if nothing is found', () => {
+    const mockTripleDocument = getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockEmptySubject);
+    expect(subject.getAllDateTimes(mockPredicate))
+      .toEqual([]);
   });
 });
 
@@ -340,14 +505,14 @@ describe('removeLiteral', () => {
   it('should properly remove a Date, if given', () => {
     const mockTripleDocument = getMockTripleDocument();
     const subject = initialiseSubject(mockTripleDocument, mockSubjectWithDateLiteral);
-    subject.removeLiteral(mockPredicate, mockLiteralDate);
+    subject.removeLiteral(mockPredicate, mockLiteralDateTime);
     const [pendingDeletions, pendingAdditions] = subject.getPendingStatements();
     expect(pendingAdditions).toEqual([]);
     expect(pendingDeletions.length).toBe(1);
     expect(pendingDeletions[0].object.termType).toBe('Literal');
     expect((pendingDeletions[0].object as Literal).datatype.uri)
       .toBe('http://www.w3.org/2001/XMLSchema#dateTime');
-    expect(pendingDeletions[0].object.value).toBe(Literal.fromDate(mockLiteralDate).value);
+    expect(pendingDeletions[0].object.value).toBe(Literal.fromDate(mockLiteralDateTime).value);
   });
 });
 
