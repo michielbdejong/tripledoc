@@ -25,6 +25,9 @@ export function isLiteral<T>(param: T | Literal): param is Literal {
     (typeof (param as Literal).termType === 'string') &&
     (param as Literal).termType === 'Literal';
 }
+/**
+ * @ignore This is an internal TripleDoc data type that should not be exposed to library consumers.
+ */
 export interface StringLiteral extends Literal {
   datatype: NamedNode & { uri: 'http://www.w3.org/2001/XMLSchema#string' };
 }
@@ -37,6 +40,9 @@ export interface StringLiteral extends Literal {
 export function isStringLiteral<T>(param: T | Literal): param is StringLiteral {
   return isLiteral(param) && param.datatype.uri === 'http://www.w3.org/2001/XMLSchema#string';
 }
+/**
+ * @ignore This is an internal TripleDoc data type that should not be exposed to library consumers.
+ */
 export interface IntegerLiteral extends Literal {
   datatype: NamedNode & { uri: 'http://www.w3.org/2001/XMLSchema#integer' };
 }
@@ -49,6 +55,9 @@ export interface IntegerLiteral extends Literal {
 export function isIntegerLiteral<T>(param: T | Literal): param is IntegerLiteral {
   return isLiteral(param) && param.datatype.uri === 'http://www.w3.org/2001/XMLSchema#integer';
 }
+/**
+ * @ignore This is an internal TripleDoc data type that should not be exposed to library consumers.
+ */
 export interface DecimalLiteral extends Literal {
   datatype: NamedNode & { uri: 'http://www.w3.org/2001/XMLSchema#decimal' };
 }
@@ -61,6 +70,9 @@ export interface DecimalLiteral extends Literal {
 export function isDecimalLiteral<T>(param: T | Literal): param is DecimalLiteral {
   return isLiteral(param) && param.datatype.uri === 'http://www.w3.org/2001/XMLSchema#decimal';
 }
+/**
+ * @ignore This is an internal TripleDoc data type that should not be exposed to library consumers.
+ */
 export interface DateTimeLiteral extends Literal {
   datatype: NamedNode & { uri: 'http://www.w3.org/2001/XMLSchema#dateTime' };
 }
