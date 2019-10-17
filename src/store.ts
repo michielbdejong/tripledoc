@@ -1,6 +1,6 @@
 import { graph, Fetcher, UpdateManager, Statement } from 'rdflib';
 
-const store = graph();
+let store = graph();
 const fetcher = new Fetcher(store, undefined);
 const updater = new UpdateManager(store);
 
@@ -15,6 +15,9 @@ export function getStore() {
   return store;
 }
 
+export function flushStore() {
+  store = graph();
+}
 /**
  * Single instance of an rdflib fetcher
  *
