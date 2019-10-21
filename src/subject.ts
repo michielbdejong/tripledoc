@@ -14,7 +14,7 @@ import {
   StringLiteral,
 } from './index';
 import { getStore } from './store';
-import { findObjectsInStore } from './getEntities';
+import { findObjectsInStatements, findMatchingStatements } from './getEntities';
 import { TripleDocument } from './document';
 import { rdf } from 'rdf-namespaces';
 
@@ -173,11 +173,6 @@ export interface TripleSubject {
    */
   getPendingStatements: () => [Statement[], Statement[]];
   /**
-   * @ignore `onSave` should only be called by the Document that is responsible for saving this
-   *         Subject, so it's not part of the public API and can break in a minor release.
-   */
-  onSave: () => void;
-  /**
    * Get the IRI of the Node representing this specific Subject.
    *
    * @returns The IRI of this specific Subject.
@@ -191,11 +186,11 @@ export interface TripleSubject {
  * @param subjectRef The URL that identifies this subject.
  */
 export function initialiseSubject(document: TripleDocument, subjectRef: NodeRef): TripleSubject {
-  const store = getStore();
+  const statements = findMatchingStatements(document.getStatements(), subjectRef, null, null, document.asNodeRef());
   let pendingAdditions: Statement[] = [];
   let pendingDeletions: Statement[] = [];
 
-  const get = (predicateNode: NodeRef) => findObjectsInStore(store, subjectRef, predicateNode, document.asNodeRef());
+  const get = (predicateNode: NodeRef) => findObjectsInStatements(statements, subjectRef, predicateNode, document.asNodeRef());
   const getString = (predicateNode: NodeRef) => {
     const objects = get(predicateNode);
     const firstStringLiteral = objects.find(isStringLiteral);
@@ -289,12 +284,12 @@ export function initialiseSubject(document: TripleDocument, subjectRef: NodeRef)
     pendingAdditions.push(st(sym(subjectRef), sym(predicateRef), sym(nodeRef), sym(document.asNodeRef())));
   };
   const removeAll = (predicateRef: NodeRef) => {
-    pendingDeletions.push(...store.statementsMatching(sym(subjectRef), sym(predicateRef), null, sym(document.asNodeRef())));
+    pendingDeletions.push(...findMatchingStatements(statements, subjectRef, predicateRef, null, document.asNodeRef()));
   }
 
   const subject: TripleSubject = {
     getDocument: () => document,
-    getStatements: () => store.statementsMatching(sym(subjectRef), null, null, sym(document.asNodeRef())),
+    getStatements: () => statements,
     getString: getString,
     getInteger: getInteger,
     getDecimal: getDecimal,
@@ -326,10 +321,6 @@ export function initialiseSubject(document: TripleDocument, subjectRef: NodeRef)
       addNodeRef(predicateRef, nodeRef);
     },
     getPendingStatements: () => [pendingDeletions, pendingAdditions],
-    onSave: () => {
-      pendingDeletions = [];
-      pendingAdditions = [];
-    },
     asNodeRef: () => subjectRef,
   };
 

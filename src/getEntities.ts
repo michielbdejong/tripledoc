@@ -1,11 +1,11 @@
-import { IndexedFormula, Node, sym, Literal, NamedNode } from 'rdflib';
+import { IndexedFormula, Node, sym, Literal, NamedNode, Statement } from 'rdflib';
 import { NodeRef, isLiteral } from './index';
 
 /**
  * @ignore This is a utility type for other parts of the code, and not part of the public API.
  */
-export type FindEntityInStore = (
-  store: IndexedFormula,
+export type FindEntityInStatements = (
+  statements: Statement[],
   knownEntity1: NodeRef,
   knownEntity2: NodeRef,
   document: NodeRef
@@ -13,8 +13,8 @@ export type FindEntityInStore = (
 /**
  * @ignore This is a utility type for other parts of the code, and not part of the public API.
  */
-export type FindEntitiesInStore = (
-  store: IndexedFormula,
+export type FindEntitiesInStatements = (
+  statements: Statement[],
   knownEntity1: NodeRef,
   knownEntity2: NodeRef,
   document: NodeRef
@@ -23,81 +23,121 @@ export type FindEntitiesInStore = (
 /**
  * @ignore This is a utility method for other parts of the code, and not part of the public API.
  */
-export const findSubjectInStore: FindEntityInStore = (store, predicateRef, objectRef, documentNode) => {
-  return findEntityInStore(store, 'subject', null, predicateRef, objectRef, documentNode);
+export const findSubjectInStatements: FindEntityInStatements = (statements, predicateRef, objectRef, documentNode) => {
+  return findEntityInStatements(statements, 'subject', null, predicateRef, objectRef, documentNode);
 }
 /**
  * @ignore This is a utility method for other parts of the code, and not part of the public API.
  */
-export const findSubjectsInStore: FindEntitiesInStore = (store, predicateRef, objectRef, documentNode) => {
-  return findEntitiesInStore(store, 'subject', null, predicateRef, objectRef, documentNode);
-}
-
-/**
- * @ignore This is a utility method for other parts of the code, and not part of the public API.
- */
-export const findPredicateInStore: FindEntityInStore = (store, subjectRef, objectRef, documentNode) => {
-  return findEntityInStore(store, 'predicate', subjectRef, null, objectRef, documentNode);
-}
-/**
- * @ignore This is a utility method for other parts of the code, and not part of the public API.
- */
-export const findPredicatesInStore: FindEntitiesInStore = (store, subjectRef, objectRef, documentNode) => {
-  return findEntitiesInStore(store, 'predicate', subjectRef, null, objectRef, documentNode);
+export const findSubjectsInStatements: FindEntitiesInStatements = (statements, predicateRef, objectRef, documentNode) => {
+  return findEntitiesInStatements(statements, 'subject', null, predicateRef, objectRef, documentNode);
 }
 
 /**
  * @ignore This is a utility method for other parts of the code, and not part of the public API.
  */
-export const findObjectInStore: FindEntityInStore = (store, subjectRef, predicateRef, documentNode) => {
-  return findEntityInStore(store, 'object', subjectRef, predicateRef, null, documentNode);
+export const findPredicateInStatements: FindEntityInStatements = (statements, subjectRef, objectRef, documentNode) => {
+  return findEntityInStatements(statements, 'predicate', subjectRef, null, objectRef, documentNode);
 }
 /**
  * @ignore This is a utility method for other parts of the code, and not part of the public API.
  */
-export const findObjectsInStore: FindEntitiesInStore = (store, subjectRef, predicateRef, documentNode) => {
-  return findEntitiesInStore(store, 'object', subjectRef, predicateRef, null, documentNode);
+export const findPredicatesInStatements: FindEntitiesInStatements = (statements, subjectRef, objectRef, documentNode) => {
+  return findEntitiesInStatements(statements, 'predicate', subjectRef, null, objectRef, documentNode);
 }
 
 /**
  * @ignore This is a utility method for other parts of the code, and not part of the public API.
  */
-export function findEntityInStore(
-  store: IndexedFormula,
+export const findObjectInStatements: FindEntityInStatements = (statements, subjectRef, predicateRef, documentNode) => {
+  return findEntityInStatements(statements, 'object', subjectRef, predicateRef, null, documentNode);
+}
+/**
+ * @ignore This is a utility method for other parts of the code, and not part of the public API.
+ */
+export const findObjectsInStatements: FindEntitiesInStatements = (statements, subjectRef, predicateRef, documentNode) => {
+  return findEntitiesInStatements(statements, 'object', subjectRef, predicateRef, null, documentNode);
+}
+
+/**
+ * @ignore This is a utility method for other parts of the code, and not part of the public API.
+ */
+export function findEntityInStatements(
+  statements: Statement[],
   type: 'subject' | 'predicate' | 'object',
   subjectRef: null | NodeRef,
   predicateRef: null | NodeRef,
   objectRef: null | NodeRef,
   documentNode: NodeRef,
 ): NodeRef | Literal | null {
-  const targetSubject = subjectRef ? sym(subjectRef) : null;
-  const targetPredicate = predicateRef ? sym(predicateRef) : null;
-  const targetObject = objectRef ? sym(objectRef) : null;
-  const targetDocument = sym(documentNode);
-  const [ statement ] = store.statementsMatching(targetSubject, targetPredicate, targetObject, targetDocument, true);
-  if (!statement || !statement[type]) {
-    return null;
-  }
-  return normaliseEntity(statement[type]);
+  const foundStatement = statements.find((statement) => {
+    return (
+      typeof statement[type] !== 'undefined' &&
+      statementMatches(statement, subjectRef, predicateRef, objectRef, documentNode)
+    );
+  });
+
+  return (typeof foundStatement !== 'undefined') ? normaliseEntity(foundStatement[type]) : null;
 }
 
 /**
  * @ignore This is a utility method for other parts of the code, and not part of the public API.
  */
-export function findEntitiesInStore(
-  store: IndexedFormula,
+export function findEntitiesInStatements(
+  statements: Statement[],
   type: 'subject' | 'predicate' | 'object',
   subjectRef: null | NodeRef,
   predicateRef: null | NodeRef,
   objectRef: null | NodeRef,
   documentNode: NodeRef,
 ): Array<NodeRef | Literal> {
+  const foundStatements = statements.filter((statement) => {
+    return (
+      typeof statement[type] !== 'undefined' &&
+      statementMatches(statement, subjectRef, predicateRef, objectRef, documentNode)
+    );
+  });
+  return foundStatements.map(statement => normaliseEntity(statement[type])).filter(isEntity);
+}
+
+/**
+ * @ignore This is a utility method for other parts of the code, and not part of the public API.
+ */
+export function findMatchingStatements(
+  statements: Statement[],
+  subjectRef: null | NodeRef,
+  predicateRef: null | NodeRef,
+  objectRef: null | NodeRef,
+  documentNode: NodeRef,
+): Array<Statement> {
+  const foundStatements = statements.filter((statement) => {
+    return statementMatches(statement, subjectRef, predicateRef, objectRef, documentNode);
+  });
+  return foundStatements;
+}
+
+function statementMatches(
+  statement: Statement,
+  subjectRef: null | NodeRef,
+  predicateRef: null | NodeRef,
+  objectRef: null | NodeRef,
+  documentNode: NodeRef,
+): boolean {
   const targetSubject = subjectRef ? sym(subjectRef) : null;
   const targetPredicate = predicateRef ? sym(predicateRef) : null;
   const targetObject = objectRef ? sym(objectRef) : null;
   const targetDocument = sym(documentNode);
-  const statements = store.statementsMatching(targetSubject, targetPredicate, targetObject, targetDocument, false);
-  return statements.map(statement => normaliseEntity(statement[type])).filter(isEntity);
+
+  return (
+    (targetSubject === null || statement.subject.sameTerm(targetSubject)) &&
+    (targetPredicate === null || statement.predicate.sameTerm(targetPredicate)) &&
+    (targetObject === null || statement.object.sameTerm(targetObject)) &&
+    (targetDocument === null || (
+      typeof statement.why !== 'undefined' &&
+      isNamedNode(statement.why as Node) &&
+      (statement.why as Node).sameTerm(targetDocument)
+    ))
+  );
 }
 
 function normaliseEntity(entity: Node): NodeRef | Literal | null {

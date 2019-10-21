@@ -1,8 +1,8 @@
-import { Statement } from 'rdflib';
+import { Statement, sym } from 'rdflib';
 import LinkHeader from 'http-link-header';
 import { rdf } from 'rdf-namespaces';
-import { getFetcher, getStore, getUpdater, update, create } from './store';
-import { findSubjectInStore, FindEntityInStore, FindEntitiesInStore, findSubjectsInStore } from './getEntities';
+import { getFetcher, getStore, update, create } from './store';
+import { findSubjectInStatements, FindEntityInStatements, FindEntitiesInStatements, findSubjectsInStatements } from './getEntities';
 import { TripleSubject, initialiseSubject } from './subject';
 import { NodeRef, isLiteral, isNodeRef } from '.';
 
@@ -78,9 +78,20 @@ export interface TripleDocument {
    *
    * @param save.subjects Optional array of specific Subjects within this Document that should be
    *                      written to the Pod, i.e. excluding Subjects not in this array.
-   * @return The Subjects that were persisted.
+   * @return The updated Document with persisted Subjects.
    */
-  save: (subjects?: TripleSubject[]) => Promise<TripleSubject[]>;
+  save: (subjects?: TripleSubject[]) => Promise<TripleDocument>;
+  /**
+   * @deprecated
+   * @ignore This is mostly a convenience function to make it easy to work with rdflib and tripledoc
+   *         simultaneously. If you rely on this, it's probably best to either file an issue
+   *         describing what you want to do that Tripledoc can't do directly, or to just use rdflib
+   *         directly.
+   * @returns The Statements pertaining to this Document that are stored on the user's Pod. Note that
+   *          this does not return Statements that have not been saved yet - those can be retrieved
+   *          from the respective [[TripleSubject]]s.
+   */
+  getStatements: () => Statement[];
 };
 
 /**
@@ -134,6 +145,7 @@ function instantiateDocument(uri: NodeRef, metadata: DocumentMetadata): TripleDo
   const docUrl = new URL(uri);
   // Remove fragment identifiers (e.g. `#me`) from the URI:
   const documentRef: NodeRef = docUrl.origin + docUrl.pathname + docUrl.search;
+  const statements: Statement[] = getStore().statementsMatching(null, null, null, sym(documentRef));
 
   const getAclRef: () => NodeRef | null = () => {
     return metadata.aclRef || null;
@@ -148,7 +160,7 @@ function instantiateDocument(uri: NodeRef, metadata: DocumentMetadata): TripleDo
   };
 
   const findSubject = (predicateRef: NodeRef, objectRef: NodeRef) => {
-    const findSubjectRef = withDocumentSingular(findSubjectInStore, documentRef);
+    const findSubjectRef = withDocumentSingular(findSubjectInStatements, documentRef, statements);
     const subjectRef = findSubjectRef(predicateRef, objectRef);
     if (!subjectRef || isLiteral(subjectRef)) {
       return null;
@@ -157,7 +169,7 @@ function instantiateDocument(uri: NodeRef, metadata: DocumentMetadata): TripleDo
   };
 
   const findSubjects = (predicateRef: NodeRef, objectRef: NodeRef) => {
-    const findSubjectRefs = withDocumentPlural(findSubjectsInStore, documentRef);
+    const findSubjectRefs = withDocumentPlural(findSubjectsInStatements, documentRef, statements);
     const subjectRefs = findSubjectRefs(predicateRef, objectRef);
     return subjectRefs.filter(isNodeRef).map(getSubject);
   };
@@ -198,9 +210,11 @@ function instantiateDocument(uri: NodeRef, metadata: DocumentMetadata): TripleDo
       await update(allDeletions, allAdditions);
     }
 
-    relevantSubjects.forEach(subject => subject.onSave());
-    return relevantSubjects;
+    // Instantiate a new TripleDocument that includes the updated Statements:
+    return instantiateDocument(documentRef, metadata);
   };
+
+  const getStatements = () => statements;
 
   const tripleDocument: TripleDocument = {
     addSubject: addSubject,
@@ -212,19 +226,26 @@ function instantiateDocument(uri: NodeRef, metadata: DocumentMetadata): TripleDo
     getAclRef: getAclRef,
     asNodeRef: () => documentRef,
     save: save,
+    getStatements: getStatements,
   };
   return tripleDocument;
 }
 
-const withDocumentSingular = (getEntityFromStore: FindEntityInStore, document: NodeRef) => {
-  const store = getStore();
+const withDocumentSingular = (
+  getEntityFromStatements: FindEntityInStatements,
+  document: NodeRef,
+  statements: Statement[],
+) => {
   return (knownEntity1: NodeRef, knownEntity2: NodeRef) =>
-    getEntityFromStore(store, knownEntity1, knownEntity2, document);
+    getEntityFromStatements(statements, knownEntity1, knownEntity2, document);
 };
-const withDocumentPlural = (getEntitiesFromStore: FindEntitiesInStore, document: NodeRef) => {
-  const store = getStore();
+const withDocumentPlural = (
+  getEntitiesFromStatements: FindEntitiesInStatements,
+  document: NodeRef,
+  statements: Statement[],
+) => {
   return (knownEntity1: NodeRef, knownEntity2: NodeRef) =>
-    getEntitiesFromStore(store, knownEntity1, knownEntity2, document);
+    getEntitiesFromStatements(statements, knownEntity1, knownEntity2, document);
 };
 
 /**

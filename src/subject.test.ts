@@ -629,18 +629,3 @@ describe('removeAll', () => {
     ]);
   });
 });
-
-describe('The callback handler for when the Document saves this Subject', () => {
-  it('should clear pending Statements', () => {
-    const mockTripleDocument = getMockTripleDocument();
-    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithNode);
-    subject.addLiteral(mockPredicate, 'Some literal value');
-    subject.addNodeRef(mockPredicate, mockObjectNode2);
-    const [_pendingDeletions, pendingAdditions] = subject.getPendingStatements();
-    expect(pendingAdditions.length).toBe(2);
-    subject.onSave();
-
-    const [_pendingDeletionsAfterSave, pendingAdditionsAfterSave] = subject.getPendingStatements();
-    expect(pendingAdditionsAfterSave.length).toBe(0);
-  });
-});
