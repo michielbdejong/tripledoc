@@ -21,7 +21,7 @@ import { foaf } from 'rdf-namespaces';
 fetchDocument('https://www.w3.org/People/Berners-Lee/card')
 .then(profileDoc => {
   const profile = profileDoc.getSubject('https://www.w3.org/People/Berners-Lee/card#i');
-  const name = profile.getLiteral(foaf.name);
+  const name = profile.getString(foaf.name);
   console.log('The name in this profile is:', name);
 
   profile.addNodeRef(foaf.knows, 'https://vincentt.inrupt.net/profile/card#me');
