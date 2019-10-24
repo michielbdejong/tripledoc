@@ -1,6 +1,9 @@
-import { graph, st, sym, Statement, BlankNode } from 'rdflib';
 import { rdf, schema } from 'rdf-namespaces';
+import { DataFactory, Quad } from 'n3';
 import { createDocument, fetchDocument } from './document';
+import { triplesToTurtle } from './turtle';
+
+const { namedNode, quad, blankNode } = DataFactory;
 
 const mockDocument = 'https://document.com/';
 const mockSubject = 'https://subject1.com/';
@@ -12,44 +15,44 @@ const mockUnusedPredicate = 'https://mock-unused-predicate.com/';
 const mockObject= 'https://mock-object.com/';
 const mockBlankNode = 'arbitrary-blank-node';
 const mockUnusedObject= 'https://mock-unused-object.com/';
-const mockStatements = [
-  st(sym(mockSubjectOfTypeMovie1), sym(rdf.type), sym(schema.Movie), sym(mockDocument)),
-  st(sym(mockSubjectOfTypeMovie2), sym(rdf.type), sym(schema.Movie), sym(mockDocument)),
-  st(sym(mockSubject), sym(mockPredicate), sym(mockObject), sym(mockDocument)),
-  st(sym(mockSubject2), sym(mockPredicate), sym(mockObject), sym(mockDocument)),
-  st(new BlankNode(mockBlankNode), sym(mockPredicate), sym(mockObject), sym(mockDocument)),
+const mockTriples = [
+  quad(namedNode(mockSubjectOfTypeMovie1), namedNode(rdf.type), namedNode(schema.Movie), namedNode(mockDocument)),
+  quad(namedNode(mockSubjectOfTypeMovie2), namedNode(rdf.type), namedNode(schema.Movie), namedNode(mockDocument)),
+  quad(namedNode(mockSubject), namedNode(mockPredicate), namedNode(mockObject), namedNode(mockDocument)),
+  quad(namedNode(mockSubject2), namedNode(mockPredicate), namedNode(mockObject), namedNode(mockDocument)),
+  quad(blankNode(mockBlankNode), namedNode(mockPredicate), namedNode(mockObject), namedNode(mockDocument)),
 ];
-const store = graph();
-store.addAll(mockStatements);
+const turtle = triplesToTurtle(mockTriples);
 let mockUpdater: jest.Mock;
 let mockCreater: jest.Mock;
-let mockFetchLoad: jest.Mock;
+let mockGetter: jest.Mock;
+let mockHeaders = {
+  get: jest.fn(),
+};
 jest.mock('./store', () => {
   mockUpdater = jest.fn(() => Promise.resolve());
   mockCreater = jest.fn(() => Promise.resolve({
-    headers: new Headers(),
+    headers: mockHeaders,
   }));
-  mockFetchLoad = jest.fn(() => Promise.resolve({
-    headers: new Headers()
+  mockGetter = jest.fn(() => Promise.resolve({
+    headers: mockHeaders,
+    text: jest.fn(() => Promise.resolve(turtle)),
   }));
   return {
-    getStore: () => store,
-    getFetcher: () => ({
-      load: mockFetchLoad,
-    }),
+    get: mockGetter,
     update: mockUpdater,
     create: mockCreater,
   }
 });
 
-function getMockTripleDocument() {
-  const mockTripleDocument = createDocument(mockDocument);
+async function getMockTripleDocument() {
+  const mockTripleDocument = await fetchDocument(mockDocument);
   return mockTripleDocument;
 }
 
 describe('getSubject', () => {
-  it('should not re-initialise Subjects every time they are accessed', () => {
-    const mockTripleDocument = getMockTripleDocument();
+  it('should not re-initialise Subjects every time they are accessed', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
     const firstAccessed = mockTripleDocument.getSubject(mockSubjectOfTypeMovie1);
     const secondAccessed = mockTripleDocument.getSubject(mockSubjectOfTypeMovie1);
     expect(firstAccessed).toEqual(secondAccessed);
@@ -57,8 +60,8 @@ describe('getSubject', () => {
 });
 
 describe('getSubjectsOfType', () => {
-  it('should return all Subjects that are of a specific type', () => {
-    const mockTripleDocument = getMockTripleDocument();
+  it('should return all Subjects that are of a specific type', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
     const movies = mockTripleDocument.getSubjectsOfType(schema.Movie);
     expect(movies.map(subject => subject.asNodeRef()))
       .toEqual([mockSubjectOfTypeMovie1, mockSubjectOfTypeMovie2]);
@@ -66,71 +69,71 @@ describe('getSubjectsOfType', () => {
 });
 
 describe('findSubject', () => {
-  it('should return a single Subject that matches the given Predicate and Object', () => {
-    const mockTripleDocument = getMockTripleDocument();
+  it('should return a single Subject that matches the given Predicate and Object', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
     const foundSubject = mockTripleDocument.findSubject(mockPredicate, mockObject);
     expect(foundSubject!.asNodeRef()).toBe(mockSubject);
   });
 
-  it('should return null if no Subject matches the given Object', () => {
-    const mockTripleDocument = getMockTripleDocument();
+  it('should return null if no Subject matches the given Object', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
     const foundSubject = mockTripleDocument.findSubject(mockPredicate, mockUnusedObject);
     expect(foundSubject).toBeNull();
   });
 
-  it('should return null if no Subject matches the given Predicate', () => {
-    const mockTripleDocument = getMockTripleDocument();
+  it('should return null if no Subject matches the given Predicate', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
     const foundSubject = mockTripleDocument.findSubject(mockUnusedPredicate, mockObject);
     expect(foundSubject).toBeNull();
   });
 });
 
 describe('findSubjects', () => {
-  it('should return all Subjects that match the given Predicate and Object', () => {
-    const mockTripleDocument = getMockTripleDocument();
+  it('should return all Subjects that match the given Predicate and Object', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
     const foundSubjects = mockTripleDocument.findSubjects(mockPredicate, mockObject);
     const foundRefs = foundSubjects.map(subject => subject.asNodeRef());
     expect(foundRefs).toEqual([mockSubject, mockSubject2]);
   });
 
-  it('should return an empty array if no Subject matches the given Object', () => {
-    const mockTripleDocument = getMockTripleDocument();
+  it('should return an empty array if no Subject matches the given Object', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
     const foundSubjects = mockTripleDocument.findSubjects(mockPredicate, mockUnusedObject);
     expect(foundSubjects).toEqual([]);
   });
 
-  it('should return null if no Subject matches the given Predicate', () => {
-    const mockTripleDocument = getMockTripleDocument();
+  it('should return null if no Subject matches the given Predicate', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
     const foundSubjects = mockTripleDocument.findSubjects(mockUnusedPredicate, mockObject);
     expect(foundSubjects).toEqual([]);
   });
 });
 
 describe('addSubject', () => {
-  it('should generate a random identifier for a new Subject', () => {
-    const mockTripleDocument = getMockTripleDocument();
+  it('should generate a random identifier for a new Subject', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
     const newSubject = mockTripleDocument.addSubject();
     const identifier = newSubject.asNodeRef().substring(mockTripleDocument.asNodeRef().length);
     expect(identifier.charAt(0)).toBe('#');
     expect(identifier.length).toBeGreaterThan(1);
   });
 
-  it('should use a given identifier', () => {
-    const mockTripleDocument = getMockTripleDocument();
+  it('should use a given identifier', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
     const newSubject = mockTripleDocument.addSubject({ identifier: 'some-id' });
     expect(newSubject.asNodeRef()).toBe(mockTripleDocument.asNodeRef() + '#some-id');
   });
 
-  it('should use a given prefix for the identifier', () => {
-    const mockTripleDocument = getMockTripleDocument();
+  it('should use a given prefix for the identifier', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
     const newSubject = mockTripleDocument.addSubject({ identifierPrefix: 'some-prefix_' });
     const identifier = newSubject.asNodeRef().substring(mockTripleDocument.asNodeRef().length);
     expect(identifier.substring(0, '#some-prefix_'.length)).toBe('#some-prefix_');
     expect(identifier.length).toBeGreaterThan('#some-prefix_'.length);
   });
 
-  it('should use a given prefix before a given identifier', () => {
-    const mockTripleDocument = getMockTripleDocument();
+  it('should use a given prefix before a given identifier', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
     const newSubject = mockTripleDocument.addSubject({
       identifier: 'some-id',
       identifierPrefix: 'some-prefix_',
@@ -141,7 +144,7 @@ describe('addSubject', () => {
 
 describe('save', () => {
   it('should allow only saving specific subjects', async () => {
-    const mockTripleDocument = getMockTripleDocument();
+    const mockTripleDocument = await getMockTripleDocument();
     const subjectToSave = mockTripleDocument.addSubject();
     subjectToSave.addLiteral(schema.name, 'Some value to save');
     const subjectNotToSave = mockTripleDocument.addSubject();
@@ -149,11 +152,13 @@ describe('save', () => {
 
     await mockTripleDocument.save([ subjectToSave ]);
 
-    const savedStatements = mockCreater.mock.calls[0][1] as Statement[];
-    expect(savedStatements.length).toBe(1);
-    expect(savedStatements[0].subject.value).toBe(subjectToSave.asNodeRef());
-    expect(savedStatements[0].predicate.value).toBe(schema.name);
-    expect(savedStatements[0].object.value).toBe('Some value to save');
+    const deletedTriples = mockUpdater.mock.calls[0][1] as Quad[];
+    const savedTriples = mockUpdater.mock.calls[0][2] as Quad[];
+    expect(deletedTriples.length).toBe(0);
+    expect(savedTriples.length).toBe(1);
+    expect(savedTriples[0].subject.value).toBe(subjectToSave.asNodeRef());
+    expect(savedTriples[0].predicate.value).toBe(schema.name);
+    expect(savedTriples[0].object.value).toBe('Some value to save');
   });
 
   it('should call `create` when creating a new Document', async () => {
@@ -167,9 +172,9 @@ describe('save', () => {
     expect(mockUpdater.mock.calls.length).toBe(0);
     // The Document to be created is the first argument to `create`:
     expect(mockCreater.mock.calls[0][0] as string).toBe(mockDocument);
-    // The Statements to be inserted are the second argument:
-    expect((mockCreater.mock.calls[0][1] as Statement[]).length).toBe(1);
-    expect((mockCreater.mock.calls[0][1] as Statement[])[0].object.value).toBe('Some value');
+    // The Triples to be inserted are the second argument:
+    expect((mockCreater.mock.calls[0][1] as Quad[]).length).toBe(1);
+    expect((mockCreater.mock.calls[0][1] as Quad[])[0].object.value).toBe('Some value');
   });
 
   it('should return the ACL if received after creating a new Document', async () => {
@@ -178,11 +183,7 @@ describe('save', () => {
     newSubject.addLiteral(schema.name, 'Arbitrary value');
     expect(mockTripleDocument.getAclRef()).toBeNull();
 
-    mockCreater.mockReturnValueOnce(Promise.resolve({
-      headers: new Headers({
-        Link: '<https://some-acl-url.example>; rel="acl"',
-      }),
-    }));
+    mockHeaders.get.mockReturnValueOnce('<https://some-acl-url.example>; rel="acl"');
 
     await mockTripleDocument.save();
 
@@ -195,11 +196,11 @@ describe('save', () => {
     newSubject.addLiteral(schema.name, 'Arbitrary value');
     expect(mockTripleDocument.getWebSocketRef()).toBeNull();
 
-    mockCreater.mockReturnValueOnce(Promise.resolve({
-      headers: new Headers({
-        'Updates-Via': 'wss://some-websocket-url.com'
-      }),
-    }));
+    // The `Link` header is accessed first, to get the ACL Reference,
+    // then the Updates-Via header is accessed second.
+    // Better ways of mocking the latter's value specifically are welcome.
+    mockHeaders.get.mockReturnValueOnce(null);
+    mockHeaders.get.mockReturnValueOnce('wss://some-websocket-url.com');
 
     await mockTripleDocument.save();
 
@@ -215,30 +216,34 @@ describe('save', () => {
 
     expect(mockUpdater.mock.calls.length).toBe(1);
     expect(mockCreater.mock.calls.length).toBe(0);
-    // The Statements to delete are the first argument:
-    expect((mockUpdater.mock.calls[0][0] as Statement[]).length).toBe(0);
-    // The Statements to add are the second argument:
-    expect((mockUpdater.mock.calls[0][1] as Statement[]).length).toBe(1);
-    expect((mockUpdater.mock.calls[0][1] as Statement[])[0].object.value).toBe('Some value');
+    // The Document URL is the first argument
+    expect(mockUpdater.mock.calls[0][0]).toBe(mockDocument);
+    // The Triples to delete are the first argument:
+    expect((mockUpdater.mock.calls[0][1] as Quad[]).length).toBe(0);
+    // The Triples to add are the second argument:
+    expect((mockUpdater.mock.calls[0][2] as Quad[]).length).toBe(1);
+    expect((mockUpdater.mock.calls[0][2] as Quad[])[0].object.value).toBe('Some value');
   });
 });
 
 describe('removeSubject', () => {
-  it('should remove all statements related to the given subject', async () => {
+  it('should remove all Triples related to the given subject', async () => {
     const mockTripleDocument = await fetchDocument(mockDocument);
     mockTripleDocument.removeSubject(mockSubject);
 
     await mockTripleDocument.save();
 
     expect(mockUpdater.mock.calls.length).toBe(1);
-    // The Statements to delete are the first argument:
-    expect((mockUpdater.mock.calls[0][0] as Statement[]).length).toBe(1);
-    // The Statements to add are the second argument:
-    expect((mockUpdater.mock.calls[0][1] as Statement[]).length).toBe(0);
+    // The Document URL is the first argument
+    expect(mockUpdater.mock.calls[0][0]).toBe(mockDocument);
+    // The Triples to delete are the second argument:
+    expect((mockUpdater.mock.calls[0][1] as Quad[]).length).toBe(1);
+    // The Triples to add are the third argument:
+    expect((mockUpdater.mock.calls[0][2] as Quad[]).length).toBe(0);
 
-    expect((mockUpdater.mock.calls[0][0] as Statement[])[0].subject.value).toBe(mockSubject);
-    expect((mockUpdater.mock.calls[0][0] as Statement[])[0].predicate.value).toBe(mockPredicate);
-    expect((mockUpdater.mock.calls[0][0] as Statement[])[0].object.value).toBe(mockObject);
+    expect((mockUpdater.mock.calls[0][1] as Quad[])[0].subject.value).toBe(mockSubject);
+    expect((mockUpdater.mock.calls[0][1] as Quad[])[0].predicate.value).toBe(mockPredicate);
+    expect((mockUpdater.mock.calls[0][1] as Quad[])[0].object.value).toBe(mockObject);
   });
 });
 
@@ -249,32 +254,22 @@ describe('getAclRef', () => {
   });
 
   it('should return the ACL URL if one was given', async () => {
-    mockFetchLoad.mockReturnValueOnce(Promise.resolve({
-      headers: new Headers({
-        Link: '<https://mock-acl.com>; rel="acl"; title="Mock ACL", ',
-      }),
-    }));
+    mockHeaders.get.mockReturnValueOnce('<https://mock-acl.com>; rel="acl"; title="Mock ACL", ');
     const mockTripleDocument = await fetchDocument(mockDocument);
     expect(mockTripleDocument.getAclRef()).toBe('https://mock-acl.com/');
   });
 
   it('should properly resolve the ACL if its URL is relative', async () => {
-    mockFetchLoad.mockReturnValueOnce(Promise.resolve({
-      headers: new Headers({
-        Link: '<relative-path.ttl.acl>; rel="acl"; title="Mock ACL", ',
-      }),
-    }));
+    mockHeaders.get.mockReturnValueOnce('<relative-path.ttl.acl>; rel="acl"; title="Mock ACL", ');
     const mockTripleDocument = await fetchDocument('https://some-doc.example/relative-path.ttl');
     expect(mockTripleDocument.getAclRef()).toBe('https://some-doc.example/relative-path.ttl.acl');
   });
 
   it('should return null if more than one ACL was given', async () => {
-    mockFetchLoad.mockReturnValueOnce(Promise.resolve({
-      headers: new Headers({
-        Link: '<https://mock-acl.com>; rel="acl"; title="Mock ACL", ' +
-          '<https://mock-acl-2.com>; rel="acl"; title="Mock ACL 2", ',
-      }),
-    }));
+    mockHeaders.get.mockReturnValueOnce(
+      '<https://mock-acl.com>; rel="acl"; title="Mock ACL", ' +
+      '<https://mock-acl-2.com>; rel="acl"; title="Mock ACL 2", '
+    );
     const mockTripleDocument = await fetchDocument(mockDocument);
     expect(mockTripleDocument.getAclRef()).toBeNull();
   });
@@ -287,12 +282,12 @@ describe('getWebSocketRef', () => {
   });
 
   it('should return the WebSocket URL if one was given', async () => {
-    mockFetchLoad.mockReturnValueOnce(Promise.resolve({
-      headers: new Headers({
-        'Updates-Via': 'wss://some-url.com',
-      }),
-    }));
+    // The `Link` header is accessed first, to get the ACL Reference,
+    // then the Updates-Via header is accessed second.
+    // Better ways of mocking the latter's value specifically are welcome.
+    mockHeaders.get.mockReturnValueOnce(null);
+    mockHeaders.get.mockReturnValueOnce('wss://some-websocket-url.com');
     const mockTripleDocument = await fetchDocument(mockDocument);
-    expect(mockTripleDocument.getWebSocketRef()).toBe('wss://some-url.com');
+    expect(mockTripleDocument.getWebSocketRef()).toBe('wss://some-websocket-url.com');
   });
 });

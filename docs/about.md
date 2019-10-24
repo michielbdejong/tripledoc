@@ -7,7 +7,7 @@ Tripledoc originated in the quest to write documentation on how to get started w
 targeted at a regular front-end engineer without previous experience with Linked Data or RDF.
 
 It turned out that the conceptual models were hard to explain using existing libraries. Tripledoc
-is a thin wrapper around rdflib, the library we use to develop Inrupt's Solid Data Browser,
+started as a thin wrapper around rdflib, the library we use to develop Inrupt's Solid Data Browser,
 providing an interface that meshes well with the way we think about accessing Solid data.
 
 Tripledoc aims to solve the following problems:

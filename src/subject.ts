@@ -1,4 +1,4 @@
-import { Statement, Literal, st, sym, BlankNode } from 'rdflib';
+import { Literal, BlankNode, DataFactory, Quad } from 'n3';
 import {
   Reference,
   isLiteral,
@@ -14,8 +14,7 @@ import {
   StringLiteral,
   isBlankNode,
 } from './index';
-import { getStore } from './store';
-import { findObjectsInStatements, findMatchingStatements } from './getEntities';
+import { findObjectsInTriples, findMatchingTriples } from './getEntities';
 import { TripleDocument } from './document';
 import { rdf } from 'rdf-namespaces';
 
@@ -26,15 +25,15 @@ export interface TripleSubject {
   getDocument: () => TripleDocument;
   /**
    * @deprecated
-   * @ignore This is mostly a convenience function to make it easy to work with rdflib and tripledoc
+   * @ignore This is mostly a convenience function to make it easy to work with n3 and tripledoc
    *         simultaneously. If you rely on this, it's probably best to either file an issue
-   *         describing what you want to do that Tripledoc can't do directly, or to just use rdflib
+   *         describing what you want to do that Tripledoc can't do directly, or to just use n3
    *         directly.
-   * @returns The Statements pertaining to this Subject that are stored on the user's Pod. Note that
-   *          this does not return Statements that have not been saved yet - see
-   *          [[getPendingStatements]] for those.
+   * @returns The Triples pertaining to this Subject that are stored on the user's Pod. Note that
+   *          this does not return Triples that have not been saved yet - see
+   *          [[getPendingTriples]] for those.
    */
-  getStatements: () => Statement[];
+  getTriples: () => Quad[];
   /**
    * Find a literal string value for `predicate` on this Subject.
    *
@@ -242,12 +241,12 @@ export interface TripleSubject {
    */
   clear: () => void;
   /**
-   * @ignore Pending Statements are only provided so the Document can access them in order to save
+   * @ignore Pending Triples are only provided so the Document can access them in order to save
    *         them - this is not part of the public API and can thus break in a minor release.
-   * @returns A tuple with the first element being a list of Statements that should be deleted from
-   *          the store, and the second element a list of Statements that should be added to it.
+   * @returns A tuple with the first element being a list of Triples that should be deleted from
+   *          the store, and the second element a list of Triples that should be added to it.
    */
-  getPendingStatements: () => [Statement[], Statement[]];
+  getPendingTriples: () => [Quad[], Quad[]];
   /**
    * Get the IRI of the [[Reference]] representing this specific Subject.
    *
@@ -267,14 +266,14 @@ export interface TripleSubject {
  * @param subjectRef The URL that identifies this subject.
  */
 export function initialiseSubject(document: TripleDocument, subjectRef: Reference | BlankNode): TripleSubject {
-  const subjectNode = isBlankNode(subjectRef) ? subjectRef : sym(subjectRef);
-  const statements = findMatchingStatements(document.getStatements(), subjectRef, null, null, document.asRef());
-  let pendingAdditions: Statement[] = [];
-  let pendingDeletions: Statement[] = [];
+  const subjectNode = isBlankNode(subjectRef) ? subjectRef : DataFactory.namedNode(subjectRef);
+  const triples = findMatchingTriples(document.getTriples(), subjectRef, null, null, document.asRef());
+  let pendingAdditions: Quad[] = [];
+  let pendingDeletions: Quad[] = [];
 
-  const get = (predicateRef: Reference) => findObjectsInStatements(statements, subjectRef, predicateRef, document.asRef());
-  const getString = (predicateRef: Reference) => {
-    const objects = get(predicateRef);
+  const get = (predicateNode: Reference) => findObjectsInTriples(triples, subjectRef, predicateNode, document.asRef());
+  const getString = (predicateNode: Reference) => {
+    const objects = get(predicateNode);
     const firstStringLiteral = objects.find(isStringLiteral);
     if (typeof firstStringLiteral === 'undefined') {
       return null;
@@ -373,19 +372,34 @@ export function initialiseSubject(document: TripleDocument, subjectRef: Referenc
   }
 
   const addLiteral = (predicateRef: Reference, literal: LiteralTypes) => {
-    pendingAdditions.push(st(subjectNode, sym(predicateRef), asLiteral(literal), sym(document.asRef())));
+    pendingAdditions.push(DataFactory.quad(
+      subjectNode,
+      DataFactory.namedNode(predicateRef),
+      asLiteral(literal),
+      DataFactory.namedNode(document.asRef()),
+    ));
   };
-  const addRef = (predicateRef: Reference, ref: Reference) => {
-    pendingAdditions.push(st(subjectNode, sym(predicateRef), sym(ref), sym(document.asRef())));
+  const addRef = (predicateRef: Reference, nodeRef: Reference) => {
+    pendingAdditions.push(DataFactory.quad(
+      subjectNode,
+      DataFactory.namedNode(predicateRef),
+      DataFactory.namedNode(nodeRef),
+      DataFactory.namedNode(document.asRef()),
+    ));
   };
   const removeRef = (predicateRef: Reference, nodeRef: Reference) => {
-    pendingDeletions.push(st(subjectNode, sym(predicateRef), sym(nodeRef), sym(document.asRef())));
+    pendingDeletions.push(DataFactory.quad(
+      subjectNode,
+      DataFactory.namedNode(predicateRef),
+      DataFactory.namedNode(nodeRef),
+      DataFactory.namedNode(document.asRef()),
+    ));
   };
   const removeAll = (predicateRef: Reference) => {
-    pendingDeletions.push(...findMatchingStatements(statements, subjectRef, predicateRef, null, document.asRef()));
+    pendingDeletions.push(...findMatchingTriples(triples, subjectRef, predicateRef, null, document.asRef()));
   }
   const clear = () => {
-    pendingDeletions.push(...statements);
+    pendingDeletions.push(...triples);
   }
   const setRef = (predicateRef: Reference, nodeRef: Reference) => {
     removeAll(predicateRef);
@@ -396,7 +410,7 @@ export function initialiseSubject(document: TripleDocument, subjectRef: Referenc
 
   const subject: TripleSubject = {
     getDocument: () => document,
-    getStatements: () => statements,
+    getTriples: () => triples,
     getString: getString,
     getInteger: getInteger,
     getDecimal: getDecimal,
@@ -416,7 +430,12 @@ export function initialiseSubject(document: TripleDocument, subjectRef: Referenc
     addRef: addRef,
     removeAll: removeAll,
     removeLiteral: (predicateRef, literal) => {
-      pendingDeletions.push(st(subjectNode, sym(predicateRef), asLiteral(literal), sym(document.asRef())));
+      pendingDeletions.push(DataFactory.quad(
+        subjectNode,
+        DataFactory.namedNode(predicateRef),
+        asLiteral(literal), 
+        DataFactory.namedNode(document.asRef()),
+      ));
     },
     removeRef: removeRef,
     setLiteral: (predicateRef, literal) => {
@@ -425,7 +444,7 @@ export function initialiseSubject(document: TripleDocument, subjectRef: Referenc
     },
     setRef: setRef,
     clear: clear,
-    getPendingStatements: () => [pendingDeletions, pendingAdditions],
+    getPendingTriples: () => [pendingDeletions, pendingAdditions],
     asRef: asRef,
     // Deprecated aliases, included for backwards compatibility:
     getNodeRef: getRef,
@@ -479,10 +498,23 @@ function fromLiteral(literal: Literal): LiteralTypes {
 }
 function asLiteral(literal: LiteralTypes): Literal {
   if (literal instanceof Date) {
-    return Literal.fromDate(literal);
+    // To align with rdflib, we ignore miliseconds:
+    // https://github.com/linkeddata/rdflib.js/blob/d84af88f367b8b5f617c753d8241c5a2035458e8/src/literal.js#L74
+    const roundedDate = new Date(
+      Date.UTC(
+        literal.getUTCFullYear(), literal.getUTCMonth(), literal.getUTCDate(),
+        literal.getUTCHours(), literal.getUTCMinutes(), literal.getUTCSeconds(), 0,
+      ),
+    );
+    // Truncate the `.000Z` at the end (i.e. the miliseconds), to plain `Z`:
+    const rdflibStyleString = roundedDate.toISOString().replace(/\.000Z$/, 'Z');
+    return DataFactory.literal(rdflibStyleString, DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#dateTime'));
   }
-  if (typeof literal === 'number') {
-    return Literal.fromNumber(literal);
+  if (typeof literal === 'number' && Number.isInteger(literal)) {
+    return DataFactory.literal(literal, DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#integer'))
   }
-  return new Literal(literal, undefined as any, undefined as any);
+  if (typeof literal === 'number' && !Number.isInteger(literal)) {
+    return DataFactory.literal(literal, DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#decimal'))
+  }
+  return DataFactory.literal(literal);
 }
