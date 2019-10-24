@@ -4,6 +4,8 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+## [2.0.0] - 2019-10-24
+
 ### Breaking changes
 
 - A TripleDocument is no longer mutable, meaning that the values you read from it (Subjects, properties on those Subjects, …) will not change after you call `save()` on it, even if those values have been updated in the Pod. Instead, `save()` will now return a new TripleDocument that _does_ contain the updated values. This provides benefits to those wanting to access the "old" data, those who prefer working with immutable data structures, or work with a library that does, such as React.
