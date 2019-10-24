@@ -61,6 +61,7 @@ export interface TripleDocument {
    */
   getSubjectsOfType: (typeRef: NodeRef) => TripleSubject[];
   /**
+   * @ignore Experimental API, might change in the future to return an instantiated Document
    * @deprecated Replaced by [[getAclRef]]
    */
   getAcl: () => NodeRef | null;
