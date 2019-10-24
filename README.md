@@ -36,6 +36,8 @@ fetchDocument('https://www.w3.org/People/Berners-Lee/card')
 });
 ```
 
+[Full documentation](https://vincenttunru.gitlab.io/tripledoc/)
+
 # Changelog
 
 See [CHANGELOG](https://gitlab.com/vincenttunru/tripledoc/blob/master/CHANGELOG.md).
