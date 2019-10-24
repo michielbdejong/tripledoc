@@ -35,21 +35,41 @@ export interface TripleSubject {
    */
   getStatements: () => Statement[];
   /**
+   * Find a literal string value for `predicate` on this Subject.
+   *
+   * This retrieves _one_ string literal, or `null` if none is found. If you want to find _all_
+   * string literals for a predicate, see [[getAllStrings]].
+   *
    * @param getString.predicate Which property of this Subject you want the value of.
    * @returns The first literal string value satisfying `predicate`, if any, and `null` otherwise.
    */
   getString: (predicate: NodeRef) => string | null;
   /**
+   * Find a literal integer value for `predicate` on this Subject.
+   *
+   * This retrieves _one_ integer literal, or `null` if none is found. If you want to find _all_
+   * integer literals for a predicate, see [[getAllIntegers]].
+   *
    * @param getInteger.predicate Which property of this Subject you want the value of.
    * @returns The first literal integer value satisfying `predicate`, if any, and `null` otherwise.
    */
   getInteger: (predicate: NodeRef) => number | null;
   /**
+   * Find a literal decimal value for `predicate` on this Subject.
+   *
+   * This retrieves _one_ decimal literal, or `null` if none is found. If you want to find _all_
+   * decimal literals for a predicate, see [[getAllDecimals]].
+   *
    * @param getDecimal.predicate Which property of this Subject you want the value of.
    * @returns The first literal decimal value satisfying `predicate`, if any, and `null` otherwise.
    */
   getDecimal: (predicate: NodeRef) => number | null;
   /**
+   * Find a literal date+time value for `predicate` on this Subject.
+   *
+   * This retrieves _one_ date+time literal, or `null` if none is found. If you want to find _all_
+   * date+time literals for a predicate, see [[getAllDateTimes]].
+   *
    * @param getDateTime.predicate Which property of this Subject you want the value of.
    * @returns The first literal Date value satisfying `predicate`, if any, and `null` otherwise.
    */
@@ -89,6 +109,11 @@ export interface TripleSubject {
    */
   getAllLiterals: (predicate: NodeRef) => LiteralTypes[];
   /**
+   * Find a reference to a Node attached to this Subject with `predicate`.
+   *
+   * This retrieves _one_ reference to a Node, or `null` if none is found. If you want to find _all_
+   * Node references for a predicate, see [[getAllNodeRefs]].
+   *
    * @param getNodeRef.predicate Which property of this Subject you want the value of.
    * @returns The IRI of the first Node satisfying `predicate`, if any, and `null` otherwise.
    */
