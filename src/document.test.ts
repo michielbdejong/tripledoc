@@ -1,6 +1,6 @@
-import { graph, st, sym, NamedNode, Statement } from 'rdflib';
-import { createDocument, fetchDocument } from './document';
+import { graph, st, sym, Statement } from 'rdflib';
 import { rdf, schema } from 'rdf-namespaces';
+import { createDocument, fetchDocument } from './document';
 
 const mockDocument = 'https://document.com/';
 const mockSubject = 'https://subject1.com/';
@@ -138,20 +138,6 @@ describe('addSubject', () => {
 });
 
 describe('save', () => {
-  it('should save all pending statements from a given subject, and clear them when saved', async () => {
-    const mockTripleDocument = getMockTripleDocument();
-    const newSubject = mockTripleDocument.addSubject();
-    newSubject.addLiteral(schema.name, 'Some value');
-
-    const [_pendingDeletionsBeforeSave, pendingAdditionsBeforeSave] = newSubject.getPendingStatements();
-    expect(pendingAdditionsBeforeSave.length).toBe(1);
-    expect(pendingAdditionsBeforeSave[0].object.value).toBe('Some value');
-    await mockTripleDocument.save();
-
-    const [_pendingDeletionsAfterSave, pendingAdditionsAfterSave] = newSubject.getPendingStatements();
-    expect(pendingAdditionsAfterSave.length).toBe(0);
-  });
-
   it('should allow only saving specific subjects', async () => {
     const mockTripleDocument = getMockTripleDocument();
     const subjectToSave = mockTripleDocument.addSubject();
@@ -161,12 +147,11 @@ describe('save', () => {
 
     await mockTripleDocument.save([ subjectToSave ]);
 
-    const [_pendingDeletionsForSaved, pendingAdditionForSaved] = subjectToSave.getPendingStatements();
-    const [_pendingDeletionsForUnsaved, pendingAdditionForUnsaved] = subjectNotToSave.getPendingStatements();
-    expect(pendingAdditionForSaved.length).toBe(0);
-    expect(pendingAdditionForUnsaved.length).toBe(1);
     const savedStatements = mockCreater.mock.calls[0][1] as Statement[];
     expect(savedStatements.length).toBe(1);
+    expect(savedStatements[0].subject.value).toBe(subjectToSave.asNodeRef());
+    expect(savedStatements[0].predicate.value).toBe(schema.name);
+    expect(savedStatements[0].object.value).toBe('Some value to save');
   });
 
   it('should call `create` when creating a new Document', async () => {
