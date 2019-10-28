@@ -4,7 +4,7 @@ import { rdf } from 'rdf-namespaces';
 import { getFetcher, getStore, update, create } from './store';
 import { findSubjectInStatements, FindEntityInStatements, FindEntitiesInStatements, findSubjectsInStatements } from './getEntities';
 import { TripleSubject, initialiseSubject } from './subject';
-import { NodeRef, isLiteral, isNodeRef } from '.';
+import { Reference, isLiteral, isReference } from '.';
 
 /**
  * @ignore This is documented on use.
@@ -37,7 +37,7 @@ export interface TripleDocument {
    * @returns `null` if no Subject matching `predicateRef` and `objectRef` is found,
    *          a random one of the matching Subjects otherwise.
    */
-  findSubject: (predicateRef: NodeRef, objectRef: NodeRef) => TripleSubject | null;
+  findSubject: (predicateRef: Reference, objectRef: Reference) => TripleSubject | null;
   /**
    * Find Subjects which have the value of `objectRef` for the Predicate `predicateRef`.
    *
@@ -45,34 +45,39 @@ export interface TripleDocument {
    * @param findSubjects.objectRef - The Object that must match for the desired Subjects.
    * @returns An array with every matching Subject, and an empty array if none match.
    */
-  findSubjects: (predicateRef: NodeRef, objectRef: NodeRef) => TripleSubject[];
+  findSubjects: (predicateRef: Reference, objectRef: Reference) => TripleSubject[];
   /**
    * Given the IRI of a Subject, return an instantiated [[TripleSubject]] representing its values.
    *
    * @param getSubject.subjectRef IRI of the Subject to inspect.
    * @returns Instantiation of the Subject at `subjectRef`, ready for inspection.
    */
-  getSubject: (subjectRef: NodeRef) => TripleSubject;
+  getSubject: (subjectRef: Reference) => TripleSubject;
   /**
    * Get all Subjects in this Document of a given type.
    *
    * @param getSubjectsOfType.typeRef IRI of the type the desired Subjects should be of.
    * @returns All Subjects in this Document that are of the given type.
    */
-  getSubjectsOfType: (typeRef: NodeRef) => TripleSubject[];
+  getSubjectsOfType: (typeRef: Reference) => TripleSubject[];
   /**
    * @ignore Experimental API, might change in the future to return an instantiated Document
    * @deprecated Replaced by [[getAclRef]]
    */
-  getAcl: () => NodeRef | null;
+  getAcl: () => Reference | null;
   /**
    * @ignore Experimental API, might change in the future to return an instantiated Document
    */
-  getAclRef: () => NodeRef | null;
+  getAclRef: () => Reference | null;
   /**
    * @returns The IRI of this Document.
    */
-  asNodeRef: () => NodeRef;
+  asRef: () => Reference;
+  /**
+   * @ignore Deprecated.
+   * @deprecated Replaced by [[asRef]].
+   */
+  asNodeRef: () => Reference;
   /**
    * Persist Subjects in this Document to the Pod.
    *
@@ -102,7 +107,7 @@ export interface TripleDocument {
  * @param ref URL where this document should live
  * @param statements Initial statements to be included in this document
  */
-export function createDocument(ref: NodeRef): TripleDocument {
+export function createDocument(ref: Reference): TripleDocument {
   return instantiateDocument(ref, { existsOnPod: false });
 }
 
@@ -115,17 +120,17 @@ export function createDocument(ref: NodeRef): TripleDocument {
  * @param documentRef Where the document lives.
  * @returns Representation of triples in the document at `uri`.
  */
-export async function fetchDocument(documentRef: NodeRef): Promise<TripleDocument> {
+export async function fetchDocument(documentRef: Reference): Promise<TripleDocument> {
   const fetcher = getFetcher();
   const response = await fetcher.load(documentRef);
 
-  let aclRef: NodeRef | undefined = extractAclRef(response, documentRef);
+  let aclRef: Reference | undefined = extractAclRef(response, documentRef);
 
   return instantiateDocument(documentRef, { aclRef: aclRef, existsOnPod: true });
 }
 
-function extractAclRef(response: Response, documentRef: NodeRef) {
-  let aclRef: NodeRef | undefined;
+function extractAclRef(response: Response, documentRef: Reference) {
+  let aclRef: Reference | undefined;
   const linkHeader = response.headers.get('Link');
   if (linkHeader) {
     const parsedLinks = LinkHeader.parse(linkHeader);
@@ -138,28 +143,30 @@ function extractAclRef(response: Response, documentRef: NodeRef) {
 }
 
 interface DocumentMetadata {
-  aclRef?: NodeRef;
+  aclRef?: Reference;
   existsOnPod?: boolean;
 };
-function instantiateDocument(uri: NodeRef, metadata: DocumentMetadata): TripleDocument {
+function instantiateDocument(uri: Reference, metadata: DocumentMetadata): TripleDocument {
   const docUrl = new URL(uri);
   // Remove fragment identifiers (e.g. `#me`) from the URI:
-  const documentRef: NodeRef = docUrl.origin + docUrl.pathname + docUrl.search;
+  const documentRef: Reference = docUrl.origin + docUrl.pathname + docUrl.search;
   const statements: Statement[] = getStore().statementsMatching(null, null, null, sym(documentRef));
 
-  const getAclRef: () => NodeRef | null = () => {
+  const asRef = () => documentRef;
+
+  const getAclRef: () => Reference | null = () => {
     return metadata.aclRef || null;
   };
 
   const accessedSubjects: { [iri: string]: TripleSubject } = {};
-  const getSubject = (subjectRef: NodeRef) => {
+  const getSubject = (subjectRef: Reference) => {
     if (!accessedSubjects[subjectRef]) {
       accessedSubjects[subjectRef] = initialiseSubject(tripleDocument, subjectRef);
     }
     return accessedSubjects[subjectRef];
   };
 
-  const findSubject = (predicateRef: NodeRef, objectRef: NodeRef) => {
+  const findSubject = (predicateRef: Reference, objectRef: Reference) => {
     const findSubjectRef = withDocumentSingular(findSubjectInStatements, documentRef, statements);
     const subjectRef = findSubjectRef(predicateRef, objectRef);
     if (!subjectRef || isLiteral(subjectRef)) {
@@ -168,12 +175,12 @@ function instantiateDocument(uri: NodeRef, metadata: DocumentMetadata): TripleDo
     return getSubject(subjectRef);
   };
 
-  const findSubjects = (predicateRef: NodeRef, objectRef: NodeRef) => {
+  const findSubjects = (predicateRef: Reference, objectRef: Reference) => {
     const findSubjectRefs = withDocumentPlural(findSubjectsInStatements, documentRef, statements);
     const subjectRefs = findSubjectRefs(predicateRef, objectRef);
-    return subjectRefs.filter(isNodeRef).map(getSubject);
+    return subjectRefs.filter(isReference).map(getSubject);
   };
-  const getSubjectsOfType = (typeRef: NodeRef) => {
+  const getSubjectsOfType = (typeRef: Reference) => {
     return findSubjects(rdf.type, typeRef);
   };
 
@@ -183,12 +190,12 @@ function instantiateDocument(uri: NodeRef, metadata: DocumentMetadata): TripleDo
       identifierPrefix = '',
     }: NewSubjectOptions = {},
   ) => {
-    const subjectRef: NodeRef = documentRef + '#' + identifierPrefix + identifier;
+    const subjectRef: Reference = documentRef + '#' + identifierPrefix + identifier;
     return getSubject(subjectRef);
   };
 
   const save = async (subjects = Object.values(accessedSubjects)) => {
-    const relevantSubjects = subjects.filter(subject => subject.getDocument().asNodeRef() === documentRef);
+    const relevantSubjects = subjects.filter(subject => subject.getDocument().asRef() === documentRef);
     type UpdateStatements = [Statement[], Statement[]];
     const [allDeletions, allAdditions] = relevantSubjects.reduce<UpdateStatements>(
       ([deletionsSoFar, additionsSoFar], subject) => {
@@ -224,27 +231,29 @@ function instantiateDocument(uri: NodeRef, metadata: DocumentMetadata): TripleDo
     findSubjects: findSubjects,
     getAcl: getAclRef,
     getAclRef: getAclRef,
-    asNodeRef: () => documentRef,
+    asRef: asRef,
     save: save,
     getStatements: getStatements,
+    // Deprecated aliases, included for backwards compatibility:
+    asNodeRef: asRef,
   };
   return tripleDocument;
 }
 
 const withDocumentSingular = (
   getEntityFromStatements: FindEntityInStatements,
-  document: NodeRef,
+  document: Reference,
   statements: Statement[],
 ) => {
-  return (knownEntity1: NodeRef, knownEntity2: NodeRef) =>
+  return (knownEntity1: Reference, knownEntity2: Reference) =>
     getEntityFromStatements(statements, knownEntity1, knownEntity2, document);
 };
 const withDocumentPlural = (
   getEntitiesFromStatements: FindEntitiesInStatements,
-  document: NodeRef,
+  document: Reference,
   statements: Statement[],
 ) => {
-  return (knownEntity1: NodeRef, knownEntity2: NodeRef) =>
+  return (knownEntity1: Reference, knownEntity2: Reference) =>
     getEntitiesFromStatements(statements, knownEntity1, knownEntity2, document);
 };
 

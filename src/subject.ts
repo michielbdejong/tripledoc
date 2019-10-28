@@ -1,9 +1,9 @@
 import { Statement, Literal, st, sym } from 'rdflib';
 import {
-  NodeRef,
+  Reference,
   isLiteral,
   LiteralTypes,
-  isNodeRef,
+  isReference,
   isStringLiteral,
   isIntegerLiteral,
   isDecimalLiteral,
@@ -43,7 +43,7 @@ export interface TripleSubject {
    * @param getString.predicate Which property of this Subject you want the value of.
    * @returns The first literal string value satisfying `predicate`, if any, and `null` otherwise.
    */
-  getString: (predicate: NodeRef) => string | null;
+  getString: (predicate: Reference) => string | null;
   /**
    * Find a literal integer value for `predicate` on this Subject.
    *
@@ -53,7 +53,7 @@ export interface TripleSubject {
    * @param getInteger.predicate Which property of this Subject you want the value of.
    * @returns The first literal integer value satisfying `predicate`, if any, and `null` otherwise.
    */
-  getInteger: (predicate: NodeRef) => number | null;
+  getInteger: (predicate: Reference) => number | null;
   /**
    * Find a literal decimal value for `predicate` on this Subject.
    *
@@ -63,7 +63,7 @@ export interface TripleSubject {
    * @param getDecimal.predicate Which property of this Subject you want the value of.
    * @returns The first literal decimal value satisfying `predicate`, if any, and `null` otherwise.
    */
-  getDecimal: (predicate: NodeRef) => number | null;
+  getDecimal: (predicate: Reference) => number | null;
   /**
    * Find a literal date+time value for `predicate` on this Subject.
    *
@@ -73,60 +73,70 @@ export interface TripleSubject {
    * @param getDateTime.predicate Which property of this Subject you want the value of.
    * @returns The first literal Date value satisfying `predicate`, if any, and `null` otherwise.
    */
-  getDateTime: (predicate: NodeRef) => Date | null;
+  getDateTime: (predicate: Reference) => Date | null;
   /**
    * @param getLiteral.predicate Which property of this Subject you want the value of.
    * @returns The first literal value satisfying `predicate`, if any, and `null` otherwise.
    * @deprecated This method has been superseded by the type-specific methods [[getString]],
    *             [[getNumber]] and [[getDateTime]].
    */
-  getLiteral: (predicate: NodeRef) => LiteralTypes | null;
+  getLiteral: (predicate: Reference) => LiteralTypes | null;
   /**
    * @param getAllStrings.predicate Which property of this Subject you want the values of.
    * @returns All literal string values satisfying `predicate`.
    */
-  getAllStrings: (predicate: NodeRef) => string[];
+  getAllStrings: (predicate: Reference) => string[];
   /**
    * @param getAllIntegers.predicate Which property of this Subject you want the values of.
    * @returns All literal integer values satisfying `predicate`.
    */
-  getAllIntegers: (predicate: NodeRef) => number[];
+  getAllIntegers: (predicate: Reference) => number[];
   /**
    * @param getAllDecimals.predicate Which property of this Subject you want the values of.
    * @returns All literal decimal values satisfying `predicate`.
    */
-  getAllDecimals: (predicate: NodeRef) => number[];
+  getAllDecimals: (predicate: Reference) => number[];
   /**
    * @param getAllDateTimes.predicate Which property of this Subject you want the values of.
    * @returns All literal DateTime values satisfying `predicate`.
    */
-  getAllDateTimes: (predicate: NodeRef) => Date[];
+  getAllDateTimes: (predicate: Reference) => Date[];
   /**
    * @param getAllLiterals.predicate Which property of this Subject you want the values of.
    * @returns All literal values satisfying `predicate`.
    * @deprecated This method has been superseded by the type-specific methods [[getAllStrings]],
    *             [[getAllNumbers]] and [[getAllDates]].
    */
-  getAllLiterals: (predicate: NodeRef) => LiteralTypes[];
+  getAllLiterals: (predicate: Reference) => LiteralTypes[];
   /**
-   * Find a reference to a Node attached to this Subject with `predicate`.
+   * Find a reference attached to this Subject with `predicate`.
    *
-   * This retrieves _one_ reference to a Node, or `null` if none is found. If you want to find _all_
-   * Node references for a predicate, see [[getAllNodeRefs]].
+   * This retrieves _one_ reference, or `null` if none is found. If you want to find _all_
+   * references for a predicate, see [[getAllRefs]].
    *
-   * @param getNodeRef.predicate Which property of this Subject you want the value of.
-   * @returns The IRI of the first Node satisfying `predicate`, if any, and `null` otherwise.
+   * @param getRef.predicate Which property of this Subject you want the value of.
+   * @returns The first referenced IRI satisfying `predicate`, if any, and `null` otherwise.
    */
-  getNodeRef: (predicate: NodeRef) => NodeRef | null;
+  getRef: (predicate: Reference) => Reference | null;
+  /**
+   * @ignore Deprecated method.
+   * @deprecated Replaced by [[getRef]].
+   */
+  getNodeRef: (predicate: Reference) => Reference | null;
   /**
    * @returns The type of this Subject, if known.
    */
-  getType: () => NodeRef | null;
+  getType: () => Reference | null;
   /**
-   * @param getAllNodeRefs.predicate Which property of this Subject you want the values of.
-   * @returns IRIs of all Nodes satisfying `predicate`.
+   * @param getAllRefs.predicate Which property of this Subject you want the values of.
+   * @returns All references satisfying `predicate`.
    */
-  getAllNodeRefs: (predicate: NodeRef) => Array<NodeRef>;
+  getAllRefs: (predicate: Reference) => Array<Reference>;
+  /**
+   * @ignore Deprecated method.
+   * @deprecated Replaced by [[getAllRefs]].
+   */
+  getAllNodeRefs: (predicate: Reference) => Array<Reference>;
   /**
    * Set a property of this Subject to a Literal value (i.e. not a URL).
    *
@@ -135,16 +145,21 @@ export interface TripleSubject {
    * @param addLiteral.predicate The property you want to add another value of.
    * @param addLiteral.object The Literal value you want to add, the type of which is one of [[LiteralTypes]].
    */
-  addLiteral: (predicate: NodeRef, object: LiteralTypes) => void;
+  addLiteral: (predicate: Reference, object: LiteralTypes) => void;
   /**
-   * Set a property of this Subject to a Node.
+   * Set a property of this Subject to a [[Reference]].
    *
    * Note that this value is not saved to the user's Pod until you save the containing Document.
    *
-   * @param addNodeRef.predicate The property you want to add another value of.
-   * @param addNodeRef.object The IRI of the Node you want to add.
+   * @param addRef.predicate The property you want to add another value of.
+   * @param addRef.object The IRI you want to add a reference to.
    */
-  addNodeRef: (predicate: NodeRef, object: NodeRef) => void;
+  addRef: (predicate: Reference, object: Reference) => void;
+  /**
+   * @ignore Deprecated method.
+   * @deprecated Replaced by [[addRef]].
+   */
+  addNodeRef: (predicate: Reference, object: Reference) => void;
   /**
    * Remove a Literal value for a property of this Subject.
    *
@@ -153,16 +168,21 @@ export interface TripleSubject {
    * @param removeLiteral.predicate The property you want to remove a value of.
    * @param removeLiteral.object The Literal value you want to remove, the type of which is one of [[LiteralTypes]].
    */
-  removeLiteral: (predicate: NodeRef, object: LiteralTypes) => void;
+  removeLiteral: (predicate: Reference, object: LiteralTypes) => void;
   /**
-   * No longer point a property of this Subject to a given Node.
+   * Remove a [[Reference]] value for a property of this Subject.
    *
    * Note that this pointer is not removed from the user's Pod until you save the containing Document.
    *
-   * @param removeNodeRef.predicate The property you no longer want to point to the given Node.
-   * @param removeNodeRef.object The IRI of the Node you want to remove.
+   * @param removeRef.predicate The property you want to remove a reference for.
+   * @param removeRef.object The reference you want to remove.
    */
-  removeNodeRef: (predicate: NodeRef, object: NodeRef) => void;
+  removeRef: (predicate: Reference, object: Reference) => void;
+  /**
+   * @ignore Deprecated.
+   * @deprecated Replaced by [[removeRef]].
+   */
+  removeNodeRef: (predicate: Reference, object: Reference) => void;
   /**
    * Remove all values for a property of this Subject.
    *
@@ -171,7 +191,7 @@ export interface TripleSubject {
    *
    * @param removeAll.predicate The property you want to remove the values of.
    */
-  removeAll: (predicate: NodeRef) => void;
+  removeAll: (predicate: Reference) => void;
   /**
    * Set a property of this Subject to a Literal value, clearing all existing values.
    *
@@ -180,16 +200,21 @@ export interface TripleSubject {
    * @param setLiteral.predicate The property you want to set the value of.
    * @param setLiteral.object The Literal value you want to set, the type of which is one of [[LiteralTypes]].
    */
-  setLiteral: (predicate: NodeRef, object: LiteralTypes) => void;
+  setLiteral: (predicate: Reference, object: LiteralTypes) => void;
   /**
-   * Set a property of this Subject to a Node, clearing all existing values.
+   * Set a property of this Subject to a [[Reference]], clearing all existing values.
    *
    * Note that this change is not saved to the user's Pod until you save the containing Document.
    *
-   * @param setNodeRef.predicate The property you want to set the value of.
-   * @param setNodeRef.object The IRI of the Node you want to add.
+   * @param setRef.predicate The property you want to set the value of.
+   * @param setRef.object The reference you want to add.
    */
-  setNodeRef: (predicate: NodeRef, object: NodeRef) => void;
+  setRef: (predicate: Reference, object: Reference) => void;
+  /**
+   * @ignore Deprecated.
+   * @deprecated Replaced by [[setRef]].
+   */
+  setNodeRef: (predicate: Reference, object: Reference) => void;
   /**
    * @ignore Pending Statements are only provided so the Document can access them in order to save
    *         them - this is not part of the public API and can thus break in a minor release.
@@ -198,11 +223,16 @@ export interface TripleSubject {
    */
   getPendingStatements: () => [Statement[], Statement[]];
   /**
-   * Get the IRI of the Node representing this specific Subject.
+   * Get the IRI of the [[Reference]] representing this specific Subject.
    *
    * @returns The IRI of this specific Subject.
    */
-  asNodeRef: () => NodeRef;
+  asRef: () => Reference;
+  /**
+   * @ignore Deprecated.
+   * @deprecated Replaced by [[asRef]].
+   */
+  asNodeRef: () => Reference;
 };
 
 /**
@@ -210,22 +240,22 @@ export interface TripleSubject {
  * @param document The Document this Subject is defined in.
  * @param subjectRef The URL that identifies this subject.
  */
-export function initialiseSubject(document: TripleDocument, subjectRef: NodeRef): TripleSubject {
-  const statements = findMatchingStatements(document.getStatements(), subjectRef, null, null, document.asNodeRef());
+export function initialiseSubject(document: TripleDocument, subjectRef: Reference): TripleSubject {
+  const statements = findMatchingStatements(document.getStatements(), subjectRef, null, null, document.asRef());
   let pendingAdditions: Statement[] = [];
   let pendingDeletions: Statement[] = [];
 
-  const get = (predicateNode: NodeRef) => findObjectsInStatements(statements, subjectRef, predicateNode, document.asNodeRef());
-  const getString = (predicateNode: NodeRef) => {
-    const objects = get(predicateNode);
+  const get = (predicateRef: Reference) => findObjectsInStatements(statements, subjectRef, predicateRef, document.asRef());
+  const getString = (predicateRef: Reference) => {
+    const objects = get(predicateRef);
     const firstStringLiteral = objects.find(isStringLiteral);
     if (typeof firstStringLiteral === 'undefined') {
       return null;
     }
     return firstStringLiteral.value;
   };
-  const getInteger = (predicateNode: NodeRef) => {
-    const objects = get(predicateNode);
+  const getInteger = (predicateRef: Reference) => {
+    const objects = get(predicateRef);
     const firstIntegerLiteral = objects.find(isIntegerLiteral);
     if (typeof firstIntegerLiteral === 'undefined') {
       return null;
@@ -233,8 +263,8 @@ export function initialiseSubject(document: TripleDocument, subjectRef: NodeRef)
 
     return fromIntegerLiteral(firstIntegerLiteral);
   };
-  const getDecimal = (predicateNode: NodeRef) => {
-    const objects = get(predicateNode);
+  const getDecimal = (predicateRef: Reference) => {
+    const objects = get(predicateRef);
     const firstDecimalLiteral = objects.find(isDecimalLiteral);
     if (typeof firstDecimalLiteral === 'undefined') {
       return null;
@@ -242,8 +272,8 @@ export function initialiseSubject(document: TripleDocument, subjectRef: NodeRef)
 
     return fromDecimalLiteral(firstDecimalLiteral);
   };
-  const getDateTime = (predicateNode: NodeRef) => {
-    const objects = get(predicateNode);
+  const getDateTime = (predicateRef: Reference) => {
+    const objects = get(predicateRef);
     const firstDateTimeLiteral = objects.find(isDateTimeLiteral);
     if (typeof firstDateTimeLiteral === 'undefined') {
       return null;
@@ -251,66 +281,75 @@ export function initialiseSubject(document: TripleDocument, subjectRef: NodeRef)
 
     return fromDateTimeLiteral(firstDateTimeLiteral);
   };
-  const getLiteral = (predicateNode: NodeRef) => {
-    const objects = get(predicateNode);
+  const getLiteral = (predicateRef: Reference) => {
+    const objects = get(predicateRef);
     const firstLiteral = objects.find(isLiteral);
     if (typeof firstLiteral === 'undefined') {
       return null;
     }
     return fromLiteral(firstLiteral);
   };
-  const getAllStrings = (predicateNode: NodeRef) => {
-    const objects = get(predicateNode);
+  const getAllStrings = (predicateRef: Reference) => {
+    const objects = get(predicateRef);
     const literals = objects.filter(isStringLiteral);
     return literals.map(fromStringLiteral);
   };
-  const getAllIntegers = (predicateNode: NodeRef) => {
-    const objects = get(predicateNode);
+  const getAllIntegers = (predicateRef: Reference) => {
+    const objects = get(predicateRef);
     const literals = objects.filter(isIntegerLiteral);
     return literals.map(fromIntegerLiteral);
   };
-  const getAllDecimals = (predicateNode: NodeRef) => {
-    const objects = get(predicateNode);
+  const getAllDecimals = (predicateRef: Reference) => {
+    const objects = get(predicateRef);
     const literals = objects.filter(isDecimalLiteral);
     return literals.map(fromDecimalLiteral);
   };
-  const getAllDateTimes = (predicateNode: NodeRef) => {
-    const objects = get(predicateNode);
+  const getAllDateTimes = (predicateRef: Reference) => {
+    const objects = get(predicateRef);
     const literals = objects.filter(isDateTimeLiteral);
     return literals.map(fromDateTimeLiteral);
   };
-  const getAllLiterals = (predicateNode: NodeRef) => {
-    const objects = get(predicateNode);
+  const getAllLiterals = (predicateRef: Reference) => {
+    const objects = get(predicateRef);
     const literals = objects.filter(isLiteral);
     return literals.map(fromLiteral);
   };
-  const getNodeRef = (predicateNode: NodeRef) => {
-    const objects = get(predicateNode);
-    const firstNodeRef = objects.find(isNodeRef);
-    if (typeof firstNodeRef === 'undefined') {
+  const getRef = (predicateRef: Reference) => {
+    const objects = get(predicateRef);
+    const firstRef = objects.find(isReference);
+    if (typeof firstRef === 'undefined') {
       return null;
     }
-    return firstNodeRef;
+    return firstRef;
   };
-  const getAllNodeRefs = (predicateNode: NodeRef) => {
-    const objects = get(predicateNode);
-    const nodeRefs = objects.filter(isNodeRef);
+  const getAllRefs = (predicateRef: Reference) => {
+    const objects = get(predicateRef);
+    const nodeRefs = objects.filter(isReference);
     return nodeRefs;
   };
 
   const getType = () => {
-    return getNodeRef(rdf.type);
+    return getRef(rdf.type);
   }
 
-  const addLiteral = (predicateRef: NodeRef, literal: LiteralTypes) => {
-    pendingAdditions.push(st(sym(subjectRef), sym(predicateRef), asLiteral(literal), sym(document.asNodeRef())));
+  const addLiteral = (predicateRef: Reference, literal: LiteralTypes) => {
+    pendingAdditions.push(st(sym(subjectRef), sym(predicateRef), asLiteral(literal), sym(document.asRef())));
   };
-  const addNodeRef = (predicateRef: NodeRef, nodeRef: NodeRef) => {
-    pendingAdditions.push(st(sym(subjectRef), sym(predicateRef), sym(nodeRef), sym(document.asNodeRef())));
+  const addRef = (predicateRef: Reference, ref: Reference) => {
+    pendingAdditions.push(st(sym(subjectRef), sym(predicateRef), sym(ref), sym(document.asRef())));
   };
-  const removeAll = (predicateRef: NodeRef) => {
-    pendingDeletions.push(...findMatchingStatements(statements, subjectRef, predicateRef, null, document.asNodeRef()));
+  const removeRef = (predicateRef: Reference, nodeRef: Reference) => {
+    pendingDeletions.push(st(sym(subjectRef), sym(predicateRef), sym(nodeRef), sym(document.asRef())));
+  };
+  const removeAll = (predicateRef: Reference) => {
+    pendingDeletions.push(...findMatchingStatements(statements, subjectRef, predicateRef, null, document.asRef()));
   }
+  const setRef = (predicateRef: Reference, nodeRef: Reference) => {
+    removeAll(predicateRef);
+    addRef(predicateRef, nodeRef);
+  };
+
+  const asRef = () => subjectRef;
 
   const subject: TripleSubject = {
     getDocument: () => document,
@@ -325,28 +364,30 @@ export function initialiseSubject(document: TripleDocument, subjectRef: NodeRef)
     getAllDecimals: getAllDecimals,
     getAllDateTimes: getAllDateTimes,
     getAllLiterals: getAllLiterals,
-    getNodeRef: getNodeRef,
-    getAllNodeRefs: getAllNodeRefs,
+    getRef: getRef,
+    getAllRefs: getAllRefs,
     getType: getType,
     addLiteral: addLiteral,
-    addNodeRef: addNodeRef,
+    addRef: addRef,
     removeAll: removeAll,
     removeLiteral: (predicateRef, literal) => {
-      pendingDeletions.push(st(sym(subjectRef), sym(predicateRef), asLiteral(literal), sym(document.asNodeRef())));
+      pendingDeletions.push(st(sym(subjectRef), sym(predicateRef), asLiteral(literal), sym(document.asRef())));
     },
-    removeNodeRef: (predicateRef, nodeRef) => {
-      pendingDeletions.push(st(sym(subjectRef), sym(predicateRef), sym(nodeRef), sym(document.asNodeRef())));
-    },
+    removeRef: removeRef,
     setLiteral: (predicateRef, literal) => {
       removeAll(predicateRef);
       addLiteral(predicateRef, literal);
     },
-    setNodeRef: (predicateRef, nodeRef) => {
-      removeAll(predicateRef);
-      addNodeRef(predicateRef, nodeRef);
-    },
+    setRef: setRef,
     getPendingStatements: () => [pendingDeletions, pendingAdditions],
-    asNodeRef: () => subjectRef,
+    asRef: asRef,
+    // Deprecated aliases, included for backwards compatibility:
+    getNodeRef: getRef,
+    getAllNodeRefs: getAllRefs,
+    addNodeRef: addRef,
+    removeNodeRef: removeRef,
+    setNodeRef: setRef,
+    asNodeRef: asRef,
   };
 
   return subject;

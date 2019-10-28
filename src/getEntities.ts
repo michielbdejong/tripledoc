@@ -1,62 +1,62 @@
 import { IndexedFormula, Node, sym, Literal, NamedNode, Statement } from 'rdflib';
-import { NodeRef, isLiteral } from './index';
+import { Reference, isLiteral } from './index';
 
 /**
  * @ignore This is a utility type for other parts of the code, and not part of the public API.
  */
 export type FindEntityInStatements = (
   statements: Statement[],
-  knownEntity1: NodeRef,
-  knownEntity2: NodeRef,
-  document: NodeRef
-) => NodeRef | Literal | null;
+  knownEntity1: Reference,
+  knownEntity2: Reference,
+  document: Reference
+) => Reference | Literal | null;
 /**
  * @ignore This is a utility type for other parts of the code, and not part of the public API.
  */
 export type FindEntitiesInStatements = (
   statements: Statement[],
-  knownEntity1: NodeRef,
-  knownEntity2: NodeRef,
-  document: NodeRef
-) => Array<NodeRef | Literal>;
+  knownEntity1: Reference,
+  knownEntity2: Reference,
+  document: Reference
+) => Array<Reference | Literal>;
 
 /**
  * @ignore This is a utility method for other parts of the code, and not part of the public API.
  */
-export const findSubjectInStatements: FindEntityInStatements = (statements, predicateRef, objectRef, documentNode) => {
-  return findEntityInStatements(statements, 'subject', null, predicateRef, objectRef, documentNode);
+export const findSubjectInStatements: FindEntityInStatements = (statements, predicateRef, objectRef, documentRef) => {
+  return findEntityInStatements(statements, 'subject', null, predicateRef, objectRef, documentRef);
 }
 /**
  * @ignore This is a utility method for other parts of the code, and not part of the public API.
  */
-export const findSubjectsInStatements: FindEntitiesInStatements = (statements, predicateRef, objectRef, documentNode) => {
-  return findEntitiesInStatements(statements, 'subject', null, predicateRef, objectRef, documentNode);
-}
-
-/**
- * @ignore This is a utility method for other parts of the code, and not part of the public API.
- */
-export const findPredicateInStatements: FindEntityInStatements = (statements, subjectRef, objectRef, documentNode) => {
-  return findEntityInStatements(statements, 'predicate', subjectRef, null, objectRef, documentNode);
-}
-/**
- * @ignore This is a utility method for other parts of the code, and not part of the public API.
- */
-export const findPredicatesInStatements: FindEntitiesInStatements = (statements, subjectRef, objectRef, documentNode) => {
-  return findEntitiesInStatements(statements, 'predicate', subjectRef, null, objectRef, documentNode);
+export const findSubjectsInStatements: FindEntitiesInStatements = (statements, predicateRef, objectRef, documentRef) => {
+  return findEntitiesInStatements(statements, 'subject', null, predicateRef, objectRef, documentRef);
 }
 
 /**
  * @ignore This is a utility method for other parts of the code, and not part of the public API.
  */
-export const findObjectInStatements: FindEntityInStatements = (statements, subjectRef, predicateRef, documentNode) => {
-  return findEntityInStatements(statements, 'object', subjectRef, predicateRef, null, documentNode);
+export const findPredicateInStatements: FindEntityInStatements = (statements, subjectRef, objectRef, documentRef) => {
+  return findEntityInStatements(statements, 'predicate', subjectRef, null, objectRef, documentRef);
 }
 /**
  * @ignore This is a utility method for other parts of the code, and not part of the public API.
  */
-export const findObjectsInStatements: FindEntitiesInStatements = (statements, subjectRef, predicateRef, documentNode) => {
-  return findEntitiesInStatements(statements, 'object', subjectRef, predicateRef, null, documentNode);
+export const findPredicatesInStatements: FindEntitiesInStatements = (statements, subjectRef, objectRef, documentRef) => {
+  return findEntitiesInStatements(statements, 'predicate', subjectRef, null, objectRef, documentRef);
+}
+
+/**
+ * @ignore This is a utility method for other parts of the code, and not part of the public API.
+ */
+export const findObjectInStatements: FindEntityInStatements = (statements, subjectRef, predicateRef, documentRef) => {
+  return findEntityInStatements(statements, 'object', subjectRef, predicateRef, null, documentRef);
+}
+/**
+ * @ignore This is a utility method for other parts of the code, and not part of the public API.
+ */
+export const findObjectsInStatements: FindEntitiesInStatements = (statements, subjectRef, predicateRef, documentRef) => {
+  return findEntitiesInStatements(statements, 'object', subjectRef, predicateRef, null, documentRef);
 }
 
 /**
@@ -65,15 +65,15 @@ export const findObjectsInStatements: FindEntitiesInStatements = (statements, su
 export function findEntityInStatements(
   statements: Statement[],
   type: 'subject' | 'predicate' | 'object',
-  subjectRef: null | NodeRef,
-  predicateRef: null | NodeRef,
-  objectRef: null | NodeRef,
-  documentNode: NodeRef,
-): NodeRef | Literal | null {
+  subjectRef: null | Reference,
+  predicateRef: null | Reference,
+  objectRef: null | Reference,
+  documentRef: Reference,
+): Reference | Literal | null {
   const foundStatement = statements.find((statement) => {
     return (
       typeof statement[type] !== 'undefined' &&
-      statementMatches(statement, subjectRef, predicateRef, objectRef, documentNode)
+      statementMatches(statement, subjectRef, predicateRef, objectRef, documentRef)
     );
   });
 
@@ -86,15 +86,15 @@ export function findEntityInStatements(
 export function findEntitiesInStatements(
   statements: Statement[],
   type: 'subject' | 'predicate' | 'object',
-  subjectRef: null | NodeRef,
-  predicateRef: null | NodeRef,
-  objectRef: null | NodeRef,
-  documentNode: NodeRef,
-): Array<NodeRef | Literal> {
+  subjectRef: null | Reference,
+  predicateRef: null | Reference,
+  objectRef: null | Reference,
+  documentRef: Reference,
+): Array<Reference | Literal> {
   const foundStatements = statements.filter((statement) => {
     return (
       typeof statement[type] !== 'undefined' &&
-      statementMatches(statement, subjectRef, predicateRef, objectRef, documentNode)
+      statementMatches(statement, subjectRef, predicateRef, objectRef, documentRef)
     );
   });
   return foundStatements.map(statement => normaliseEntity(statement[type])).filter(isEntity);
@@ -105,28 +105,28 @@ export function findEntitiesInStatements(
  */
 export function findMatchingStatements(
   statements: Statement[],
-  subjectRef: null | NodeRef,
-  predicateRef: null | NodeRef,
-  objectRef: null | NodeRef,
-  documentNode: NodeRef,
+  subjectRef: null | Reference,
+  predicateRef: null | Reference,
+  objectRef: null | Reference,
+  documentRef: Reference,
 ): Array<Statement> {
   const foundStatements = statements.filter((statement) => {
-    return statementMatches(statement, subjectRef, predicateRef, objectRef, documentNode);
+    return statementMatches(statement, subjectRef, predicateRef, objectRef, documentRef);
   });
   return foundStatements;
 }
 
 function statementMatches(
   statement: Statement,
-  subjectRef: null | NodeRef,
-  predicateRef: null | NodeRef,
-  objectRef: null | NodeRef,
-  documentNode: NodeRef,
+  subjectRef: null | Reference,
+  predicateRef: null | Reference,
+  objectRef: null | Reference,
+  documentRef: Reference,
 ): boolean {
   const targetSubject = subjectRef ? sym(subjectRef) : null;
   const targetPredicate = predicateRef ? sym(predicateRef) : null;
   const targetObject = objectRef ? sym(objectRef) : null;
-  const targetDocument = sym(documentNode);
+  const targetDocument = sym(documentRef);
 
   return (
     (targetSubject === null || statement.subject.sameTerm(targetSubject)) &&
@@ -140,7 +140,7 @@ function statementMatches(
   );
 }
 
-function normaliseEntity(entity: Node): NodeRef | Literal | null {
+function normaliseEntity(entity: Node): Reference | Literal | null {
   if (isNamedNode(entity)) {
     return entity.uri;
   }
@@ -151,7 +151,7 @@ function normaliseEntity(entity: Node): NodeRef | Literal | null {
   /* istanbul ignore next: All code paths to here result in either a Node or a Literal, so we can't test it */
   return null;
 }
-function isEntity(node: NodeRef | Literal | null): node is NodeRef | Literal {
+function isEntity(node: Reference | Literal | null): node is Reference | Literal {
   return (node !== null);
 }
 

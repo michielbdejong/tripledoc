@@ -1,4 +1,4 @@
-import { isLiteral, isNodeRef } from './index';
+import { isLiteral, isReference } from './index';
 import { lit, sym } from 'rdflib';
 
 describe('isLiteral', () => {
@@ -23,20 +23,20 @@ describe('isLiteral', () => {
   });
 });
 
-describe('isNodeRef', () => {
+describe('isReference', () => {
   it('should return true if a value is a string', () => {
-    expect(isNodeRef('http://some-node.com')).toBe(true);
+    expect(isReference('http://some-node.com')).toBe(true);
   });
 
   it('should return false if a value is an RDFLib Literal', () => {
-    expect(isNodeRef(lit('Some value', 'en', sym('http://arbitrary-node.com'))))
+    expect(isReference(lit('Some value', 'en', sym('http://arbitrary-node.com'))))
       .toBe(false);
   });
 
   it('should return false if a value is not a string and hence cannot be a URL', () => {
-    expect(isNodeRef({ arbitrary: 'object' } as any)).toBe(false);
-    expect(isNodeRef(13.37 as any)).toBe(false);
-    expect(isNodeRef(null as any)).toBe(false);
-    expect(isNodeRef(true as any)).toBe(false);
+    expect(isReference({ arbitrary: 'object' } as any)).toBe(false);
+    expect(isReference(13.37 as any)).toBe(false);
+    expect(isReference(null as any)).toBe(false);
+    expect(isReference(true as any)).toBe(false);
   });
 });

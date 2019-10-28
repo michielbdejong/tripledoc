@@ -11,7 +11,7 @@ export type LiteralTypes = string | number | Date;
 /**
  * A URL that points to a node in the Linked Data graph.
  */
-export type NodeRef = string;
+export type Reference = string;
 
 /**
  * @ignore Tripledoc's methods should be explicit about whether they return or accept a Literal, so
@@ -85,12 +85,19 @@ export interface DateTimeLiteral extends Literal {
 export function isDateTimeLiteral<T>(param: T | Literal): param is DateTimeLiteral {
   return isLiteral(param) && param.datatype.uri === 'http://www.w3.org/2001/XMLSchema#dateTime';
 }
+
 /**
- * @ignore Tripledoc's methods should be explicit about whether they return or accept a [[NodeRef]],
+ * @ignore Deprecated function.
+ * @deprecated Replaced by [[isReference]].
+ */
+export const isNodeRef = isReference;
+
+/**
+ * @ignore Tripledoc's methods should be explicit about whether they return or accept a [[Reference]],
  *         so this is merely an internal utility function, rather than a public API.
  * @param param A value that might or might not be a reference to a node in the Linked Data graph.
  * @returns Whether `param` is a reference to a node in the Linked Data graph.
  */
-export function isNodeRef(node: NodeRef | Literal): node is NodeRef {
-  return typeof node === 'string' && !isLiteral(node);
+export function isReference(value: Reference | Literal): value is Reference {
+  return typeof value === 'string' && !isLiteral(value);
 }

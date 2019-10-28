@@ -4,6 +4,13 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+### Deprecations
+
+A number of deprecations to remove mentions of "nodes", simplifying them to simply "references".
+
+- `getNodeRef`, `getAllNodeRefs`, `addNodeRef`, `removeNodeRef`, `setNodeRef` and `asNodeRef` have been superseded by `getRef`, `getAllRefs`, `addRef`, `removeRef`, `setRef` and `asRef`, respectively, and are therefore now deprecated - they will be removed in a future major version.
+- The exported type `NodeRef` is now called `Reference`, and the former is therefore deprecated.
+
 ## [2.0.0] - 2019-10-24
 
 ### Breaking changes

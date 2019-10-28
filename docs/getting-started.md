@@ -44,7 +44,7 @@ function getName(profile) {
 }
 
 async function getFriends(profile) {
-  const friendsDocumentUrl = profile.getNodeRef(rdfs.seeAlso);
+  const friendsDocumentUrl = profile.getRef(rdfs.seeAlso);
   const friendsDocument = await fetchDocument(friendsDocumentUrl);
   return friendsDocument.getSubjectsOfType(foaf.Person);
 }

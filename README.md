@@ -24,7 +24,7 @@ fetchDocument('https://www.w3.org/People/Berners-Lee/card')
   const name = profile.getString(foaf.name);
   console.log('The name in this profile is:', name);
 
-  profile.addNodeRef(foaf.knows, 'https://vincentt.inrupt.net/profile/card#me');
+  profile.addRef(foaf.knows, 'https://vincentt.inrupt.net/profile/card#me');
   profile.addLiteral(foaf.nick, 'timbl');
 
   // Credentials are included [1] in this request, so make sure those are set
