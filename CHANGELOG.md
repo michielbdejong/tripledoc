@@ -4,6 +4,8 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+## [2.1.0] - 2019-10-28
+
 ### Deprecations
 
 A number of deprecations to remove mentions of "nodes", simplifying them to simply "references".
