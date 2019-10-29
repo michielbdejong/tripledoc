@@ -12,6 +12,11 @@ export type LiteralTypes = string | number | Date;
  * A URL that points to a node in the Linked Data graph.
  */
 export type Reference = string;
+/**
+ * @ignore Deprecated.
+ * @deprecated Replaced by [[Reference]].
+ */
+export type NodeRef = Reference;
 
 /**
  * @ignore Tripledoc's methods should be explicit about whether they return or accept a Literal, so

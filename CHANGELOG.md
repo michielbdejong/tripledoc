@@ -4,6 +4,10 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+### Bugs fixed
+
+- The deprecated `NodeRef` type was accidentally removed in v2.1.0. You shouldn't use it anymore, but it's merely deprecated, not removed - which would be a breaking change.
+
 ## [2.1.0] - 2019-10-28
 
 ### Deprecations
