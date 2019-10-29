@@ -204,6 +204,25 @@ describe('save', () => {
   });
 });
 
+describe('removeSubject', () => {
+  it('should remove all statements related to the given subject', async () => {
+    const mockTripleDocument = await fetchDocument(mockDocument);
+    mockTripleDocument.removeSubject(mockSubject);
+
+    await mockTripleDocument.save();
+
+    expect(mockUpdater.mock.calls.length).toBe(1);
+    // The Statements to delete are the first argument:
+    expect((mockUpdater.mock.calls[0][0] as Statement[]).length).toBe(1);
+    // The Statements to add are the second argument:
+    expect((mockUpdater.mock.calls[0][1] as Statement[]).length).toBe(0);
+
+    expect((mockUpdater.mock.calls[0][0] as Statement[])[0].subject.value).toBe(mockSubject);
+    expect((mockUpdater.mock.calls[0][0] as Statement[])[0].predicate.value).toBe(mockPredicate);
+    expect((mockUpdater.mock.calls[0][0] as Statement[])[0].object.value).toBe(mockObject);
+  });
+});
+
 describe('getAclRef', () => {
   it('should return null if no ACL header was present', async () => {
     const mockTripleDocument = await fetchDocument(mockDocument);

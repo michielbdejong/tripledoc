@@ -16,9 +16,11 @@ const mockSubjectWithDateLiteral = 'https://subject7.com/';
 const mockSubjectWithIntegerLiteral = 'https://subject8.com/';
 const mockSubjectWithDecimalLiteral = 'https://subject9.com/';
 const mockSubjectWithDifferentTypesOfLiterals = 'https://subject10.com/';
+const mockSubjectWithDifferentPredicates = 'https://subject11.com/';
 const mockTypedSubject = 'https://subject7.com/';
 const mockEmptySubject = 'https://empty-subject.com/';
 const mockPredicate = 'https://mock-predicate.com/';
+const mockPredicate2 = 'https://mock-predicate-2.com/';
 const mockObjectRef = 'https://mock-object.com/';
 const mockObjectRef2 = 'https://mock-object-2.com/';
 const mockLiteralValue = 'Arbitrary literal value';
@@ -54,6 +56,9 @@ const mockStatements = [
   st(sym(mockSubjectWithDifferentTypesOfLiterals), sym(mockPredicate), mockObjectDateTimeLiteral, sym(mockDocument)),
   st(sym(mockSubjectWithDifferentTypesOfLiterals), sym(mockPredicate), mockObjectDecimalLiteral, sym(mockDocument)),
   st(sym(mockSubjectWithDifferentTypesOfLiterals), sym(mockPredicate), mockObjectIntegerLiteral, sym(mockDocument)),
+  st(sym(mockSubjectWithDifferentPredicates), sym(mockPredicate), mockObjectLiteral, sym(mockDocument)),
+  st(sym(mockSubjectWithDifferentPredicates), sym(mockPredicate), sym(mockObjectRef), sym(mockDocument)),
+  st(sym(mockSubjectWithDifferentPredicates), sym(mockPredicate2), sym(mockObjectRef2), sym(mockDocument)),
 ];
 const store = graph();
 store.addAll(mockStatements);
@@ -624,6 +629,36 @@ describe('removeAll', () => {
         sym(mockSubjectWithLiteralThenRef),
         sym(mockPredicate),
         sym(mockObjectRef),
+        sym(mockTripleDocument.asRef()),
+      ),
+    ]);
+  });
+});
+
+describe('clear', () => {
+  it('should remove all existing values, whether Literal or Reference, regardless of the predicate', () => {
+    const mockTripleDocument = getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithDifferentPredicates);
+    subject.clear();
+    const [pendingDeletions, pendingAdditions] = subject.getPendingStatements();
+    expect(pendingAdditions).toEqual([]);
+    expect(pendingDeletions).toEqual([
+      st(
+        sym(mockSubjectWithDifferentPredicates),
+        sym(mockPredicate),
+        mockObjectLiteral,
+        sym(mockTripleDocument.asRef()),
+      ),
+      st(
+        sym(mockSubjectWithDifferentPredicates),
+        sym(mockPredicate),
+        sym(mockObjectRef),
+        sym(mockTripleDocument.asRef()),
+      ),
+      st(
+        sym(mockSubjectWithDifferentPredicates),
+        sym(mockPredicate2),
+        sym(mockObjectRef2),
         sym(mockTripleDocument.asRef()),
       ),
     ]);
