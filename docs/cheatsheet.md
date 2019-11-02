@@ -13,7 +13,7 @@ import { fetchDocument } from "tripledoc";
 async function getName(webId) {
   const profileDoc = await fetchDocument(webId);
   const profile = profileDoc.getSubject(webId);
-  return profile.getLiteral('http://xmlns.com/foaf/0.1/name');
+  return profile.getString('http://xmlns.com/foaf/0.1/name');
 }
 ```
 
@@ -64,7 +64,7 @@ import { fetchDocument } from "tripledoc";
 async function getNicknames(webId) {
   const profileDoc = await fetchDocument(webId);
   const profile = profileDoc.getSubject(webId);
-  return profile.getAllLiterals('http://xmlns.com/foaf/0.1/nick');
+  return profile.getAllStrings('http://xmlns.com/foaf/0.1/nick');
 }
 ```
 
