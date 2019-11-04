@@ -15,7 +15,7 @@ export interface NewSubjectOptions {
 };
 export interface TripleDocument {
   /**
-   * Add a subject — note that it is not written to the Pod until you call [[save]].
+   * Add a Subject — note that it is not written to the Pod until you call [[save]].
    *
    * @param addSubject.options By default, Tripledoc will automatically generate an identifier with
    *                           which this Subject can be identified within the Document, and which
@@ -29,6 +29,12 @@ export interface TripleDocument {
    * @returns A [[TripleSubject]] instance that can be used to define its properties.
    */
   addSubject: (options?: NewSubjectOptions) => TripleSubject;
+  /**
+   * Remove a Subject - note that it is not removed from the Pod until you call [[save]].
+   *
+   * @param removeSubject.subject The IRI of the Subject to remove.
+   */
+  removeSubject: (subject: Reference) => void;
   /**
    * Find a Subject which has the value of `objectRef` for the Predicate `predicateRef`.
    *
@@ -194,6 +200,11 @@ function instantiateDocument(uri: Reference, metadata: DocumentMetadata): Triple
     return getSubject(subjectRef);
   };
 
+  const removeSubject = (subjectRef: Reference) => {
+    const subject = getSubject(subjectRef);
+    return subject.clear();
+  };
+
   const save = async (subjects = Object.values(accessedSubjects)) => {
     const relevantSubjects = subjects.filter(subject => subject.getDocument().asRef() === documentRef);
     type UpdateStatements = [Statement[], Statement[]];
@@ -225,6 +236,7 @@ function instantiateDocument(uri: Reference, metadata: DocumentMetadata): Triple
 
   const tripleDocument: TripleDocument = {
     addSubject: addSubject,
+    removeSubject: removeSubject,
     getSubject: getSubject,
     getSubjectsOfType: getSubjectsOfType,
     findSubject: findSubject,

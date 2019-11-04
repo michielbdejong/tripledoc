@@ -4,6 +4,10 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+### New features
+
+- TripleDocuments now have a [[RemoveSubject]] method, to remove a Subject and all its Statements.
+
 ### Bugs fixed
 
 - The deprecated `NodeRef` type was accidentally removed in v2.1.0. You shouldn't use it anymore, but it's merely deprecated, not removed - which would be a breaking change.

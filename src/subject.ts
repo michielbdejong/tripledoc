@@ -216,6 +216,12 @@ export interface TripleSubject {
    */
   setNodeRef: (predicate: Reference, object: Reference) => void;
   /**
+   * Unset all values for all Predicates of this Subject.
+   *
+   * @ignore Currently an internal API for use by [[TripleDocument]].
+   */
+  clear: () => void;
+  /**
    * @ignore Pending Statements are only provided so the Document can access them in order to save
    *         them - this is not part of the public API and can thus break in a minor release.
    * @returns A tuple with the first element being a list of Statements that should be deleted from
@@ -344,6 +350,9 @@ export function initialiseSubject(document: TripleDocument, subjectRef: Referenc
   const removeAll = (predicateRef: Reference) => {
     pendingDeletions.push(...findMatchingStatements(statements, subjectRef, predicateRef, null, document.asRef()));
   }
+  const clear = () => {
+    pendingDeletions.push(...statements);
+  }
   const setRef = (predicateRef: Reference, nodeRef: Reference) => {
     removeAll(predicateRef);
     addRef(predicateRef, nodeRef);
@@ -379,6 +388,7 @@ export function initialiseSubject(document: TripleDocument, subjectRef: Referenc
       addLiteral(predicateRef, literal);
     },
     setRef: setRef,
+    clear: clear,
     getPendingStatements: () => [pendingDeletions, pendingAdditions],
     asRef: asRef,
     // Deprecated aliases, included for backwards compatibility:
