@@ -50,10 +50,6 @@ async function getName(webId) {
 
 [CodeSandbox link not possible](https://github.com/codesandbox/codesandbox-client/issues/2368)
 
-### rdf-ext
-
-TODO
-
 ## Reading multiple values for a property
 
 ### Tripledoc
@@ -108,10 +104,6 @@ async function getNicknames(webId) {
 
 [CodeSandbox link not possible](https://github.com/codesandbox/codesandbox-client/issues/2368)
 
-### rdf-ext
-
-TODO
-
 ## Adding multiple literals for the same property
 
 Note: the examples below assume the user [is logged in](writing-a-solid-app/1-authentication) and is
@@ -162,10 +154,6 @@ async function addNicknames(webId, nicknames) {
   await person['http://xmlns.com/foaf/0.1/nick'].add(...nicknames.map(nickname => literal(nickname)));
 }
 ```
-
-### rdf-ext
-
-TODO
 
 ## Adding values for multiple properties
 
@@ -224,10 +212,6 @@ async function addNameAndNickname(webId, name, nickname) {
 }
 ```
 
-### rdf-ext
-
-TODO
-
 ## Replacing existing values with new ones
 
 Note: the examples below assume the user [is logged in](writing-a-solid-app/1-authentication) and is
@@ -279,10 +263,6 @@ async function setNicknames(webId, nicknames) {
   await person['http://xmlns.com/foaf/0.1/nick'].set(...nicknames.map(nickname => literal(nickname)));
 }
 ```
-
-### rdf-ext
-
-TODO
 
 ## Removing all values for a property
 
@@ -336,10 +316,6 @@ async function removeNicknames(webId) {
 ```
 
 
-### rdf-ext
-
-TODO
-
 ## Removing a single specific value for a property
 
 Note: the examples below assume the user [is logged in](writing-a-solid-app/1-authentication) and is
@@ -390,10 +366,6 @@ async function removeNickname(webId, nickname) {
   await person['http://xmlns.com/foaf/0.1/nick'].delete(literal(nickname));
 }
 ```
-
-### rdf-ext
-
-TODO
 
 ## Create a new Document
 
@@ -450,7 +422,3 @@ async function createEmptyDocument(location) {
   await fetch(location, options);
 };
 ```
-
-### rdf-ext
-
-TODO
