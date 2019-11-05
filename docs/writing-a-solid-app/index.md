@@ -9,3 +9,9 @@ interested in building one that stores data to a [Solid](https://solidproject.or
 
 It does not assume prior knowledge of Semantic Web technologies, Linked Data, RDF, or knowing what
 those terms mean in the first place.
+
+We will be building [a note-taking app](https://notepod.vincenttunru.com/) that can add notes to
+someone's Pod, and can read existing ones. If you're so inclined, you can [play around with the
+source code of the finished
+app](https://codesandbox.io/s/github/Vinnl/notepod/tree/5-writing-data/?module=%2Fsrc%2FApp.tsx)
+already.

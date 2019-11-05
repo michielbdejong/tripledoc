@@ -22,7 +22,9 @@ async function addNote(note, notesList) {
 }
 ```
 
-With the user's Pod fully set up, the above is all there is to it, really!
+With the user's Pod fully set up, the above is all there is to it, really! [Play around with the
+completed
+app](https://codesandbox.io/s/github/Vinnl/notepod/tree/5-writing-data/?module=%2Fsrc%2FApp.tsx).
 
 So what's next? Start writing your own App! Find a Vocabulary that matches your use case; we've used
 Schema.org here, but you can find many more at [Linked Open
