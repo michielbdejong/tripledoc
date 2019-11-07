@@ -187,6 +187,8 @@ function instantiateDocument(documentRef: Reference, triples: Quad[], metadata: 
 
   const accessedSubjects: { [iri: string]: TripleSubject } = {};
   const getSubject = (subjectRef: Reference) => {
+    // Allow relative URLs to access Subjects in this Document:
+    subjectRef = new URL(subjectRef, documentRef).href;
     if (!accessedSubjects[subjectRef]) {
       accessedSubjects[subjectRef] = initialiseSubject(tripleDocument, subjectRef);
     }

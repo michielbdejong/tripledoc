@@ -6,10 +6,10 @@ import { triplesToTurtle } from './turtle';
 const { namedNode, quad, blankNode } = DataFactory;
 
 const mockDocument = 'https://document.com/';
-const mockSubject = 'https://subject1.com/';
-const mockSubject2 = 'https://subject2.com/';
-const mockSubjectOfTypeMovie1 = 'https://subject3.com/';
-const mockSubjectOfTypeMovie2 = 'https://subject4.com/';
+const mockSubject = 'https://document.com/#subject1';
+const mockSubject2 = 'https://document.com/#subject2';
+const mockSubjectOfTypeMovie1 = 'https://document.com/#subject3';
+const mockSubjectOfTypeMovie2 = 'https://document.com/#subject4';
 const mockPredicate = 'https://mock-predicate.com/';
 const mockUnusedPredicate = 'https://mock-unused-predicate.com/';
 const mockObject= 'https://mock-object.com/';
@@ -56,6 +56,14 @@ describe('getSubject', () => {
     const firstAccessed = mockTripleDocument.getSubject(mockSubjectOfTypeMovie1);
     const secondAccessed = mockTripleDocument.getSubject(mockSubjectOfTypeMovie1);
     expect(firstAccessed).toEqual(secondAccessed);
+  });
+
+  it('should allow accessing Subjects just by their identifier', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
+    const subjectIdentifier = new URL(mockSubject).hash;
+    const subject = mockTripleDocument.getSubject(subjectIdentifier);
+    expect(subject.getRef(mockPredicate)).toBe(mockObject);
+    expect(subject.asRef()).toBe(mockSubject);
   });
 });
 
