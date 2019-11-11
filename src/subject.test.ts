@@ -1,6 +1,6 @@
-import { graph, st, sym, lit, Literal } from 'rdflib';
+import { graph, st, sym, lit, Literal, BlankNode } from 'rdflib';
 import {
-  initialiseSubject
+  initialiseSubject, TripleSubject
 } from './subject';
 import { createDocument } from './document';
 import { rdf } from 'rdf-namespaces';
@@ -8,6 +8,8 @@ import { rdf } from 'rdf-namespaces';
 const mockDocument = 'https://document.com/';
 const mockSubjectWithLiteralThenRef = 'https://subject1.com/';
 const mockSubjectWithRefThenLiteral = 'https://subject2.com/';
+const mockSubjectWithBlankNodeThenRef = 'https://document.com/#blank-node-then-ref';
+const mockSubjectWithRefThenBlankNode = 'https://document.com/#ref-then-blank-node';
 const mockSubjectWithLiteral = 'https://subject3.com/';
 const mockSubjectWithRef = 'https://subject4.com/';
 const mockSubjectWithTwoLiterals = 'https://subject5.com/';
@@ -34,11 +36,17 @@ const mockObjectIntegerLiteral = Literal.fromNumber(mockLiteralInteger);
 const mockLiteralDecimal = 4.2;
 const mockObjectDecimalLiteral = Literal.fromNumber(mockLiteralDecimal);
 const mockTypeObject = 'https://mock-type-object.com/';
+const mockBlankNode = 'arbitrary-blank-node-id';
 const mockStatements = [
   st(sym(mockSubjectWithLiteralThenRef), sym(mockPredicate), mockObjectLiteral, sym(mockDocument)),
   st(sym(mockSubjectWithLiteralThenRef), sym(mockPredicate), sym(mockObjectRef), sym(mockDocument)),
   st(sym(mockSubjectWithRefThenLiteral), sym(mockPredicate), sym(mockObjectRef), sym(mockDocument)),
   st(sym(mockSubjectWithRefThenLiteral), sym(mockPredicate), mockObjectLiteral, sym(mockDocument)),
+  st(sym(mockSubjectWithBlankNodeThenRef), sym(mockPredicate), new BlankNode(mockBlankNode), sym(mockDocument)),
+  st(sym(mockSubjectWithBlankNodeThenRef), sym(mockPredicate), sym(mockObjectRef), sym(mockDocument)),
+  st(sym(mockSubjectWithRefThenBlankNode), sym(mockPredicate), sym(mockObjectRef), sym(mockDocument)),
+  st(sym(mockSubjectWithRefThenBlankNode), sym(mockPredicate), new BlankNode(mockBlankNode), sym(mockDocument)),
+  st(new BlankNode(mockBlankNode), sym(mockPredicate), sym(mockObjectRef), sym(mockDocument)),
   st(sym(mockSubjectWithLiteral), sym(mockPredicate), mockObjectLiteral, sym(mockDocument)),
   st(sym(mockSubjectWithRef), sym(mockPredicate), sym(mockObjectRef), sym(mockDocument)),
   st(sym(mockSubjectWithTwoLiterals), sym(mockPredicate), mockObjectLiteral, sym(mockDocument)),
@@ -77,6 +85,13 @@ describe('asRef', () => {
     const subject = initialiseSubject(mockTripleDocument, mockSubjectWithLiteral);
     expect(subject.asRef())
       .toBe(mockSubjectWithLiteral);
+  });
+
+  it('should give access to the local ID for a Subject if it is a local Subject (i.e. a Blank Node)', () => {
+    const mockTripleDocument = getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, new BlankNode(mockBlankNode));
+    expect(subject.asRef())
+      .toBe(mockBlankNode);
   });
 });
 
@@ -336,6 +351,55 @@ describe('getAllLiterals', () => {
     const mockTripleDocument = getMockTripleDocument();
     const subject = initialiseSubject(mockTripleDocument, mockEmptySubject);
     expect(subject.getAllLiterals(mockPredicate))
+      .toEqual([]);
+  });
+});
+
+describe('getLocalSubject', () => {
+  it('should return a new TripleSubject representing a local Subject', () => {
+    const mockTripleDocument = getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithBlankNodeThenRef);
+    const localSubject = subject.getLocalSubject(mockPredicate);
+    expect(localSubject).not.toBeNull();
+    expect((localSubject as TripleSubject).getRef(mockPredicate))
+      .toEqual(mockObjectRef);
+  });
+
+  it('should return null if a Reference is found instead of a local Subject', () => {
+    const mockTripleDocument = getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithRef);
+    expect(subject.getLocalSubject(mockPredicate))
+      .toBeNull();
+  });
+
+  it('should return a new TripleSubject representing a local Subject, even if a Reference also matches the predicate', () => {
+    const mockTripleDocument = getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithRefThenBlankNode);
+    const localSubject = subject.getLocalSubject(mockPredicate);
+    expect(localSubject).not.toBeNull();
+    expect((localSubject as TripleSubject).getRef(mockPredicate))
+      .toEqual(mockObjectRef);
+  });
+
+});
+
+describe('getAllLocalSubjects', () => {
+  it('should only return local Subjects (i.e. those with a Blank Node)', () => {
+    const mockTripleDocument = getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithRefThenBlankNode);
+
+    const localSubjects = subject.getAllLocalSubjects(mockPredicate);
+
+    expect(localSubjects.length)
+      .toBe(1);
+    expect(localSubjects[0].getRef(mockPredicate))
+      .toEqual(mockObjectRef);
+  });
+
+  it('should return an empty array if nothing is found', () => {
+    const mockTripleDocument = getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockEmptySubject);
+    expect(subject.getAllLocalSubjects(mockPredicate))
       .toEqual([]);
   });
 });

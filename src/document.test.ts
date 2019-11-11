@@ -1,4 +1,4 @@
-import { graph, st, sym, Statement } from 'rdflib';
+import { graph, st, sym, Statement, BlankNode } from 'rdflib';
 import { rdf, schema } from 'rdf-namespaces';
 import { createDocument, fetchDocument } from './document';
 
@@ -10,12 +10,14 @@ const mockSubjectOfTypeMovie2 = 'https://subject4.com/';
 const mockPredicate = 'https://mock-predicate.com/';
 const mockUnusedPredicate = 'https://mock-unused-predicate.com/';
 const mockObject= 'https://mock-object.com/';
+const mockBlankNode = 'arbitrary-blank-node';
 const mockUnusedObject= 'https://mock-unused-object.com/';
 const mockStatements = [
   st(sym(mockSubjectOfTypeMovie1), sym(rdf.type), sym(schema.Movie), sym(mockDocument)),
   st(sym(mockSubjectOfTypeMovie2), sym(rdf.type), sym(schema.Movie), sym(mockDocument)),
   st(sym(mockSubject), sym(mockPredicate), sym(mockObject), sym(mockDocument)),
   st(sym(mockSubject2), sym(mockPredicate), sym(mockObject), sym(mockDocument)),
+  st(new BlankNode(mockBlankNode), sym(mockPredicate), sym(mockObject), sym(mockDocument)),
 ];
 const store = graph();
 store.addAll(mockStatements);
