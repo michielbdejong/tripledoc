@@ -116,6 +116,6 @@ export function isReference(value: Reference | BlankNode | Literal): value is Re
 export function isBlankNode(param: Reference | Literal | BlankNode): param is BlankNode {
   return (typeof param === 'object') &&
     (param !== null) &&
-    (typeof (param as Literal).termType === 'string') &&
-    (param as Literal).termType === 'BlankNode';
+    (typeof (param as BlankNode).termType === 'string') &&
+    (param as BlankNode).termType === 'BlankNode';
 }
