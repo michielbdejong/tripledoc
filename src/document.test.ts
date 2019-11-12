@@ -27,7 +27,7 @@ let mockFetchLoad: jest.Mock;
 jest.mock('./store', () => {
   mockUpdater = jest.fn(() => Promise.resolve());
   mockCreater = jest.fn(() => Promise.resolve({
-    headers: { get: () => null },
+    headers: new Headers(),
   }));
   mockFetchLoad = jest.fn(() => Promise.resolve({
     headers: new Headers()
@@ -179,9 +179,9 @@ describe('save', () => {
     expect(mockTripleDocument.getAclRef()).toBeNull();
 
     mockCreater.mockReturnValueOnce(Promise.resolve({
-      headers: {
-        get: () => '<https://some-acl-url.example>; rel="acl"'
-      },
+      headers: new Headers({
+        Link: '<https://some-acl-url.example>; rel="acl"',
+      }),
     }));
 
     await mockTripleDocument.save();
