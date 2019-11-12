@@ -4,6 +4,8 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+## [2.3.0] - 2019-11-12
+
 ### Experimental changes
 
 - A new `getLocalSubject` method (and the corresponding `getAllLocalSubjects`) has been added to the `TripleSubject` interface. It is still experimental while we figure out the naming and API, so don't rely on this for production applications - its interface might change without warning in a future minor or patch release. It enables access to data hidden in [`BlankNode`s](https://rdf.js.org/data-model-spec/#blanknode-interface). It is not currently possible to write your own Blank Nodes using Tripledoc's API.
