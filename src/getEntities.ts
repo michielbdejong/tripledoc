@@ -1,4 +1,4 @@
-import { IndexedFormula, Node, sym, Literal, NamedNode, Statement } from 'rdflib';
+import { IndexedFormula, Node, sym, Literal, NamedNode, BlankNode, Statement } from 'rdflib';
 import { Reference, isLiteral } from './index';
 
 /**
@@ -9,16 +9,16 @@ export type FindEntityInStatements = (
   knownEntity1: Reference,
   knownEntity2: Reference,
   document: Reference
-) => Reference | Literal | null;
+) => Reference | Literal | BlankNode | null;
 /**
  * @ignore This is a utility type for other parts of the code, and not part of the public API.
  */
 export type FindEntitiesInStatements = (
   statements: Statement[],
-  knownEntity1: Reference,
-  knownEntity2: Reference,
+  knownEntity1: Reference | BlankNode,
+  knownEntity2: Reference | BlankNode,
   document: Reference
-) => Array<Reference | Literal>;
+) => Array<Reference | Literal | BlankNode>;
 
 /**
  * @ignore This is a utility method for other parts of the code, and not part of the public API.
@@ -69,7 +69,7 @@ export function findEntityInStatements(
   predicateRef: null | Reference,
   objectRef: null | Reference,
   documentRef: Reference,
-): Reference | Literal | null {
+): Reference | Literal | BlankNode | null {
   const foundStatement = statements.find((statement) => {
     return (
       typeof statement[type] !== 'undefined' &&
@@ -86,11 +86,11 @@ export function findEntityInStatements(
 export function findEntitiesInStatements(
   statements: Statement[],
   type: 'subject' | 'predicate' | 'object',
-  subjectRef: null | Reference,
-  predicateRef: null | Reference,
-  objectRef: null | Reference,
+  subjectRef: null | Reference | BlankNode,
+  predicateRef: null | Reference | BlankNode,
+  objectRef: null | Reference | BlankNode,
   documentRef: Reference,
-): Array<Reference | Literal> {
+): Array<Reference | Literal | BlankNode> {
   const foundStatements = statements.filter((statement) => {
     return (
       typeof statement[type] !== 'undefined' &&
@@ -105,9 +105,9 @@ export function findEntitiesInStatements(
  */
 export function findMatchingStatements(
   statements: Statement[],
-  subjectRef: null | Reference,
-  predicateRef: null | Reference,
-  objectRef: null | Reference,
+  subjectRef: null | Reference | BlankNode,
+  predicateRef: null | Reference | BlankNode,
+  objectRef: null | Reference | BlankNode,
   documentRef: Reference,
 ): Array<Statement> {
   const foundStatements = statements.filter((statement) => {
@@ -118,14 +118,14 @@ export function findMatchingStatements(
 
 function statementMatches(
   statement: Statement,
-  subjectRef: null | Reference,
-  predicateRef: null | Reference,
-  objectRef: null | Reference,
+  subjectRef: null | Reference | BlankNode,
+  predicateRef: null | Reference | BlankNode,
+  objectRef: null | Reference | BlankNode,
   documentRef: Reference,
 ): boolean {
-  const targetSubject = subjectRef ? sym(subjectRef) : null;
-  const targetPredicate = predicateRef ? sym(predicateRef) : null;
-  const targetObject = objectRef ? sym(objectRef) : null;
+  const targetSubject = subjectRef ? toNode(subjectRef) : null;
+  const targetPredicate = predicateRef ? toNode(predicateRef) : null;
+  const targetObject = objectRef ? toNode(objectRef) : null;
   const targetDocument = sym(documentRef);
 
   return (
@@ -140,7 +140,14 @@ function statementMatches(
   );
 }
 
-function normaliseEntity(entity: Node): Reference | Literal | null {
+function toNode(referenceOrBlankNode: Reference | BlankNode): Node {
+  return (typeof referenceOrBlankNode === 'string') ? sym(referenceOrBlankNode) : referenceOrBlankNode;
+}
+
+function normaliseEntity(entity: Node): Reference | Literal | BlankNode | null {
+  if (isBlankNode(entity)) {
+    return entity;
+  }
   if (isNamedNode(entity)) {
     return entity.uri;
   }
@@ -151,7 +158,7 @@ function normaliseEntity(entity: Node): Reference | Literal | null {
   /* istanbul ignore next: All code paths to here result in either a Node or a Literal, so we can't test it */
   return null;
 }
-function isEntity(node: Reference | Literal | null): node is Reference | Literal {
+function isEntity(node: Reference | Literal | BlankNode | null): node is Reference | Literal {
   return (node !== null);
 }
 
@@ -160,5 +167,13 @@ function isEntity(node: Reference | Literal | null): node is Reference | Literal
  *         be exposed to.
  */
 function isNamedNode(node: Node): node is NamedNode {
-  return typeof (node as NamedNode).uri === 'string';
+  return node.termType === 'NamedNode';
+}
+
+/**
+ * @ignore Utility function for working with rdflib, which the library consumer should not need to
+ *         be exposed to.
+ */
+function isBlankNode(node: Node): node is BlankNode {
+  return node.termType === 'BlankNode';
 }

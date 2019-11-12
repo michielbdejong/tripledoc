@@ -1,4 +1,4 @@
-import { Literal, sym, NamedNode } from 'rdflib';
+import { Literal, sym, NamedNode, BlankNode } from 'rdflib';
 
 export * from './document';
 export * from './subject';
@@ -103,6 +103,19 @@ export const isNodeRef = isReference;
  * @param param A value that might or might not be a reference to a node in the Linked Data graph.
  * @returns Whether `param` is a reference to a node in the Linked Data graph.
  */
-export function isReference(value: Reference | Literal): value is Reference {
+export function isReference(value: Reference | BlankNode | Literal): value is Reference {
   return typeof value === 'string' && !isLiteral(value);
+}
+
+/**
+ * @ignore Blank Nodes themselves should not be exposed to library consumers, so this is merely an
+ *         internal utility function, rather than a public API.
+ * @param param A value that might or might not be a blank node in the Linked Data graph.
+ * @returns Whether `param` is a blank node in the Linked Data graph.
+ */
+export function isBlankNode(param: Reference | Literal | BlankNode): param is BlankNode {
+  return (typeof param === 'object') &&
+    (param !== null) &&
+    (typeof (param as Literal).termType === 'string') &&
+    (param as Literal).termType === 'BlankNode';
 }

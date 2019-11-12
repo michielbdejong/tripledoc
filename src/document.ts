@@ -4,7 +4,7 @@ import { rdf } from 'rdf-namespaces';
 import { getFetcher, getStore, update, create } from './store';
 import { findSubjectInStatements, FindEntityInStatements, FindEntitiesInStatements, findSubjectsInStatements } from './getEntities';
 import { TripleSubject, initialiseSubject } from './subject';
-import { Reference, isLiteral, isReference } from '.';
+import { Reference, isReference } from '.';
 
 /**
  * @ignore This is documented on use.
@@ -175,7 +175,7 @@ function instantiateDocument(uri: Reference, metadata: DocumentMetadata): Triple
   const findSubject = (predicateRef: Reference, objectRef: Reference) => {
     const findSubjectRef = withDocumentSingular(findSubjectInStatements, documentRef, statements);
     const subjectRef = findSubjectRef(predicateRef, objectRef);
-    if (!subjectRef || isLiteral(subjectRef)) {
+    if (!subjectRef || !isReference(subjectRef)) {
       return null;
     }
     return getSubject(subjectRef);

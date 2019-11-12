@@ -1,4 +1,4 @@
-import { graph, st, sym } from 'rdflib';
+import { graph, st, sym, BlankNode } from 'rdflib';
 import {
   findSubjectInStatements,
   findSubjectsInStatements,
@@ -18,6 +18,9 @@ const mockPredicate2 = 'https://predicate2.com';
 const unusedObject = 'https://unused-object.com';
 const mockObject1 = 'https://object1.com';
 const mockObject2 = 'https://object2.com';
+const mockBlankNode = new BlankNode('mock_blank_node');
+const mockSubjectWithBlankNode = 'https://subject-with-blank-node.com';
+const mockObjectForBlankNode = 'https://object-for-blank-node.com';
 function getMockStatements() {
   const statements = [
     st(sym(mockSubject1), sym(mockPredicate1), sym(mockObject1), sym(mockDocument)),
@@ -28,6 +31,8 @@ function getMockStatements() {
     st(sym(mockSubject2), sym(mockPredicate1), sym(mockObject2), sym(mockDocument)),
     st(sym(mockSubject2), sym(mockPredicate2), sym(mockObject1), sym(mockDocument)),
     st(sym(mockSubject2), sym(mockPredicate2), sym(mockObject2), sym(mockDocument)),
+    st(sym(mockSubjectWithBlankNode), sym(mockPredicate1), mockBlankNode, sym(mockDocument)),
+    st(mockBlankNode, sym(mockPredicate1), sym(mockObjectForBlankNode), sym(mockDocument)),
   ];
   return statements;
 }
@@ -57,6 +62,12 @@ describe('findSubjectsInStatements', () => {
     const mockStore = getMockStatements();
     expect(findSubjectsInStatements(mockStore, unusedPredicate, unusedObject, mockDocument))
     .toEqual([]);
+  });
+
+  it('should be able to return blank nodes', () => {
+    const mockStore = getMockStatements();
+    expect(findSubjectsInStatements(mockStore, mockPredicate1, mockObjectForBlankNode, mockDocument))
+    .toEqual([mockBlankNode]);
   });
 });
 
@@ -99,6 +110,12 @@ describe('findObjectInStatements', () => {
     const mockStore = getMockStatements();
     expect(findObjectInStatements(mockStore, unusedSubject, unusedPredicate, mockDocument))
     .toBeNull();
+  });
+
+  it('should be able to return blank nodes', () => {
+    const mockStore = getMockStatements();
+    expect(findObjectInStatements(mockStore, mockSubjectWithBlankNode, mockPredicate1, mockDocument))
+      .toEqual(mockBlankNode);
   });
 });
 

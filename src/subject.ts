@@ -1,4 +1,4 @@
-import { Statement, Literal, st, sym } from 'rdflib';
+import { Statement, Literal, st, sym, BlankNode } from 'rdflib';
 import {
   Reference,
   isLiteral,
@@ -12,6 +12,7 @@ import {
   IntegerLiteral,
   DecimalLiteral,
   StringLiteral,
+  isBlankNode,
 } from './index';
 import { getStore } from './store';
 import { findObjectsInStatements, findMatchingStatements } from './getEntities';
@@ -108,6 +109,25 @@ export interface TripleSubject {
    *             [[getAllNumbers]] and [[getAllDates]].
    */
   getAllLiterals: (predicate: Reference) => LiteralTypes[];
+  /**
+   * Find a local Subject (i.e. without its own URL) referenced by this Subject with `predicate`.
+   *
+   * This retrieves _one_ [[TripleSubject]], or `null` if none is found. If you want to find _all_
+   * local Subjects for a predicate, see [[getAllLocalSubjects]].
+   *
+   * @param getRef.predicate Which property of this Subject you want the value of.
+   * @returns The first referenced local Subject satisfying `predicate`, if any, and `null` otherwise.
+   * @ignore Experimental API; could change in minor or patch releases.
+   */
+  getLocalSubject: (predicate: Reference) => TripleSubject | null;
+  /**
+   * Find local Subject (i.e. without their own URLs) referenced by this Subject with `predicate`.
+   *
+   * @param getRef.predicate Which property of this Subject you want the values of.
+   * @returns All referenced local Subjects satisfying `predicate`.
+   * @ignore Experimental API; could change in minor or patch releases.
+   */
+  getAllLocalSubjects: (predicate: Reference) => Array<TripleSubject>;
   /**
    * Find a reference attached to this Subject with `predicate`.
    *
@@ -246,7 +266,8 @@ export interface TripleSubject {
  * @param document The Document this Subject is defined in.
  * @param subjectRef The URL that identifies this subject.
  */
-export function initialiseSubject(document: TripleDocument, subjectRef: Reference): TripleSubject {
+export function initialiseSubject(document: TripleDocument, subjectRef: Reference | BlankNode): TripleSubject {
+  const subjectNode = isBlankNode(subjectRef) ? subjectRef : sym(subjectRef);
   const statements = findMatchingStatements(document.getStatements(), subjectRef, null, null, document.asRef());
   let pendingAdditions: Statement[] = [];
   let pendingDeletions: Statement[] = [];
@@ -320,6 +341,19 @@ export function initialiseSubject(document: TripleDocument, subjectRef: Referenc
     const literals = objects.filter(isLiteral);
     return literals.map(fromLiteral);
   };
+  const getLocalSubject = (predicateRef: Reference) => {
+    const objects = get(predicateRef);
+    const firstRef = objects.find(isBlankNode);
+    if (typeof firstRef === 'undefined') {
+      return null;
+    }
+    return initialiseSubject(document, firstRef);
+  };
+  const getAllLocalSubjects = (predicateRef: Reference) => {
+    const objects = get(predicateRef);
+    const nodeRefs = objects.filter(isBlankNode);
+    return nodeRefs.map((localSubject: BlankNode) => initialiseSubject(document, localSubject));
+  };
   const getRef = (predicateRef: Reference) => {
     const objects = get(predicateRef);
     const firstRef = objects.find(isReference);
@@ -339,13 +373,13 @@ export function initialiseSubject(document: TripleDocument, subjectRef: Referenc
   }
 
   const addLiteral = (predicateRef: Reference, literal: LiteralTypes) => {
-    pendingAdditions.push(st(sym(subjectRef), sym(predicateRef), asLiteral(literal), sym(document.asRef())));
+    pendingAdditions.push(st(subjectNode, sym(predicateRef), asLiteral(literal), sym(document.asRef())));
   };
   const addRef = (predicateRef: Reference, ref: Reference) => {
-    pendingAdditions.push(st(sym(subjectRef), sym(predicateRef), sym(ref), sym(document.asRef())));
+    pendingAdditions.push(st(subjectNode, sym(predicateRef), sym(ref), sym(document.asRef())));
   };
   const removeRef = (predicateRef: Reference, nodeRef: Reference) => {
-    pendingDeletions.push(st(sym(subjectRef), sym(predicateRef), sym(nodeRef), sym(document.asRef())));
+    pendingDeletions.push(st(subjectNode, sym(predicateRef), sym(nodeRef), sym(document.asRef())));
   };
   const removeAll = (predicateRef: Reference) => {
     pendingDeletions.push(...findMatchingStatements(statements, subjectRef, predicateRef, null, document.asRef()));
@@ -358,7 +392,7 @@ export function initialiseSubject(document: TripleDocument, subjectRef: Referenc
     addRef(predicateRef, nodeRef);
   };
 
-  const asRef = () => subjectRef;
+  const asRef = () => isBlankNode(subjectRef) ? subjectRef.id : subjectRef;
 
   const subject: TripleSubject = {
     getDocument: () => document,
@@ -373,6 +407,8 @@ export function initialiseSubject(document: TripleDocument, subjectRef: Referenc
     getAllDecimals: getAllDecimals,
     getAllDateTimes: getAllDateTimes,
     getAllLiterals: getAllLiterals,
+    getLocalSubject: getLocalSubject,
+    getAllLocalSubjects: getAllLocalSubjects,
     getRef: getRef,
     getAllRefs: getAllRefs,
     getType: getType,
@@ -380,7 +416,7 @@ export function initialiseSubject(document: TripleDocument, subjectRef: Referenc
     addRef: addRef,
     removeAll: removeAll,
     removeLiteral: (predicateRef, literal) => {
-      pendingDeletions.push(st(sym(subjectRef), sym(predicateRef), asLiteral(literal), sym(document.asRef())));
+      pendingDeletions.push(st(subjectNode, sym(predicateRef), asLiteral(literal), sym(document.asRef())));
     },
     removeRef: removeRef,
     setLiteral: (predicateRef, literal) => {
