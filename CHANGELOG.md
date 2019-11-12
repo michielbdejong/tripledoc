@@ -4,6 +4,10 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+### Experimental changes
+
+- A TripleDocument now provides the experimental `getWebSocketRef` method. This method provides access to a WebSocket URL that can provide real-time notifications when a Document was updated. Since this part of the spec is likely to change in the future and is currently not very well-documented, Tripledoc provides no stability guarantees about this method.
+
 ## [2.3.0] - 2019-11-12
 
 ### Experimental changes

@@ -76,6 +76,10 @@ export interface TripleDocument {
    */
   getAclRef: () => Reference | null;
   /**
+   * @ignore Experimental API, will probably change as the Solid specification changes to no longer support WebSockets
+   */
+  getWebSocketRef: () => Reference | null;
+  /**
    * @returns The IRI of this Document.
    */
   asRef: () => Reference;
@@ -128,11 +132,19 @@ export function createDocument(ref: Reference): TripleDocument {
  */
 export async function fetchDocument(documentRef: Reference): Promise<TripleDocument> {
   const fetcher = getFetcher();
-  const response = await fetcher.load(documentRef);
+  const response: Response = await fetcher.load(documentRef);
 
   let aclRef: Reference | undefined = extractAclRef(response, documentRef);
+  const webSocketRef: Reference | null = response.headers.get('Updates-Via');
 
-  return instantiateDocument(documentRef, { aclRef: aclRef, existsOnPod: true });
+  return instantiateDocument(
+    documentRef,
+    {
+      aclRef: aclRef,
+      webSocketRef: webSocketRef || undefined,
+      existsOnPod: true,
+    },
+  );
 }
 
 function extractAclRef(response: Response, documentRef: Reference) {
@@ -150,6 +162,7 @@ function extractAclRef(response: Response, documentRef: Reference) {
 
 interface DocumentMetadata {
   aclRef?: Reference;
+  webSocketRef?: Reference;
   existsOnPod?: boolean;
 };
 function instantiateDocument(uri: Reference, metadata: DocumentMetadata): TripleDocument {
@@ -162,6 +175,9 @@ function instantiateDocument(uri: Reference, metadata: DocumentMetadata): Triple
 
   const getAclRef: () => Reference | null = () => {
     return metadata.aclRef || null;
+  };
+  const getWebSocketRef: () => Reference | null = () => {
+    return metadata.webSocketRef || null;
   };
 
   const accessedSubjects: { [iri: string]: TripleSubject } = {};
@@ -222,6 +238,10 @@ function instantiateDocument(uri: Reference, metadata: DocumentMetadata): Triple
       if (aclRef) {
         metadata.aclRef = aclRef;
       }
+      const webSocketRef = response.headers.get('Updates-Via');
+      if (webSocketRef) {
+        metadata.webSocketRef = webSocketRef;
+      }
 
       metadata.existsOnPod = true;
     } else {
@@ -241,13 +261,14 @@ function instantiateDocument(uri: Reference, metadata: DocumentMetadata): Triple
     getSubjectsOfType: getSubjectsOfType,
     findSubject: findSubject,
     findSubjects: findSubjects,
-    getAcl: getAclRef,
     getAclRef: getAclRef,
+    getWebSocketRef: getWebSocketRef,
     asRef: asRef,
     save: save,
     getStatements: getStatements,
     // Deprecated aliases, included for backwards compatibility:
     asNodeRef: asRef,
+    getAcl: getAclRef,
   };
   return tripleDocument;
 }

@@ -189,6 +189,23 @@ describe('save', () => {
     expect(mockTripleDocument.getAclRef()).toBe('https://some-acl-url.example/');
   });
 
+  it('should return the WebSocket update URL if received after creating a new Document', async () => {
+    const mockTripleDocument = createDocument(mockDocument);
+    const newSubject = mockTripleDocument.addSubject();
+    newSubject.addLiteral(schema.name, 'Arbitrary value');
+    expect(mockTripleDocument.getWebSocketRef()).toBeNull();
+
+    mockCreater.mockReturnValueOnce(Promise.resolve({
+      headers: new Headers({
+        'Updates-Via': 'wss://some-websocket-url.com'
+      }),
+    }));
+
+    await mockTripleDocument.save();
+
+    expect(mockTripleDocument.getWebSocketRef()).toBe('wss://some-websocket-url.com');
+  });
+
   it('should call `update` when modifying an existing Document', async () => {
     const mockTripleDocument = await fetchDocument(mockDocument);
     const newSubject = mockTripleDocument.addSubject();
@@ -260,5 +277,22 @@ describe('getAclRef', () => {
     }));
     const mockTripleDocument = await fetchDocument(mockDocument);
     expect(mockTripleDocument.getAclRef()).toBeNull();
+  });
+});
+
+describe('getWebSocketRef', () => {
+  it('should return null if no Updates-Via header was present', async () => {
+    const mockTripleDocument = await fetchDocument(mockDocument);
+    expect(mockTripleDocument.getWebSocketRef()).toBeNull();
+  });
+
+  it('should return the WebSocket URL if one was given', async () => {
+    mockFetchLoad.mockReturnValueOnce(Promise.resolve({
+      headers: new Headers({
+        'Updates-Via': 'wss://some-url.com',
+      }),
+    }));
+    const mockTripleDocument = await fetchDocument(mockDocument);
+    expect(mockTripleDocument.getWebSocketRef()).toBe('wss://some-url.com');
   });
 });
