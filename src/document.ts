@@ -1,8 +1,8 @@
 import LinkHeader from 'http-link-header';
 import { rdf } from 'rdf-namespaces';
-import { Quad } from 'n3';
+import { Quad, Store, N3Store, DataFactory } from 'n3';
 import { update, create, get } from './store';
-import { findSubjectInTriples, FindEntityInTriples, FindEntitiesInTriples, findSubjectsInTriples } from './getEntities';
+import { findSubjectInStore, FindEntityInStore, FindEntitiesInStore, findSubjectsInStore } from './getEntities';
 import { TripleSubject, initialiseSubject } from './subject';
 import { turtleToTriples } from './turtle';
 import { Reference, isReference } from '.';
@@ -103,6 +103,17 @@ export interface TripleDocument {
    *         simultaneously. If you rely on this, it's probably best to either file an issue
    *         describing what you want to do that Tripledoc can't do directly, or to just use n3
    *         directly.
+   * @returns An N3 Store containing the Triples pertaining to this Document that are stored on the
+   *          user's Pod. Note that this does not contain Triples that have not been saved yet -
+   *          those can be retrieved from the respective [[TripleSubject]]s.
+   */
+  getStore: () => N3Store;
+  /**
+   * @deprecated
+   * @ignore This is mostly a convenience function to make it easy to work with n3 and tripledoc
+   *         simultaneously. If you rely on this, it's probably best to either file an issue
+   *         describing what you want to do that Tripledoc can't do directly, or to just use n3
+   *         directly.
    * @returns The Triples pertaining to this Document that are stored on the user's Pod. Note that
    *          this does not return Triples that have not been saved yet - those can be retrieved
    *          from the respective [[TripleSubject]]s.
@@ -177,6 +188,8 @@ interface DocumentMetadata {
 };
 function instantiateDocument(documentRef: Reference, triples: Quad[], metadata: DocumentMetadata): TripleDocument {
   const asRef = () => documentRef;
+  const store = new Store();
+  store.addQuads(triples);
 
   const getAclRef: () => Reference | null = () => {
     return metadata.aclRef || null;
@@ -196,7 +209,7 @@ function instantiateDocument(documentRef: Reference, triples: Quad[], metadata: 
   };
 
   const findSubject = (predicateRef: Reference, objectRef: Reference) => {
-    const findSubjectRef = withDocumentSingular(findSubjectInTriples, documentRef, triples);
+    const findSubjectRef = withDocumentSingular(findSubjectInStore, documentRef, store);
     const subjectRef = findSubjectRef(predicateRef, objectRef);
     if (!subjectRef || !isReference(subjectRef)) {
       return null;
@@ -205,7 +218,7 @@ function instantiateDocument(documentRef: Reference, triples: Quad[], metadata: 
   };
 
   const findSubjects = (predicateRef: Reference, objectRef: Reference) => {
-    const findSubjectRefs = withDocumentPlural(findSubjectsInTriples, documentRef, triples);
+    const findSubjectRefs = withDocumentPlural(findSubjectsInStore, documentRef, store);
     const subjectRefs = findSubjectRefs(predicateRef, objectRef);
     return subjectRefs.filter(isReference).map(getSubject);
   };
@@ -239,7 +252,7 @@ function instantiateDocument(documentRef: Reference, triples: Quad[], metadata: 
       [[], []],
     );
 
-    let newTriples: Quad[] = triples
+    let newTriples: Quad[] = getTriples()
       .concat(allAdditions)
       .filter(tripleToDelete => allDeletions.findIndex((triple) => triple.equals(tripleToDelete)) === -1);
     if (!metadata.existsOnPod) {
@@ -262,7 +275,8 @@ function instantiateDocument(documentRef: Reference, triples: Quad[], metadata: 
     return instantiateDocument(documentRef, newTriples, metadata);
   };
 
-  const getTriples = () => triples;
+  const getStore = () => store;
+  const getTriples = () => store.getQuads(null, null, null, DataFactory.namedNode(documentRef));
 
   const tripleDocument: TripleDocument = {
     addSubject: addSubject,
@@ -275,6 +289,7 @@ function instantiateDocument(documentRef: Reference, triples: Quad[], metadata: 
     getWebSocketRef: getWebSocketRef,
     asRef: asRef,
     save: save,
+    getStore: getStore,
     getTriples: getTriples,
     // Deprecated aliases, included for backwards compatibility:
     asNodeRef: asRef,
@@ -285,20 +300,20 @@ function instantiateDocument(documentRef: Reference, triples: Quad[], metadata: 
 }
 
 const withDocumentSingular = (
-  getEntityFromTriples: FindEntityInTriples,
+  getEntityFromTriples: FindEntityInStore,
   document: Reference,
-  triples: Quad[],
+  store: N3Store,
 ) => {
   return (knownEntity1: Reference, knownEntity2: Reference) =>
-    getEntityFromTriples(triples, knownEntity1, knownEntity2, document);
+    getEntityFromTriples(store, knownEntity1, knownEntity2, document);
 };
 const withDocumentPlural = (
-  getEntitiesFromTriples: FindEntitiesInTriples,
+  getEntitiesFromTriples: FindEntitiesInStore,
   document: Reference,
-  triples: Quad[],
+  store: N3Store,
 ) => {
   return (knownEntity1: Reference, knownEntity2: Reference) =>
-    getEntitiesFromTriples(triples, knownEntity1, knownEntity2, document);
+    getEntitiesFromTriples(store, knownEntity1, knownEntity2, document);
 };
 
 /**

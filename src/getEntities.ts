@@ -1,4 +1,4 @@
-import { Quad, BlankNode, NamedNode, Literal, DataFactory, Term } from 'n3';
+import { Quad, BlankNode, NamedNode, Literal, DataFactory, Term, N3Store } from 'n3';
 import { Reference, isLiteral } from './index';
 
 /*
@@ -11,8 +11,8 @@ import { Reference, isLiteral } from './index';
 /**
  * @ignore This is a utility type for other parts of the code, and not part of the public API.
  */
-export type FindEntityInTriples = (
-  triples: Quad[],
+export type FindEntityInStore = (
+  store: N3Store,
   knownEntity1: Reference,
   knownEntity2: Reference,
   document: Reference
@@ -20,8 +20,8 @@ export type FindEntityInTriples = (
 /**
  * @ignore This is a utility type for other parts of the code, and not part of the public API.
  */
-export type FindEntitiesInTriples = (
-  triples: Quad[],
+export type FindEntitiesInStore = (
+  store: N3Store,
   knownEntity1: Reference | BlankNode,
   knownEntity2: Reference | BlankNode,
   document: Reference
@@ -30,59 +30,59 @@ export type FindEntitiesInTriples = (
 /**
  * @ignore This is a utility method for other parts of the code, and not part of the public API.
  */
-export const findSubjectInTriples: FindEntityInTriples = (triples, predicateRef, objectRef, documentRef) => {
-  return findEntityInTriples(triples, 'subject', null, predicateRef, objectRef, documentRef);
+export const findSubjectInStore: FindEntityInStore = (store, predicateRef, objectRef, documentRef) => {
+  return findEntityInStore(store, 'subject', null, predicateRef, objectRef, documentRef);
 }
 /**
  * @ignore This is a utility method for other parts of the code, and not part of the public API.
  */
-export const findSubjectsInTriples: FindEntitiesInTriples = (triples, predicateRef, objectRef, documentRef) => {
-  return findEntitiesInTriples(triples, 'subject', null, predicateRef, objectRef, documentRef);
-}
-
-/**
- * @ignore This is a utility method for other parts of the code, and not part of the public API.
- */
-export const findPredicateInTriples: FindEntityInTriples = (triples, subjectRef, objectRef, documentRef) => {
-  return findEntityInTriples(triples, 'predicate', subjectRef, null, objectRef, documentRef);
-}
-/**
- * @ignore This is a utility method for other parts of the code, and not part of the public API.
- */
-export const findPredicatesInTriples: FindEntitiesInTriples = (triples, subjectRef, objectRef, documentRef) => {
-  return findEntitiesInTriples(triples, 'predicate', subjectRef, null, objectRef, documentRef);
+export const findSubjectsInStore: FindEntitiesInStore = (store, predicateRef, objectRef, documentRef) => {
+  return findEntitiesInStore(store, 'subject', null, predicateRef, objectRef, documentRef);
 }
 
 /**
  * @ignore This is a utility method for other parts of the code, and not part of the public API.
  */
-export const findObjectInTriples: FindEntityInTriples = (triples, subjectRef, predicateRef, documentRef) => {
-  return findEntityInTriples(triples, 'object', subjectRef, predicateRef, null, documentRef);
+export const findPredicateInStore: FindEntityInStore = (store, subjectRef, objectRef, documentRef) => {
+  return findEntityInStore(store, 'predicate', subjectRef, null, objectRef, documentRef);
 }
 /**
  * @ignore This is a utility method for other parts of the code, and not part of the public API.
  */
-export const findObjectsInTriples: FindEntitiesInTriples = (triples, subjectRef, predicateRef, documentRef) => {
-  return findEntitiesInTriples(triples, 'object', subjectRef, predicateRef, null, documentRef);
+export const findPredicatesInStore: FindEntitiesInStore = (store, subjectRef, objectRef, documentRef) => {
+  return findEntitiesInStore(store, 'predicate', subjectRef, null, objectRef, documentRef);
 }
 
 /**
  * @ignore This is a utility method for other parts of the code, and not part of the public API.
  */
-export function findEntityInTriples(
-  triples: Quad[],
+export const findObjectInStore: FindEntityInStore = (store, subjectRef, predicateRef, documentRef) => {
+  return findEntityInStore(store, 'object', subjectRef, predicateRef, null, documentRef);
+}
+/**
+ * @ignore This is a utility method for other parts of the code, and not part of the public API.
+ */
+export const findObjectsInStore: FindEntitiesInStore = (store, subjectRef, predicateRef, documentRef) => {
+  return findEntitiesInStore(store, 'object', subjectRef, predicateRef, null, documentRef);
+}
+
+/**
+ * @ignore This is a utility method for other parts of the code, and not part of the public API.
+ */
+export function findEntityInStore(
+  store: N3Store,
   type: 'subject' | 'predicate' | 'object',
-  subjectRef: null | Reference,
-  predicateRef: null | Reference,
-  objectRef: null | Reference,
-  documentRef: Reference,
+  subjectRef: null | Reference | BlankNode,
+  predicateRef: null | Reference | BlankNode,
+  objectRef: null | Reference | BlankNode,
+  documentRef: Reference | BlankNode,
 ): Reference | Literal | BlankNode | null {
-  const foundTriple = triples.find((triple) => {
-    return (
-      typeof triple[type] !== 'undefined' &&
-      tripleMatches(triple, subjectRef, predicateRef, objectRef)
-    );
-  });
+  const targetSubject = subjectRef ? toNode(subjectRef) : null;
+  const targetPredicate = predicateRef ? toNode(predicateRef) : null;
+  const targetObject = objectRef ? toNode(objectRef) : null;
+  const targetDocument = objectRef ? toNode(documentRef) : null;
+  const matchingTriples = store.getQuads(targetSubject, targetPredicate, targetObject, targetDocument);
+  const foundTriple = matchingTriples.find((triple) => (typeof triple[type] !== 'undefined'));
 
   return (typeof foundTriple !== 'undefined') ? normaliseEntity(foundTriple[type]) : null;
 }
@@ -90,54 +90,22 @@ export function findEntityInTriples(
 /**
  * @ignore This is a utility method for other parts of the code, and not part of the public API.
  */
-export function findEntitiesInTriples(
-  triples: Quad[],
+export function findEntitiesInStore(
+  store: N3Store,
   type: 'subject' | 'predicate' | 'object',
   subjectRef: null | Reference | BlankNode,
   predicateRef: null | Reference | BlankNode,
   objectRef: null | Reference | BlankNode,
   documentRef: Reference,
 ): Array<Reference | Literal | BlankNode> {
-  const foundTriples = triples.filter((triple) => {
-    return (
-      typeof triple[type] !== 'undefined' &&
-      tripleMatches(triple, subjectRef, predicateRef, objectRef)
-    );
-  });
-  return foundTriples.map(triple => normaliseEntity(triple[type])).filter(isEntity);
-}
-
-/**
- * @ignore This is a utility method for other parts of the code, and not part of the public API.
- */
-export function findMatchingTriples(
-  triples: Quad[],
-  subjectRef: null | Reference | BlankNode,
-  predicateRef: null | Reference | BlankNode,
-  objectRef: null | Reference | BlankNode,
-  documentRef: Reference,
-): Array<Quad> {
-  const foundTriples = triples.filter((triple) => {
-    return tripleMatches(triple, subjectRef, predicateRef, objectRef);
-  });
-  return foundTriples;
-}
-
-function tripleMatches(
-  triple: Quad,
-  subjectRef: null | Reference | BlankNode,
-  predicateRef: null | Reference | BlankNode,
-  objectRef: null | Reference | BlankNode,
-): boolean {
   const targetSubject = subjectRef ? toNode(subjectRef) : null;
   const targetPredicate = predicateRef ? toNode(predicateRef) : null;
   const targetObject = objectRef ? toNode(objectRef) : null;
+  const targetDocument = objectRef ? toNode(documentRef) : null;
+  const matchingTriples = store.getQuads(targetSubject, targetPredicate, targetObject, targetDocument);
+  const foundTriples = matchingTriples.filter((triple) => (typeof triple[type] !== 'undefined'));
 
-  return (
-    (targetSubject === null || triple.subject.equals(targetSubject)) &&
-    (targetPredicate === null || triple.predicate.equals(targetPredicate)) &&
-    (targetObject === null || triple.object.equals(targetObject))
-  );
+  return foundTriples.map(triple => normaliseEntity(triple[type])).filter(isEntity);
 }
 
 function toNode(referenceOrBlankNode: Reference | BlankNode): Term {

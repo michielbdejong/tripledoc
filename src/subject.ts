@@ -1,4 +1,4 @@
-import { Literal, BlankNode, DataFactory, Quad } from 'n3';
+import { Literal, BlankNode, DataFactory, Quad, Store } from 'n3';
 import {
   Reference,
   isLiteral,
@@ -14,7 +14,7 @@ import {
   StringLiteral,
   isBlankNode,
 } from './index';
-import { findObjectsInTriples, findMatchingTriples } from './getEntities';
+import { findObjectsInStore } from './getEntities';
 import { TripleDocument } from './document';
 import { rdf } from 'rdf-namespaces';
 
@@ -265,13 +265,16 @@ export interface TripleSubject {
  * @param document The Document this Subject is defined in.
  * @param subjectRef The URL that identifies this subject.
  */
-export function initialiseSubject(document: TripleDocument, subjectRef: Reference | BlankNode): TripleSubject {
+export function initialiseSubject(document: TripleDocument, subjectRef: Reference| BlankNode): TripleSubject {
   const subjectNode = isBlankNode(subjectRef) ? subjectRef : DataFactory.namedNode(subjectRef);
-  const triples = findMatchingTriples(document.getTriples(), subjectRef, null, null, document.asRef());
+  const triples = document.getStore()
+    .getQuads(subjectNode, null, null, DataFactory.namedNode(document.asNodeRef()));
+  const store = new Store();
+  store.addQuads(triples);
   let pendingAdditions: Quad[] = [];
   let pendingDeletions: Quad[] = [];
 
-  const get = (predicateNode: Reference) => findObjectsInTriples(triples, subjectRef, predicateNode, document.asRef());
+  const get = (predicateNode: Reference) => findObjectsInStore(store, subjectRef, predicateNode, document.asRef());
   const getString = (predicateNode: Reference) => {
     const objects = get(predicateNode);
     const firstStringLiteral = objects.find(isStringLiteral);
@@ -396,21 +399,30 @@ export function initialiseSubject(document: TripleDocument, subjectRef: Referenc
     ));
   };
   const removeAll = (predicateRef: Reference) => {
-    pendingDeletions.push(...findMatchingTriples(triples, subjectRef, predicateRef, null, document.asRef()));
+    pendingDeletions.push(...store.getQuads(
+      subjectNode, predicateRef, null, DataFactory.namedNode(document.asRef()),
+    ));
   }
   const clear = () => {
-    pendingDeletions.push(...triples);
+    pendingDeletions.push(...getTriples());
   }
   const setRef = (predicateRef: Reference, nodeRef: Reference) => {
     removeAll(predicateRef);
     addRef(predicateRef, nodeRef);
   };
 
+  const getTriples = () => store.getQuads(
+    subjectNode,
+    null,
+    null,
+    DataFactory.namedNode(document.asRef()),
+  )
+
   const asRef = () => isBlankNode(subjectRef) ? subjectRef.id : subjectRef;
 
   const subject: TripleSubject = {
     getDocument: () => document,
-    getTriples: () => triples,
+    getTriples: getTriples,
     getString: getString,
     getInteger: getInteger,
     getDecimal: getDecimal,
