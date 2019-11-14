@@ -4,6 +4,10 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+### New features
+
+- The npm package for Tripledoc now also includes a version that uses UMD for modules. This allows you to use Tripledoc without a bundler like Webpack, by including a `<script>` tag in your HTML. Do note that the use of a bundler is still the recommended way to use Tripledoc: this should result in better performance by not shipping and parsing code that's not being used.
+
 ### Experimental changes
 
 - A TripleDocument now provides the experimental `getWebSocketRef` method. This method provides access to a WebSocket URL that can provide real-time notifications when a Document was updated. Since this part of the spec is likely to change in the future and is currently not very well-documented, Tripledoc provides no stability guarantees about this method.

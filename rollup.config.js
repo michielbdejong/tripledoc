@@ -12,6 +12,11 @@ export default {
         file: pkg.module,
         format: 'esm',
       },
+      {
+        dir: 'umd',
+        format: 'umd',
+        name: 'Tripledoc',
+      },
     ],
     plugins: [
         typescript({
