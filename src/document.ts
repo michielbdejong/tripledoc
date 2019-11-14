@@ -150,7 +150,10 @@ export async function fetchDocument(documentRef: Reference): Promise<TripleDocum
 function extractAclRef(response: Response, documentRef: Reference) {
   let aclRef: Reference | undefined;
   const linkHeader = response.headers.get('Link');
-  if (linkHeader) {
+  // `LinkHeader` might not be present when using the UMD build in the browser,
+  // in which case we just don't parse the ACL header. It is recommended to use a non-UMD build
+  // that supports code splitting anyway.
+  if (linkHeader && LinkHeader) {
     const parsedLinks = LinkHeader.parse(linkHeader);
     const aclLinks = parsedLinks.get('rel', 'acl');
     if (aclLinks.length === 1) {
