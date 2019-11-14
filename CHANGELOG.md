@@ -4,6 +4,8 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+## [2.4.0] - 2019-11-14
+
 ### New features
 
 - The npm package for Tripledoc now also includes a version that uses UMD for modules. This allows you to use Tripledoc without a bundler like Webpack, by including a `<script>` tag in your HTML. Do note that the use of a bundler is still the recommended way to use Tripledoc: this should result in better performance by not shipping and parsing code that's not being used.
