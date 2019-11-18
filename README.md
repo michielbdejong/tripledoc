@@ -9,7 +9,7 @@ It is recommended to use Tripledoc in combination with the package [rdf-namespac
 # Installation
 
 ```bash
-npm install tripledoc
+npm install tripledoc solid-auth-client
 ```
 
 # Usage
