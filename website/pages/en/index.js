@@ -141,6 +141,8 @@ class Index extends React.Component {
     };
 
     const quickStartContent = `
+# Quick start
+
 It is recommended to install Tripledoc together with:
 
 - [rdf-namespaces](https://www.npmjs.com/package/rdf-namespaces) for easy access
