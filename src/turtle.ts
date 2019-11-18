@@ -26,6 +26,10 @@ export async function triplesToTurtle(quads: Quad[]): Promise<string> {
   return rawTurtle;
 }
 
+/**
+ * @param raw Turtle that should be parsed into Triples
+ * @ignore Utility method for internal use by Tripledoc; not part of the public API.
+ */
 export async function turtleToTriples(raw: string, documentRef: Reference): Promise<Quad[]> {
   const format = 'text/turtle';
   const parser = new Parser({ format: format, baseIRI: documentRef });
