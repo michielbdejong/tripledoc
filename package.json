@@ -24,11 +24,13 @@
   "license": "MIT",
   "devDependencies": {
     "@types/jest": "^23.3.10",
+    "@types/n3": "^1.1.1",
     "concat-md": "^0.3.0",
     "jest": "^23.6.0",
     "jest-junit": "^6.0.1",
     "rollup": "^1.20.3",
     "rollup-plugin-typescript2": "^0.24.0",
+    "solid-auth-client": "^2.3.1",
     "ts-jest": "^23.10.5",
     "typedoc": "^0.14.2",
     "typedoc-plugin-markdown": "^2.1.10",
@@ -36,9 +38,12 @@
   },
   "dependencies": {
     "@types/http-link-header": "^1.0.0",
-    "@types/rdflib": "^0.20.0",
+    "@types/solid-auth-client": "^2.3.1",
     "http-link-header": "^1.0.2",
-    "rdf-namespaces": "^1.3.0",
-    "rdflib": "0.21.1"
+    "n3": "^1.2.1",
+    "rdf-namespaces": "^1.3.0"
+  },
+  "peerDependencies": {
+    "solid-auth-client": "^2.3.1"
   }
 }

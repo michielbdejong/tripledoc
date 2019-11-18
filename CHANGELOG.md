@@ -4,6 +4,11 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+### Breaking changes
+
+- Tripledoc no longer wraps rdflib, but instead uses N3.js behind the screens. This brings a number of advantages, like a smaller bundle size and hence better performance, less logging to the console, and better test coverage. However, the main change is that calls to `fetchDocument` are no longer cached: every new invocation will perform a new HTTP request. Additionally, a number of functions that weren't part of the public, documented API, like `getStore`, are no longer included.
+- Tripledoc now expects [solid-auth-client](https://www.npmjs.com/package/solid-auth-client) to be available, whereas it would previously be installed automatically as a dependency of rdflib. If you have not added solid-auth-client as a dependency yet, run `npm install solid-auth-client` after this upgrade.
+
 ## [2.4.0] - 2019-11-14
 
 ### New features

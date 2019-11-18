@@ -1,9 +1,11 @@
+import { DataFactory } from 'n3';
 import { isLiteral, isReference } from './index';
-import { lit, sym } from 'rdflib';
+
+const { literal, namedNode } = DataFactory;
 
 describe('isLiteral', () => {
-  it('should return true if a value is an RDFlib `Literal`', () => {
-    expect(isLiteral(lit('Some value', 'en', sym('http://arbitrary-node.com'))))
+  it('should return true if a value is an N3 `Literal`', () => {
+    expect(isLiteral(literal('Some value')))
       .toBe(true);
   });
 
@@ -28,8 +30,8 @@ describe('isReference', () => {
     expect(isReference('http://some-node.com')).toBe(true);
   });
 
-  it('should return false if a value is an RDFLib Literal', () => {
-    expect(isReference(lit('Some value', 'en', sym('http://arbitrary-node.com'))))
+  it('should return false if a value is an N3 Literal', () => {
+    expect(isReference(literal('Some value')))
       .toBe(false);
   });
 

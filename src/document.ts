@@ -1,9 +1,10 @@
-import { Statement, sym } from 'rdflib';
 import LinkHeader from 'http-link-header';
 import { rdf } from 'rdf-namespaces';
-import { getFetcher, getStore, update, create } from './store';
-import { findSubjectInStatements, FindEntityInStatements, FindEntitiesInStatements, findSubjectsInStatements } from './getEntities';
+import { Quad, Store, N3Store, DataFactory } from 'n3';
+import { update, create, get } from './store';
+import { findSubjectInStore, FindEntityInStore, FindEntitiesInStore, findSubjectsInStore } from './getEntities';
 import { TripleSubject, initialiseSubject } from './subject';
+import { turtleToTriples } from './turtle';
 import { Reference, isReference } from '.';
 
 /**
@@ -98,15 +99,30 @@ export interface TripleDocument {
   save: (subjects?: TripleSubject[]) => Promise<TripleDocument>;
   /**
    * @deprecated
-   * @ignore This is mostly a convenience function to make it easy to work with rdflib and tripledoc
+   * @ignore This is mostly a convenience function to make it easy to work with n3 and tripledoc
    *         simultaneously. If you rely on this, it's probably best to either file an issue
-   *         describing what you want to do that Tripledoc can't do directly, or to just use rdflib
+   *         describing what you want to do that Tripledoc can't do directly, or to just use n3
    *         directly.
-   * @returns The Statements pertaining to this Document that are stored on the user's Pod. Note that
-   *          this does not return Statements that have not been saved yet - those can be retrieved
+   * @returns An N3 Store containing the Triples pertaining to this Document that are stored on the
+   *          user's Pod. Note that this does not contain Triples that have not been saved yet -
+   *          those can be retrieved from the respective [[TripleSubject]]s.
+   */
+  getStore: () => N3Store;
+  /**
+   * @deprecated
+   * @ignore This is mostly a convenience function to make it easy to work with n3 and tripledoc
+   *         simultaneously. If you rely on this, it's probably best to either file an issue
+   *         describing what you want to do that Tripledoc can't do directly, or to just use n3
+   *         directly.
+   * @returns The Triples pertaining to this Document that are stored on the user's Pod. Note that
+   *          this does not return Triples that have not been saved yet - those can be retrieved
    *          from the respective [[TripleSubject]]s.
    */
-  getStatements: () => Statement[];
+  getTriples: () => Quad[];
+  /**
+   * @deprecated Replaced by [[getTriples]]
+   */
+  getStatements: () => Quad[];
 };
 
 /**
@@ -115,30 +131,32 @@ export interface TripleDocument {
  * Note that this Document will not be created on the Pod until you call [[save]] on it.
  *
  * @param ref URL where this document should live
- * @param statements Initial statements to be included in this document
  */
 export function createDocument(ref: Reference): TripleDocument {
-  return instantiateDocument(ref, { existsOnPod: false });
+  return instantiateDocument(ref, [], { existsOnPod: false });
 }
 
 /**
  * Retrieve a document containing RDF triples
  *
- * Note that if you fetch the same document twice, it will be cached; only one
- * network request will be performed.
- *
  * @param documentRef Where the document lives.
  * @returns Representation of triples in the document at `uri`.
  */
-export async function fetchDocument(documentRef: Reference): Promise<TripleDocument> {
-  const fetcher = getFetcher();
-  const response: Response = await fetcher.load(documentRef);
+export async function fetchDocument(uri: Reference): Promise<TripleDocument> {
+  // Remove fragment identifiers (e.g. `#me`) from the URI:
+  const docUrl = new URL(uri);
+  const documentRef: Reference = docUrl.origin + docUrl.pathname + docUrl.search;
+
+  const response = await get(documentRef);
+  const rawDocument = await response.text();
+  const triples = await turtleToTriples(rawDocument, documentRef);
 
   let aclRef: Reference | undefined = extractAclRef(response, documentRef);
   const webSocketRef: Reference | null = response.headers.get('Updates-Via');
 
   return instantiateDocument(
     documentRef,
+    triples,
     {
       aclRef: aclRef,
       webSocketRef: webSocketRef || undefined,
@@ -168,13 +186,10 @@ interface DocumentMetadata {
   webSocketRef?: Reference;
   existsOnPod?: boolean;
 };
-function instantiateDocument(uri: Reference, metadata: DocumentMetadata): TripleDocument {
-  const docUrl = new URL(uri);
-  // Remove fragment identifiers (e.g. `#me`) from the URI:
-  const documentRef: Reference = docUrl.origin + docUrl.pathname + docUrl.search;
-  const statements: Statement[] = getStore().statementsMatching(null, null, null, sym(documentRef));
-
+function instantiateDocument(documentRef: Reference, triples: Quad[], metadata: DocumentMetadata): TripleDocument {
   const asRef = () => documentRef;
+  const store = new Store();
+  store.addQuads(triples);
 
   const getAclRef: () => Reference | null = () => {
     return metadata.aclRef || null;
@@ -185,6 +200,8 @@ function instantiateDocument(uri: Reference, metadata: DocumentMetadata): Triple
 
   const accessedSubjects: { [iri: string]: TripleSubject } = {};
   const getSubject = (subjectRef: Reference) => {
+    // Allow relative URLs to access Subjects in this Document:
+    subjectRef = new URL(subjectRef, documentRef).href;
     if (!accessedSubjects[subjectRef]) {
       accessedSubjects[subjectRef] = initialiseSubject(tripleDocument, subjectRef);
     }
@@ -192,7 +209,7 @@ function instantiateDocument(uri: Reference, metadata: DocumentMetadata): Triple
   };
 
   const findSubject = (predicateRef: Reference, objectRef: Reference) => {
-    const findSubjectRef = withDocumentSingular(findSubjectInStatements, documentRef, statements);
+    const findSubjectRef = withDocumentSingular(findSubjectInStore, documentRef, store);
     const subjectRef = findSubjectRef(predicateRef, objectRef);
     if (!subjectRef || !isReference(subjectRef)) {
       return null;
@@ -201,7 +218,7 @@ function instantiateDocument(uri: Reference, metadata: DocumentMetadata): Triple
   };
 
   const findSubjects = (predicateRef: Reference, objectRef: Reference) => {
-    const findSubjectRefs = withDocumentPlural(findSubjectsInStatements, documentRef, statements);
+    const findSubjectRefs = withDocumentPlural(findSubjectsInStore, documentRef, store);
     const subjectRefs = findSubjectRefs(predicateRef, objectRef);
     return subjectRefs.filter(isReference).map(getSubject);
   };
@@ -226,15 +243,18 @@ function instantiateDocument(uri: Reference, metadata: DocumentMetadata): Triple
 
   const save = async (subjects = Object.values(accessedSubjects)) => {
     const relevantSubjects = subjects.filter(subject => subject.getDocument().asRef() === documentRef);
-    type UpdateStatements = [Statement[], Statement[]];
-    const [allDeletions, allAdditions] = relevantSubjects.reduce<UpdateStatements>(
+    type UpdateTriples = [Quad[], Quad[]];
+    const [allDeletions, allAdditions] = relevantSubjects.reduce<UpdateTriples>(
       ([deletionsSoFar, additionsSoFar], subject) => {
-        const [deletions, additions] = subject.getPendingStatements();
+        const [deletions, additions] = subject.getPendingTriples();
         return [deletionsSoFar.concat(deletions), additionsSoFar.concat(additions)];
       },
       [[], []],
     );
 
+    let newTriples: Quad[] = getTriples()
+      .concat(allAdditions)
+      .filter(tripleToDelete => allDeletions.findIndex((triple) => triple.equals(tripleToDelete)) === -1);
     if (!metadata.existsOnPod) {
       const response = await create(documentRef, allAdditions);
       const aclRef = extractAclRef(response, documentRef);
@@ -248,14 +268,15 @@ function instantiateDocument(uri: Reference, metadata: DocumentMetadata): Triple
 
       metadata.existsOnPod = true;
     } else {
-      await update(allDeletions, allAdditions);
+      await update(documentRef, allDeletions, allAdditions);
     }
 
-    // Instantiate a new TripleDocument that includes the updated Statements:
-    return instantiateDocument(documentRef, metadata);
+    // Instantiate a new TripleDocument that includes the updated Triples:
+    return instantiateDocument(documentRef, newTriples, metadata);
   };
 
-  const getStatements = () => statements;
+  const getStore = () => store;
+  const getTriples = () => store.getQuads(null, null, null, DataFactory.namedNode(documentRef));
 
   const tripleDocument: TripleDocument = {
     addSubject: addSubject,
@@ -268,29 +289,31 @@ function instantiateDocument(uri: Reference, metadata: DocumentMetadata): Triple
     getWebSocketRef: getWebSocketRef,
     asRef: asRef,
     save: save,
-    getStatements: getStatements,
+    getStore: getStore,
+    getTriples: getTriples,
     // Deprecated aliases, included for backwards compatibility:
     asNodeRef: asRef,
     getAcl: getAclRef,
+    getStatements: getTriples,
   };
   return tripleDocument;
 }
 
 const withDocumentSingular = (
-  getEntityFromStatements: FindEntityInStatements,
+  getEntityFromTriples: FindEntityInStore,
   document: Reference,
-  statements: Statement[],
+  store: N3Store,
 ) => {
   return (knownEntity1: Reference, knownEntity2: Reference) =>
-    getEntityFromStatements(statements, knownEntity1, knownEntity2, document);
+    getEntityFromTriples(store, knownEntity1, knownEntity2, document);
 };
 const withDocumentPlural = (
-  getEntitiesFromStatements: FindEntitiesInStatements,
+  getEntitiesFromTriples: FindEntitiesInStore,
   document: Reference,
-  statements: Statement[],
+  store: N3Store,
 ) => {
   return (knownEntity1: Reference, knownEntity2: Reference) =>
-    getEntitiesFromStatements(statements, knownEntity1, knownEntity2, document);
+    getEntitiesFromTriples(store, knownEntity1, knownEntity2, document);
 };
 
 /**

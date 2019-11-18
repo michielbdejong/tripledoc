@@ -1,11 +1,18 @@
-import { IndexedFormula, Node, sym, Literal, NamedNode, BlankNode, Statement } from 'rdflib';
+import { Quad, BlankNode, NamedNode, Literal, DataFactory, Term, N3Store } from 'n3';
 import { Reference, isLiteral } from './index';
+
+/*
+ * Note: This file is mostly a remnant from when Tripledoc used rdflib.
+ *       At some point in time, we should transition from traversing an array of Quads,
+ *       to using n3's store and its methods (`getSubjects`, `getPredicates`, etc.),
+ *       which should be more performant.
+ */
 
 /**
  * @ignore This is a utility type for other parts of the code, and not part of the public API.
  */
-export type FindEntityInStatements = (
-  statements: Statement[],
+export type FindEntityInStore = (
+  store: N3Store,
   knownEntity1: Reference,
   knownEntity2: Reference,
   document: Reference
@@ -13,8 +20,8 @@ export type FindEntityInStatements = (
 /**
  * @ignore This is a utility type for other parts of the code, and not part of the public API.
  */
-export type FindEntitiesInStatements = (
-  statements: Statement[],
+export type FindEntitiesInStore = (
+  store: N3Store,
   knownEntity1: Reference | BlankNode,
   knownEntity2: Reference | BlankNode,
   document: Reference
@@ -23,133 +30,94 @@ export type FindEntitiesInStatements = (
 /**
  * @ignore This is a utility method for other parts of the code, and not part of the public API.
  */
-export const findSubjectInStatements: FindEntityInStatements = (statements, predicateRef, objectRef, documentRef) => {
-  return findEntityInStatements(statements, 'subject', null, predicateRef, objectRef, documentRef);
+export const findSubjectInStore: FindEntityInStore = (store, predicateRef, objectRef, documentRef) => {
+  return findEntityInStore(store, 'subject', null, predicateRef, objectRef, documentRef);
 }
 /**
  * @ignore This is a utility method for other parts of the code, and not part of the public API.
  */
-export const findSubjectsInStatements: FindEntitiesInStatements = (statements, predicateRef, objectRef, documentRef) => {
-  return findEntitiesInStatements(statements, 'subject', null, predicateRef, objectRef, documentRef);
-}
-
-/**
- * @ignore This is a utility method for other parts of the code, and not part of the public API.
- */
-export const findPredicateInStatements: FindEntityInStatements = (statements, subjectRef, objectRef, documentRef) => {
-  return findEntityInStatements(statements, 'predicate', subjectRef, null, objectRef, documentRef);
-}
-/**
- * @ignore This is a utility method for other parts of the code, and not part of the public API.
- */
-export const findPredicatesInStatements: FindEntitiesInStatements = (statements, subjectRef, objectRef, documentRef) => {
-  return findEntitiesInStatements(statements, 'predicate', subjectRef, null, objectRef, documentRef);
+export const findSubjectsInStore: FindEntitiesInStore = (store, predicateRef, objectRef, documentRef) => {
+  return findEntitiesInStore(store, 'subject', null, predicateRef, objectRef, documentRef);
 }
 
 /**
  * @ignore This is a utility method for other parts of the code, and not part of the public API.
  */
-export const findObjectInStatements: FindEntityInStatements = (statements, subjectRef, predicateRef, documentRef) => {
-  return findEntityInStatements(statements, 'object', subjectRef, predicateRef, null, documentRef);
+export const findPredicateInStore: FindEntityInStore = (store, subjectRef, objectRef, documentRef) => {
+  return findEntityInStore(store, 'predicate', subjectRef, null, objectRef, documentRef);
 }
 /**
  * @ignore This is a utility method for other parts of the code, and not part of the public API.
  */
-export const findObjectsInStatements: FindEntitiesInStatements = (statements, subjectRef, predicateRef, documentRef) => {
-  return findEntitiesInStatements(statements, 'object', subjectRef, predicateRef, null, documentRef);
+export const findPredicatesInStore: FindEntitiesInStore = (store, subjectRef, objectRef, documentRef) => {
+  return findEntitiesInStore(store, 'predicate', subjectRef, null, objectRef, documentRef);
 }
 
 /**
  * @ignore This is a utility method for other parts of the code, and not part of the public API.
  */
-export function findEntityInStatements(
-  statements: Statement[],
+export const findObjectInStore: FindEntityInStore = (store, subjectRef, predicateRef, documentRef) => {
+  return findEntityInStore(store, 'object', subjectRef, predicateRef, null, documentRef);
+}
+/**
+ * @ignore This is a utility method for other parts of the code, and not part of the public API.
+ */
+export const findObjectsInStore: FindEntitiesInStore = (store, subjectRef, predicateRef, documentRef) => {
+  return findEntitiesInStore(store, 'object', subjectRef, predicateRef, null, documentRef);
+}
+
+/**
+ * @ignore This is a utility method for other parts of the code, and not part of the public API.
+ */
+export function findEntityInStore(
+  store: N3Store,
   type: 'subject' | 'predicate' | 'object',
-  subjectRef: null | Reference,
-  predicateRef: null | Reference,
-  objectRef: null | Reference,
-  documentRef: Reference,
+  subjectRef: null | Reference | BlankNode,
+  predicateRef: null | Reference | BlankNode,
+  objectRef: null | Reference | BlankNode,
+  documentRef: Reference | BlankNode,
 ): Reference | Literal | BlankNode | null {
-  const foundStatement = statements.find((statement) => {
-    return (
-      typeof statement[type] !== 'undefined' &&
-      statementMatches(statement, subjectRef, predicateRef, objectRef, documentRef)
-    );
-  });
+  const targetSubject = subjectRef ? toNode(subjectRef) : null;
+  const targetPredicate = predicateRef ? toNode(predicateRef) : null;
+  const targetObject = objectRef ? toNode(objectRef) : null;
+  const targetDocument = objectRef ? toNode(documentRef) : null;
+  const matchingTriples = store.getQuads(targetSubject, targetPredicate, targetObject, targetDocument);
+  const foundTriple = matchingTriples.find((triple) => (typeof triple[type] !== 'undefined'));
 
-  return (typeof foundStatement !== 'undefined') ? normaliseEntity(foundStatement[type]) : null;
+  return (typeof foundTriple !== 'undefined') ? normaliseEntity(foundTriple[type]) : null;
 }
 
 /**
  * @ignore This is a utility method for other parts of the code, and not part of the public API.
  */
-export function findEntitiesInStatements(
-  statements: Statement[],
+export function findEntitiesInStore(
+  store: N3Store,
   type: 'subject' | 'predicate' | 'object',
   subjectRef: null | Reference | BlankNode,
   predicateRef: null | Reference | BlankNode,
   objectRef: null | Reference | BlankNode,
   documentRef: Reference,
 ): Array<Reference | Literal | BlankNode> {
-  const foundStatements = statements.filter((statement) => {
-    return (
-      typeof statement[type] !== 'undefined' &&
-      statementMatches(statement, subjectRef, predicateRef, objectRef, documentRef)
-    );
-  });
-  return foundStatements.map(statement => normaliseEntity(statement[type])).filter(isEntity);
-}
-
-/**
- * @ignore This is a utility method for other parts of the code, and not part of the public API.
- */
-export function findMatchingStatements(
-  statements: Statement[],
-  subjectRef: null | Reference | BlankNode,
-  predicateRef: null | Reference | BlankNode,
-  objectRef: null | Reference | BlankNode,
-  documentRef: Reference,
-): Array<Statement> {
-  const foundStatements = statements.filter((statement) => {
-    return statementMatches(statement, subjectRef, predicateRef, objectRef, documentRef);
-  });
-  return foundStatements;
-}
-
-function statementMatches(
-  statement: Statement,
-  subjectRef: null | Reference | BlankNode,
-  predicateRef: null | Reference | BlankNode,
-  objectRef: null | Reference | BlankNode,
-  documentRef: Reference,
-): boolean {
   const targetSubject = subjectRef ? toNode(subjectRef) : null;
   const targetPredicate = predicateRef ? toNode(predicateRef) : null;
   const targetObject = objectRef ? toNode(objectRef) : null;
-  const targetDocument = sym(documentRef);
+  const targetDocument = objectRef ? toNode(documentRef) : null;
+  const matchingTriples = store.getQuads(targetSubject, targetPredicate, targetObject, targetDocument);
+  const foundTriples = matchingTriples.filter((triple) => (typeof triple[type] !== 'undefined'));
 
-  return (
-    (targetSubject === null || statement.subject.sameTerm(targetSubject)) &&
-    (targetPredicate === null || statement.predicate.sameTerm(targetPredicate)) &&
-    (targetObject === null || statement.object.sameTerm(targetObject)) &&
-    (targetDocument === null || (
-      typeof statement.why !== 'undefined' &&
-      isNamedNode(statement.why as Node) &&
-      (statement.why as Node).sameTerm(targetDocument)
-    ))
-  );
+  return foundTriples.map(triple => normaliseEntity(triple[type])).filter(isEntity);
 }
 
-function toNode(referenceOrBlankNode: Reference | BlankNode): Node {
-  return (typeof referenceOrBlankNode === 'string') ? sym(referenceOrBlankNode) : referenceOrBlankNode;
+function toNode(referenceOrBlankNode: Reference | BlankNode): Term {
+  return (typeof referenceOrBlankNode === 'string') ? DataFactory.namedNode(referenceOrBlankNode) : referenceOrBlankNode;
 }
 
-function normaliseEntity(entity: Node): Reference | Literal | BlankNode | null {
+function normaliseEntity(entity: Term): Reference | Literal | BlankNode | null {
   if (isBlankNode(entity)) {
     return entity;
   }
   if (isNamedNode(entity)) {
-    return entity.uri;
+    return entity.value;
   }
   /* istanbul ignore else: All code paths to here result in either a Node or a Literal, so we can't test it */
   if (isLiteral(entity)) {
@@ -163,10 +131,10 @@ function isEntity(node: Reference | Literal | BlankNode | null): node is Referen
 }
 
 /**
- * @ignore Utility function for working with rdflib, which the library consumer should not need to
+ * @ignore Utility function for working with N3, which the library consumer should not need to
  *         be exposed to.
  */
-function isNamedNode(node: Node): node is NamedNode {
+function isNamedNode(node: Term): node is NamedNode {
   return node.termType === 'NamedNode';
 }
 
@@ -174,6 +142,6 @@ function isNamedNode(node: Node): node is NamedNode {
  * @ignore Utility function for working with rdflib, which the library consumer should not need to
  *         be exposed to.
  */
-function isBlankNode(node: Node): node is BlankNode {
+function isBlankNode(node: Term): node is BlankNode {
   return node.termType === 'BlankNode';
 }
