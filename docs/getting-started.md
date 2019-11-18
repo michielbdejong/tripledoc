@@ -40,7 +40,7 @@ async function getTimblProfile() {
 }
 
 function getName(profile) {
-  return profile.getLiteral(foaf.name);
+  return profile.getString(foaf.name);
 }
 
 async function getFriends(profile) {

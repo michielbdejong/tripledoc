@@ -64,7 +64,7 @@ class HomeSplash extends React.Component {
         <div className="inner">
           <ProjectTitle siteConfig={siteConfig} />
           <PromoSection>
-            <Button href={docUrl('getting-started')}>Get started</Button>
+            <Button href={docUrl('writing-a-solid-app/writing-a-solid-app')}>Get started</Button>
           </PromoSection>
         </div>
       </SplashContainer>
@@ -75,7 +75,9 @@ class HomeSplash extends React.Component {
 class Index extends React.Component {
   render() {
     const {config: siteConfig, language = ''} = this.props;
-    const {baseUrl} = siteConfig;
+    const {baseUrl, docsUrl} = siteConfig;
+    const docsPart = `${docsUrl ? `${docsUrl}/` : ''}`;
+    const docUrl = doc => `${baseUrl}${docsPart}${doc}`;
 
     const Block = props => (
       <Container
@@ -138,11 +140,56 @@ class Index extends React.Component {
       );
     };
 
+    const quickStartContent = `
+It is recommended to install Tripledoc together with:
+
+- [rdf-namespaces](https://www.npmjs.com/package/rdf-namespaces) for easy access
+to common vocabularies and their terms.
+- [solid-auth-client](https://www.npmjs.com/package/solid-auth-client) to handle authentication.
+
+
+    npm install --save tripledoc rdf-namespaces solid-auth-client
+
+The two primary data structures in Tripledoc are:
+
+- [TripleDocument](api/interfaces/tripledocument/), representing an
+[RDF Document](https://www.w3.org/TR/2014/REC-rdf11-concepts-20140225/#dfn-rdf-document).
+- [TripleSubject](api/interfaces/triplesubject/). a node in the RDF graph that can be queried for
+[Triples](https://www.w3.org/TR/2014/REC-rdf11-concepts-20140225/#dfn-rdf-triple)
+in which it occurs as the Subject.
+
+
+For a more thorough introduction, read our [**guide to writing Solid Apps**](writing-a-solid-app/writing-a-solid-app).
+`;
+    const QuickStart = () => (
+      <Container
+        padding={['bottom', 'top']}
+        id="quickstart"
+        background="light"
+      >
+        <MarkdownBlock>
+          {quickStartContent}
+        </MarkdownBlock>
+      </Container>
+    );
+
+  const Demo = () => (
+    <iframe
+     src="https://codesandbox.io/embed/youthful-proskuriakova-1tlqw?autoresize=1&hidenavigation=1&module=%2Fsrc%2Findex.ts&theme=light"
+     style={{width: '100%', height: '500px', border: 0, overflow: 'hidden'}}
+     title="tripledoc-quickstart"
+     allow="geolocation; microphone; camera; midi; vr; accelerometer; gyroscope; payment; ambient-light-sensor; encrypted-media; usb"
+     sandbox="allow-modals allow-forms allow-popups allow-scripts allow-same-origin"
+    ></iframe>
+  );
+
     return (
       <div>
         <HomeSplash siteConfig={siteConfig} language={language} />
         <div className="mainContainer">
           <Features />
+          <QuickStart/>
+          <Demo/>
           <Showcase />
         </div>
       </div>

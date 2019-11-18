@@ -5,17 +5,20 @@
     "previous": "Previous",
     "tagline": "The easiest way to get started writing Solid apps",
     "docs": {
+      "about": {
+        "title": "Why Tripledoc?"
+      },
       "api/index": {
-        "title": "'tripledoc'",
-        "sidebar_label": "'Globals'"
+        "title": "tripledoc",
+        "sidebar_label": "Globals"
       },
       "api/interfaces/tripledocument": {
-        "title": "'TripleDocument'",
-        "sidebar_label": "'TripleDocument'"
+        "title": "TripleDocument",
+        "sidebar_label": "TripleDocument"
       },
       "api/interfaces/triplesubject": {
-        "title": "'TripleSubject'",
-        "sidebar_label": "'TripleSubject'"
+        "title": "TripleSubject",
+        "sidebar_label": "TripleSubject"
       },
       "cheatsheet": {
         "title": "Cheatsheet"
@@ -44,7 +47,8 @@
     },
     "links": {
       "Getting started": "Getting started",
-      "API reference": "API reference"
+      "API reference": "API reference",
+      "Cheatsheet": "Cheatsheet"
     },
     "categories": {
       "Writing a Solid App": "Writing a Solid App"
