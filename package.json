@@ -9,7 +9,10 @@
     "prepublishOnly": "yarn run build"
   },
   "keywords": [
-    "rdf"
+    "rdf",
+    "solid",
+    "linked data",
+    "turtle"
   ],
   "homepage": "https://vincenttunru.gitlab.io/tripledoc/",
   "bugs": "https://gitlab.com/vincenttunru/tripledoc/issues",
