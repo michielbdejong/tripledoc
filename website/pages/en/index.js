@@ -161,7 +161,7 @@ The two primary data structures in Tripledoc are:
 in which it occurs as the Subject.
 
 
-For a more thorough introduction, read our [**guide to writing Solid Apps**](writing-a-solid-app/writing-a-solid-app).
+For a more thorough introduction, read our [**guide to writing Solid Apps**](docs/writing-a-solid-app/writing-a-solid-app).
 `;
     const QuickStart = () => (
       <Container
