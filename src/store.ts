@@ -65,6 +65,7 @@ export async function create(url: string, triplesToAdd: Quad[]): Promise<Respons
     body: rawTurtle,
     headers: {
       'Content-Type': 'text/turtle',
+      'If-None-Match': '*',
     },
   });
   return response;

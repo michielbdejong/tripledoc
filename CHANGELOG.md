@@ -4,6 +4,10 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+### Bugs fixed
+
+- When you attempted to create a Document that already existed (i.e. `createDocument(<some existing URL>).save()`), Tripledoc would not tell the server that it did not expect it to exist yet. But no more! Tripledoc will now send the `If-None-Match` header, and the server will reject the request if the Document _does_ already exist.
+
 ## [3.0.0] - 2019-11-18
 
 ### Breaking changes
