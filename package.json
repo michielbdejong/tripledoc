@@ -28,9 +28,11 @@
   "devDependencies": {
     "@types/jest": "^23.3.10",
     "@types/n3": "^1.1.1",
+    "@types/node-fetch": "^2.5.4",
     "concat-md": "^0.3.0",
     "jest": "^23.6.0",
     "jest-junit": "^6.0.1",
+    "node-fetch": "^2.6.0",
     "rollup": "^1.20.3",
     "rollup-plugin-typescript2": "^0.24.0",
     "solid-auth-client": "^2.3.1",
