@@ -1,5 +1,6 @@
 import { rdf, schema } from 'rdf-namespaces';
 import { DataFactory, Quad } from 'n3';
+import { Response } from 'node-fetch';
 import { createDocument, fetchDocument } from './document';
 import { triplesToTurtle } from './turtle';
 
@@ -22,22 +23,14 @@ const mockTriples = [
   quad(namedNode(mockSubject2), namedNode(mockPredicate), namedNode(mockObject), namedNode(mockDocument)),
   quad(blankNode(mockBlankNode), namedNode(mockPredicate), namedNode(mockObject), namedNode(mockDocument)),
 ];
-const turtle = triplesToTurtle(mockTriples);
+const turtlePromise = triplesToTurtle(mockTriples);
 let mockUpdater: jest.Mock;
 let mockCreater: jest.Mock;
 let mockGetter: jest.Mock;
-let mockHeaders = {
-  get: jest.fn(),
-};
 jest.mock('./store', () => {
   mockUpdater = jest.fn(() => Promise.resolve());
-  mockCreater = jest.fn(() => Promise.resolve({
-    headers: mockHeaders,
-  }));
-  mockGetter = jest.fn(() => Promise.resolve({
-    headers: mockHeaders,
-    text: jest.fn(() => Promise.resolve(turtle)),
-  }));
+  mockCreater = jest.fn(() => Promise.resolve(new Response));
+  mockGetter = jest.fn(() => turtlePromise.then(turtle => new Response(turtle)));
   return {
     get: mockGetter,
     update: mockUpdater,
@@ -49,6 +42,22 @@ async function getMockTripleDocument() {
   const mockTripleDocument = await fetchDocument(mockDocument);
   return mockTripleDocument;
 }
+
+describe('fetchDocument', () => {
+  it('should error when the server returns a 403', () => {
+    mockGetter.mockReturnValueOnce(Promise.resolve(new Response('Not allowed', {
+      status: 403,
+    })));
+    expect(fetchDocument(mockDocument)).rejects.toEqual(new Error('Fetching the Document failed: 403 Forbidden.'));
+  });
+
+  it('should error when the server returns a 404', () => {
+    mockGetter.mockReturnValueOnce(Promise.resolve(new Response('Does not exist', {
+      status: 404,
+    })));
+    expect(fetchDocument(mockDocument)).rejects.toEqual(new Error('Fetching the Document failed: 404 Not Found.'));
+  });
+});
 
 describe('getSubject', () => {
   it('should not re-initialise Subjects every time they are accessed', async () => {
@@ -191,7 +200,11 @@ describe('save', () => {
     newSubject.addLiteral(schema.name, 'Arbitrary value');
     expect(mockTripleDocument.getAclRef()).toBeNull();
 
-    mockHeaders.get.mockReturnValueOnce('<https://some-acl-url.example>; rel="acl"');
+    mockCreater.mockReturnValueOnce(turtlePromise.then(turtle => new Response(turtle, {
+      headers: {
+        Link: '<https://some-acl-url.example>; rel="acl"',
+      },
+    })));
 
     await mockTripleDocument.save();
 
@@ -204,11 +217,11 @@ describe('save', () => {
     newSubject.addLiteral(schema.name, 'Arbitrary value');
     expect(mockTripleDocument.getWebSocketRef()).toBeNull();
 
-    // The `Link` header is accessed first, to get the ACL Reference,
-    // then the Updates-Via header is accessed second.
-    // Better ways of mocking the latter's value specifically are welcome.
-    mockHeaders.get.mockReturnValueOnce(null);
-    mockHeaders.get.mockReturnValueOnce('wss://some-websocket-url.com');
+    mockCreater.mockReturnValueOnce(turtlePromise.then(turtle => new Response(turtle, {
+      headers: {
+        'Updates-Via': 'wss://some-websocket-url.com',
+      },
+    })));
 
     await mockTripleDocument.save();
 
@@ -262,22 +275,33 @@ describe('getAclRef', () => {
   });
 
   it('should return the ACL URL if one was given', async () => {
-    mockHeaders.get.mockReturnValueOnce('<https://mock-acl.com>; rel="acl"; title="Mock ACL", ');
+    mockGetter.mockReturnValueOnce(turtlePromise.then(turtle => new Response(turtle, {
+      headers: {
+        Link: '<https://mock-acl.com>; rel="acl"; title="Mock ACL", ',
+      },
+    })));
     const mockTripleDocument = await fetchDocument(mockDocument);
     expect(mockTripleDocument.getAclRef()).toBe('https://mock-acl.com/');
   });
 
   it('should properly resolve the ACL if its URL is relative', async () => {
-    mockHeaders.get.mockReturnValueOnce('<relative-path.ttl.acl>; rel="acl"; title="Mock ACL", ');
+    mockGetter.mockReturnValueOnce(turtlePromise.then(turtle => new Response(turtle, {
+      headers: {
+        Link: '<relative-path.ttl.acl>; rel="acl"; title="Mock ACL", ',
+      },
+    })));
     const mockTripleDocument = await fetchDocument('https://some-doc.example/relative-path.ttl');
     expect(mockTripleDocument.getAclRef()).toBe('https://some-doc.example/relative-path.ttl.acl');
   });
 
   it('should return null if more than one ACL was given', async () => {
-    mockHeaders.get.mockReturnValueOnce(
-      '<https://mock-acl.com>; rel="acl"; title="Mock ACL", ' +
-      '<https://mock-acl-2.com>; rel="acl"; title="Mock ACL 2", '
-    );
+    mockGetter.mockReturnValueOnce(turtlePromise.then(turtle => new Response(turtle, {
+      headers: {
+        Link:
+          '<https://mock-acl.com>; rel="acl"; title="Mock ACL", ' +
+          '<https://mock-acl-2.com>; rel="acl"; title="Mock ACL 2", ',
+      },
+    })));
     const mockTripleDocument = await fetchDocument(mockDocument);
     expect(mockTripleDocument.getAclRef()).toBeNull();
   });
@@ -290,11 +314,11 @@ describe('getWebSocketRef', () => {
   });
 
   it('should return the WebSocket URL if one was given', async () => {
-    // The `Link` header is accessed first, to get the ACL Reference,
-    // then the Updates-Via header is accessed second.
-    // Better ways of mocking the latter's value specifically are welcome.
-    mockHeaders.get.mockReturnValueOnce(null);
-    mockHeaders.get.mockReturnValueOnce('wss://some-websocket-url.com');
+    mockGetter.mockReturnValueOnce(turtlePromise.then(turtle => new Response(turtle, {
+      headers: {
+        'Updates-Via': 'wss://some-websocket-url.com',
+      },
+    })));
     const mockTripleDocument = await fetchDocument(mockDocument);
     expect(mockTripleDocument.getWebSocketRef()).toBe('wss://some-websocket-url.com');
   });

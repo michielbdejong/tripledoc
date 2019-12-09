@@ -148,6 +148,9 @@ export async function fetchDocument(uri: Reference): Promise<TripleDocument> {
   const documentRef: Reference = docUrl.origin + docUrl.pathname + docUrl.search;
 
   const response = await get(documentRef);
+  if (response.ok === false) {
+    throw new Error(`Fetching the Document failed: ${response.status} ${response.statusText}.`);
+  }
   const rawDocument = await response.text();
   const triples = await turtleToTriples(rawDocument, documentRef);
 
