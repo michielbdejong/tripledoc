@@ -81,22 +81,13 @@ export interface TripleDocument {
    */
   getWebSocketRef: () => Reference | null;
   /**
-   * @returns The IRI of this Document.
-   */
-  asRef: () => Reference;
-  /**
-   * @ignore Deprecated.
-   * @deprecated Replaced by [[asRef]].
-   */
-  asNodeRef: () => Reference;
-  /**
    * Persist Subjects in this Document to the Pod.
    *
    * @param save.subjects Optional array of specific Subjects within this Document that should be
    *                      written to the Pod, i.e. excluding Subjects not in this array.
    * @return The updated Document with persisted Subjects.
    */
-  save: (subjects?: TripleSubject[]) => Promise<TripleDocument>;
+  save: (subjects?: TripleSubject[]) => Promise<TripleDocument & IsExisting>;
   /**
    * @deprecated
    * @ignore This is mostly a convenience function to make it easy to work with n3 and tripledoc
@@ -124,6 +115,17 @@ export interface TripleDocument {
    */
   getStatements: () => Quad[];
 };
+interface IsExisting {
+  /**
+   * @returns The IRI of this Document.
+   */
+  asRef: () => Reference;
+  /**
+   * @ignore Deprecated.
+   * @deprecated Replaced by [[asRef]].
+   */
+  asNodeRef: () => Reference;
+};
 
 /**
  * Initialise a new Turtle document
@@ -142,7 +144,7 @@ export function createDocument(ref: Reference): TripleDocument {
  * @param documentRef Where the document lives.
  * @returns Representation of triples in the document at `uri`.
  */
-export async function fetchDocument(uri: Reference): Promise<TripleDocument> {
+export async function fetchDocument(uri: Reference): Promise<TripleDocument & IsExisting> {
   // Remove fragment identifiers (e.g. `#me`) from the URI:
   const docUrl = new URL(uri);
   const documentRef: Reference = docUrl.origin + docUrl.pathname + docUrl.search;
@@ -189,8 +191,13 @@ interface DocumentMetadata {
   webSocketRef?: Reference;
   existsOnPod?: boolean;
 };
-function instantiateDocument(documentRef: Reference, triples: Quad[], metadata: DocumentMetadata): TripleDocument {
-  const asRef = () => documentRef;
+function instantiateDocument(documentRef: Reference, triples: Quad[], metadata: DocumentMetadata): TripleDocument & IsExisting;
+function instantiateDocument(documentRef: Reference, triples: Quad[], metadata: DocumentMetadata & {existsOnPod: false}): TripleDocument;
+function instantiateDocument(
+  documentRef: Reference,
+  triples: Quad[],
+  metadata: DocumentMetadata,
+): TripleDocument | (TripleDocument & IsExisting) {
   const store = new Store();
   store.addQuads(triples);
 
@@ -245,7 +252,7 @@ function instantiateDocument(documentRef: Reference, triples: Quad[], metadata: 
   };
 
   const save = async (subjects = Object.values(accessedSubjects)) => {
-    const relevantSubjects = subjects.filter(subject => subject.getDocument().asRef() === documentRef);
+    const relevantSubjects = subjects.filter(subject => subject.getDocument() === tripleDocument);
     type UpdateTriples = [Quad[], Quad[]];
     const [allDeletions, allAdditions] = relevantSubjects.reduce<UpdateTriples>(
       ([deletionsSoFar, additionsSoFar], subject) => {
@@ -290,15 +297,23 @@ function instantiateDocument(documentRef: Reference, triples: Quad[], metadata: 
     findSubjects: findSubjects,
     getAclRef: getAclRef,
     getWebSocketRef: getWebSocketRef,
-    asRef: asRef,
     save: save,
     getStore: getStore,
     getTriples: getTriples,
     // Deprecated aliases, included for backwards compatibility:
-    asNodeRef: asRef,
     getAcl: getAclRef,
     getStatements: getTriples,
   };
+  if (metadata.existsOnPod) {
+    const asRef = () => documentRef;
+
+    return {
+      ...tripleDocument,
+      asRef: asRef,
+      // Deprecated alias:
+      asNodeRef: asRef,
+    };
+  }
   return tripleDocument;
 }
 
