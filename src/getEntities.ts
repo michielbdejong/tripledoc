@@ -1,4 +1,4 @@
-import { Quad, BlankNode, NamedNode, Literal, DataFactory, Term, N3Store } from 'n3';
+import { BlankNode, NamedNode, Literal, DataFactory, Term, N3Store } from 'n3';
 import { Reference, isLiteral } from './index';
 
 /*
@@ -15,7 +15,6 @@ export type FindEntityInStore = (
   store: N3Store,
   knownEntity1: Reference,
   knownEntity2: Reference,
-  document: Reference
 ) => Reference | Literal | BlankNode | null;
 /**
  * @ignore This is a utility type for other parts of the code, and not part of the public API.
@@ -24,46 +23,45 @@ export type FindEntitiesInStore = (
   store: N3Store,
   knownEntity1: Reference | BlankNode,
   knownEntity2: Reference | BlankNode,
-  document: Reference
 ) => Array<Reference | Literal | BlankNode>;
 
 /**
  * @ignore This is a utility method for other parts of the code, and not part of the public API.
  */
-export const findSubjectInStore: FindEntityInStore = (store, predicateRef, objectRef, documentRef) => {
-  return findEntityInStore(store, 'subject', null, predicateRef, objectRef, documentRef);
+export const findSubjectInStore: FindEntityInStore = (store, predicateRef, objectRef) => {
+  return findEntityInStore(store, 'subject', null, predicateRef, objectRef);
 }
 /**
  * @ignore This is a utility method for other parts of the code, and not part of the public API.
  */
-export const findSubjectsInStore: FindEntitiesInStore = (store, predicateRef, objectRef, documentRef) => {
-  return findEntitiesInStore(store, 'subject', null, predicateRef, objectRef, documentRef);
-}
-
-/**
- * @ignore This is a utility method for other parts of the code, and not part of the public API.
- */
-export const findPredicateInStore: FindEntityInStore = (store, subjectRef, objectRef, documentRef) => {
-  return findEntityInStore(store, 'predicate', subjectRef, null, objectRef, documentRef);
-}
-/**
- * @ignore This is a utility method for other parts of the code, and not part of the public API.
- */
-export const findPredicatesInStore: FindEntitiesInStore = (store, subjectRef, objectRef, documentRef) => {
-  return findEntitiesInStore(store, 'predicate', subjectRef, null, objectRef, documentRef);
+export const findSubjectsInStore: FindEntitiesInStore = (store, predicateRef, objectRef) => {
+  return findEntitiesInStore(store, 'subject', null, predicateRef, objectRef);
 }
 
 /**
  * @ignore This is a utility method for other parts of the code, and not part of the public API.
  */
-export const findObjectInStore: FindEntityInStore = (store, subjectRef, predicateRef, documentRef) => {
-  return findEntityInStore(store, 'object', subjectRef, predicateRef, null, documentRef);
+export const findPredicateInStore: FindEntityInStore = (store, subjectRef, objectRef) => {
+  return findEntityInStore(store, 'predicate', subjectRef, null, objectRef);
 }
 /**
  * @ignore This is a utility method for other parts of the code, and not part of the public API.
  */
-export const findObjectsInStore: FindEntitiesInStore = (store, subjectRef, predicateRef, documentRef) => {
-  return findEntitiesInStore(store, 'object', subjectRef, predicateRef, null, documentRef);
+export const findPredicatesInStore: FindEntitiesInStore = (store, subjectRef, objectRef) => {
+  return findEntitiesInStore(store, 'predicate', subjectRef, null, objectRef);
+}
+
+/**
+ * @ignore This is a utility method for other parts of the code, and not part of the public API.
+ */
+export const findObjectInStore: FindEntityInStore = (store, subjectRef, predicateRef) => {
+  return findEntityInStore(store, 'object', subjectRef, predicateRef, null);
+}
+/**
+ * @ignore This is a utility method for other parts of the code, and not part of the public API.
+ */
+export const findObjectsInStore: FindEntitiesInStore = (store, subjectRef, predicateRef) => {
+  return findEntitiesInStore(store, 'object', subjectRef, predicateRef, null);
 }
 
 /**
@@ -75,13 +73,11 @@ export function findEntityInStore(
   subjectRef: null | Reference | BlankNode,
   predicateRef: null | Reference | BlankNode,
   objectRef: null | Reference | BlankNode,
-  documentRef: Reference | BlankNode,
 ): Reference | Literal | BlankNode | null {
   const targetSubject = subjectRef ? toNode(subjectRef) : null;
   const targetPredicate = predicateRef ? toNode(predicateRef) : null;
   const targetObject = objectRef ? toNode(objectRef) : null;
-  const targetDocument = objectRef ? toNode(documentRef) : null;
-  const matchingTriples = store.getQuads(targetSubject, targetPredicate, targetObject, targetDocument);
+  const matchingTriples = store.getQuads(targetSubject, targetPredicate, targetObject, null);
   const foundTriple = matchingTriples.find((triple) => (typeof triple[type] !== 'undefined'));
 
   return (typeof foundTriple !== 'undefined') ? normaliseEntity(foundTriple[type]) : null;
@@ -96,13 +92,11 @@ export function findEntitiesInStore(
   subjectRef: null | Reference | BlankNode,
   predicateRef: null | Reference | BlankNode,
   objectRef: null | Reference | BlankNode,
-  documentRef: Reference,
 ): Array<Reference | Literal | BlankNode> {
   const targetSubject = subjectRef ? toNode(subjectRef) : null;
   const targetPredicate = predicateRef ? toNode(predicateRef) : null;
   const targetObject = objectRef ? toNode(objectRef) : null;
-  const targetDocument = objectRef ? toNode(documentRef) : null;
-  const matchingTriples = store.getQuads(targetSubject, targetPredicate, targetObject, targetDocument);
+  const matchingTriples = store.getQuads(targetSubject, targetPredicate, targetObject, null);
   const foundTriples = matchingTriples.filter((triple) => (typeof triple[type] !== 'undefined'));
 
   return foundTriples.map(triple => normaliseEntity(triple[type])).filter(isEntity);

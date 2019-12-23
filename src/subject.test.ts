@@ -6,7 +6,7 @@ import {
 import { fetchDocument } from './document';
 import { triplesToTurtle } from './turtle';
 
-const { quad, namedNode, literal, blankNode } = DataFactory;
+const { triple, namedNode, literal, blankNode } = DataFactory;
 
 const mockDocument = 'https://document.com/';
 const mockSubjectWithLiteralThenRef = 'https://subject1.com/';
@@ -43,35 +43,35 @@ const mockObjectDecimalLiteral = literal(mockLiteralDecimal.toString(), namedNod
 const mockTypeObject = 'https://mock-type-object.com/';
 const mockBlankNode = 'arbitrary-blank-node-id';
 const mockTriples = [
-  quad(namedNode(mockSubjectWithLiteralThenRef), namedNode(mockPredicate), mockObjectLiteral, namedNode(mockDocument)),
-  quad(namedNode(mockSubjectWithLiteralThenRef), namedNode(mockPredicate), namedNode(mockObjectRef), namedNode(mockDocument)),
-  quad(namedNode(mockSubjectWithRefThenLiteral), namedNode(mockPredicate), namedNode(mockObjectRef), namedNode(mockDocument)),
-  quad(namedNode(mockSubjectWithRefThenLiteral), namedNode(mockPredicate), mockObjectLiteral, namedNode(mockDocument)),
-  quad(namedNode(mockSubjectWithBlankNodeThenRef), namedNode(mockPredicate), blankNode(mockBlankNode), namedNode(mockDocument)),
-  quad(namedNode(mockSubjectWithBlankNodeThenRef), namedNode(mockPredicate), namedNode(mockObjectRef), namedNode(mockDocument)),
-  quad(namedNode(mockSubjectWithRefThenBlankNode), namedNode(mockPredicate), namedNode(mockObjectRef), namedNode(mockDocument)),
-  quad(namedNode(mockSubjectWithRefThenBlankNode), namedNode(mockPredicate), blankNode(mockBlankNode), namedNode(mockDocument)),
-  quad(blankNode(mockBlankNode), namedNode(mockPredicate), namedNode(mockObjectRef), namedNode(mockDocument)),
-  quad(namedNode(mockSubjectWithLiteral), namedNode(mockPredicate), mockObjectLiteral, namedNode(mockDocument)),
-  quad(namedNode(mockSubjectWithRef), namedNode(mockPredicate), namedNode(mockObjectRef), namedNode(mockDocument)),
-  quad(namedNode(mockSubjectWithTwoLiterals), namedNode(mockPredicate), mockObjectLiteral, namedNode(mockDocument)),
-  quad(namedNode(mockSubjectWithTwoLiterals), namedNode(mockPredicate), mockObjectLiteral2, namedNode(mockDocument)),
-  quad(namedNode(mockSubjectWithTwoLiterals), namedNode(mockPredicate), namedNode(mockObjectRef), namedNode(mockDocument)),
-  quad(namedNode(mockSubjectWithTwoRefs), namedNode(mockPredicate), namedNode(mockObjectRef), namedNode(mockDocument)),
-  quad(namedNode(mockSubjectWithTwoRefs), namedNode(mockPredicate), namedNode(mockObjectRef2), namedNode(mockDocument)),
-  quad(namedNode(mockSubjectWithTwoRefs), namedNode(mockPredicate), mockObjectLiteral, namedNode(mockDocument)),
-  quad(namedNode(mockTypedSubject), namedNode(rdf.type), namedNode(mockTypeObject), namedNode(mockDocument)),
-  quad(namedNode(mockSubjectWithDateLiteral), namedNode(mockPredicate), mockObjectDateTimeLiteral, namedNode(mockDocument)),
-  quad(namedNode(mockSubjectWithDecimalLiteral), namedNode(mockPredicate), mockObjectDecimalLiteral, namedNode(mockDocument)),
-  quad(namedNode(mockSubjectWithIntegerLiteral), namedNode(mockPredicate), mockObjectIntegerLiteral, namedNode(mockDocument)),
-  quad(namedNode(mockSubjectWithDifferentTypesOfLiterals), namedNode(mockPredicate), mockObjectLiteral, namedNode(mockDocument)),
-  quad(namedNode(mockSubjectWithDifferentTypesOfLiterals), namedNode(mockPredicate), mockObjectLiteral2, namedNode(mockDocument)),
-  quad(namedNode(mockSubjectWithDifferentTypesOfLiterals), namedNode(mockPredicate), mockObjectDateTimeLiteral, namedNode(mockDocument)),
-  quad(namedNode(mockSubjectWithDifferentTypesOfLiterals), namedNode(mockPredicate), mockObjectDecimalLiteral, namedNode(mockDocument)),
-  quad(namedNode(mockSubjectWithDifferentTypesOfLiterals), namedNode(mockPredicate), mockObjectIntegerLiteral, namedNode(mockDocument)),
-  quad(namedNode(mockSubjectWithDifferentPredicates), namedNode(mockPredicate), mockObjectLiteral, namedNode(mockDocument)),
-  quad(namedNode(mockSubjectWithDifferentPredicates), namedNode(mockPredicate), namedNode(mockObjectRef), namedNode(mockDocument)),
-  quad(namedNode(mockSubjectWithDifferentPredicates), namedNode(mockPredicate2), namedNode(mockObjectRef2), namedNode(mockDocument)),
+  triple(namedNode(mockSubjectWithLiteralThenRef), namedNode(mockPredicate), mockObjectLiteral),
+  triple(namedNode(mockSubjectWithLiteralThenRef), namedNode(mockPredicate), namedNode(mockObjectRef)),
+  triple(namedNode(mockSubjectWithRefThenLiteral), namedNode(mockPredicate), namedNode(mockObjectRef)),
+  triple(namedNode(mockSubjectWithRefThenLiteral), namedNode(mockPredicate), mockObjectLiteral),
+  triple(namedNode(mockSubjectWithBlankNodeThenRef), namedNode(mockPredicate), blankNode(mockBlankNode)),
+  triple(namedNode(mockSubjectWithBlankNodeThenRef), namedNode(mockPredicate), namedNode(mockObjectRef)),
+  triple(namedNode(mockSubjectWithRefThenBlankNode), namedNode(mockPredicate), namedNode(mockObjectRef)),
+  triple(namedNode(mockSubjectWithRefThenBlankNode), namedNode(mockPredicate), blankNode(mockBlankNode)),
+  triple(blankNode(mockBlankNode), namedNode(mockPredicate), namedNode(mockObjectRef)),
+  triple(namedNode(mockSubjectWithLiteral), namedNode(mockPredicate), mockObjectLiteral),
+  triple(namedNode(mockSubjectWithRef), namedNode(mockPredicate), namedNode(mockObjectRef)),
+  triple(namedNode(mockSubjectWithTwoLiterals), namedNode(mockPredicate), mockObjectLiteral),
+  triple(namedNode(mockSubjectWithTwoLiterals), namedNode(mockPredicate), mockObjectLiteral2),
+  triple(namedNode(mockSubjectWithTwoLiterals), namedNode(mockPredicate), namedNode(mockObjectRef)),
+  triple(namedNode(mockSubjectWithTwoRefs), namedNode(mockPredicate), namedNode(mockObjectRef)),
+  triple(namedNode(mockSubjectWithTwoRefs), namedNode(mockPredicate), namedNode(mockObjectRef2)),
+  triple(namedNode(mockSubjectWithTwoRefs), namedNode(mockPredicate), mockObjectLiteral),
+  triple(namedNode(mockTypedSubject), namedNode(rdf.type), namedNode(mockTypeObject)),
+  triple(namedNode(mockSubjectWithDateLiteral), namedNode(mockPredicate), mockObjectDateTimeLiteral),
+  triple(namedNode(mockSubjectWithDecimalLiteral), namedNode(mockPredicate), mockObjectDecimalLiteral),
+  triple(namedNode(mockSubjectWithIntegerLiteral), namedNode(mockPredicate), mockObjectIntegerLiteral),
+  triple(namedNode(mockSubjectWithDifferentTypesOfLiterals), namedNode(mockPredicate), mockObjectLiteral),
+  triple(namedNode(mockSubjectWithDifferentTypesOfLiterals), namedNode(mockPredicate), mockObjectLiteral2),
+  triple(namedNode(mockSubjectWithDifferentTypesOfLiterals), namedNode(mockPredicate), mockObjectDateTimeLiteral),
+  triple(namedNode(mockSubjectWithDifferentTypesOfLiterals), namedNode(mockPredicate), mockObjectDecimalLiteral),
+  triple(namedNode(mockSubjectWithDifferentTypesOfLiterals), namedNode(mockPredicate), mockObjectIntegerLiteral),
+  triple(namedNode(mockSubjectWithDifferentPredicates), namedNode(mockPredicate), mockObjectLiteral),
+  triple(namedNode(mockSubjectWithDifferentPredicates), namedNode(mockPredicate), namedNode(mockObjectRef)),
+  triple(namedNode(mockSubjectWithDifferentPredicates), namedNode(mockPredicate2), namedNode(mockObjectRef2)),
 ];
 const turtle = triplesToTurtle(mockTriples);
 jest.mock('./store', () => ({
@@ -119,7 +119,7 @@ describe('getTriples', () => {
     const mockTripleDocument = await getMockTripleDocument();
     const subject = initialiseSubject(mockTripleDocument, mockSubjectWithLiteral);
     expect(subject.getTriples())
-      .toEqual([quad(namedNode(mockSubjectWithLiteral), namedNode(mockPredicate), mockObjectLiteral, namedNode(mockDocument))]);
+      .toEqual([triple(namedNode(mockSubjectWithLiteral), namedNode(mockPredicate), mockObjectLiteral)]);
   });
 });
 
@@ -602,17 +602,15 @@ describe('setLiteral', () => {
     subject.setLiteral(mockPredicate, mockLiteralValue2);
     const [pendingDeletions, pendingAdditions] = subject.getPendingTriples();
     expect(pendingDeletions).toEqual([
-      quad(
+      triple(
         namedNode(mockSubjectWithLiteralThenRef),
         namedNode(mockPredicate),
         mockObjectLiteral,
-        namedNode(mockTripleDocument.asRef()),
       ),
-      quad(
+      triple(
         namedNode(mockSubjectWithLiteralThenRef),
         namedNode(mockPredicate),
         namedNode(mockObjectRef),
-        namedNode(mockTripleDocument.asRef()),
       ),
     ]);
     expect(pendingAdditions.length).toBe(1);
@@ -629,11 +627,10 @@ describe('addRef', () => {
     const [pendingDeletions, pendingAdditions] = subject.getPendingTriples();
     expect(pendingDeletions).toEqual([]);
     expect(pendingAdditions)
-      .toEqual([quad(
+      .toEqual([triple(
         namedNode(mockSubjectWithRef),
         namedNode(mockPredicate),
         namedNode(mockObjectRef2),
-        namedNode(mockTripleDocument.asRef()),
       )]);
   });
 });
@@ -646,11 +643,10 @@ describe('removeRef', () => {
     const [pendingDeletions, pendingAdditions] = subject.getPendingTriples();
     expect(pendingAdditions).toEqual([]);
     expect(pendingDeletions)
-      .toEqual([quad(
+      .toEqual([triple(
         namedNode(mockSubjectWithRef),
         namedNode(mockPredicate),
         namedNode(mockObjectRef),
-        namedNode(mockTripleDocument.asRef()),
       )]);
   });
 });
@@ -662,25 +658,22 @@ describe('setRef', () => {
     subject.setRef(mockPredicate, mockObjectRef2);
     const [pendingDeletions, pendingAdditions] = subject.getPendingTriples();
     expect(pendingDeletions).toEqual([
-      quad(
+      triple(
         namedNode(mockSubjectWithLiteralThenRef),
         namedNode(mockPredicate),
         mockObjectLiteral,
-        namedNode(mockTripleDocument.asRef()),
       ),
-      quad(
+      triple(
         namedNode(mockSubjectWithLiteralThenRef),
         namedNode(mockPredicate),
         namedNode(mockObjectRef),
-        namedNode(mockTripleDocument.asRef()),
       ),
     ]);
     expect(pendingAdditions)
-      .toEqual([quad(
+      .toEqual([triple(
         namedNode(mockSubjectWithLiteralThenRef),
         namedNode(mockPredicate),
         namedNode(mockObjectRef2),
-        namedNode(mockTripleDocument.asRef()),
       )]);
   });
 });
@@ -693,17 +686,15 @@ describe('removeAll', () => {
     const [pendingDeletions, pendingAdditions] = subject.getPendingTriples();
     expect(pendingAdditions).toEqual([]);
     expect(pendingDeletions).toEqual([
-      quad(
+      triple(
         namedNode(mockSubjectWithLiteralThenRef),
         namedNode(mockPredicate),
         mockObjectLiteral,
-        namedNode(mockTripleDocument.asRef()),
       ),
-      quad(
+      triple(
         namedNode(mockSubjectWithLiteralThenRef),
         namedNode(mockPredicate),
         namedNode(mockObjectRef),
-        namedNode(mockTripleDocument.asRef()),
       ),
     ]);
   });
@@ -717,23 +708,20 @@ describe('clear', () => {
     const [pendingDeletions, pendingAdditions] = subject.getPendingTriples();
     expect(pendingAdditions).toEqual([]);
     expect(pendingDeletions).toEqual([
-      quad(
+      triple(
         namedNode(mockSubjectWithDifferentPredicates),
         namedNode(mockPredicate),
         mockObjectLiteral,
-        namedNode(mockTripleDocument.asRef()),
       ),
-      quad(
+      triple(
         namedNode(mockSubjectWithDifferentPredicates),
         namedNode(mockPredicate),
         namedNode(mockObjectRef),
-        namedNode(mockTripleDocument.asRef()),
       ),
-      quad(
+      triple(
         namedNode(mockSubjectWithDifferentPredicates),
         namedNode(mockPredicate2),
         namedNode(mockObjectRef2),
-        namedNode(mockTripleDocument.asRef()),
       ),
     ]);
   });

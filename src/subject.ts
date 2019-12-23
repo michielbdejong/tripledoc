@@ -267,14 +267,13 @@ export interface TripleSubject {
  */
 export function initialiseSubject(document: TripleDocument, subjectRef: Reference| BlankNode): TripleSubject {
   const subjectNode = isBlankNode(subjectRef) ? subjectRef : DataFactory.namedNode(subjectRef);
-  const triples = document.getStore()
-    .getQuads(subjectNode, null, null, DataFactory.namedNode(document.asNodeRef()));
+  const triples = document.getStore().getQuads(subjectNode, null, null, null);
   const store = new Store();
   store.addQuads(triples);
   let pendingAdditions: Quad[] = [];
   let pendingDeletions: Quad[] = [];
 
-  const get = (predicateNode: Reference) => findObjectsInStore(store, subjectRef, predicateNode, document.asRef());
+  const get = (predicateNode: Reference) => findObjectsInStore(store, subjectRef, predicateNode);
   const getString = (predicateNode: Reference) => {
     const objects = get(predicateNode);
     const firstStringLiteral = objects.find(isStringLiteral);
@@ -375,32 +374,29 @@ export function initialiseSubject(document: TripleDocument, subjectRef: Referenc
   }
 
   const addLiteral = (predicateRef: Reference, literal: LiteralTypes) => {
-    pendingAdditions.push(DataFactory.quad(
+    pendingAdditions.push(DataFactory.triple(
       subjectNode,
       DataFactory.namedNode(predicateRef),
       asLiteral(literal),
-      DataFactory.namedNode(document.asRef()),
     ));
   };
   const addRef = (predicateRef: Reference, nodeRef: Reference) => {
-    pendingAdditions.push(DataFactory.quad(
+    pendingAdditions.push(DataFactory.triple(
       subjectNode,
       DataFactory.namedNode(predicateRef),
       DataFactory.namedNode(nodeRef),
-      DataFactory.namedNode(document.asRef()),
     ));
   };
   const removeRef = (predicateRef: Reference, nodeRef: Reference) => {
-    pendingDeletions.push(DataFactory.quad(
+    pendingDeletions.push(DataFactory.triple(
       subjectNode,
       DataFactory.namedNode(predicateRef),
       DataFactory.namedNode(nodeRef),
-      DataFactory.namedNode(document.asRef()),
     ));
   };
   const removeAll = (predicateRef: Reference) => {
     pendingDeletions.push(...store.getQuads(
-      subjectNode, predicateRef, null, DataFactory.namedNode(document.asRef()),
+      subjectNode, predicateRef, null, null,
     ));
   }
   const clear = () => {
@@ -415,7 +411,7 @@ export function initialiseSubject(document: TripleDocument, subjectRef: Referenc
     subjectNode,
     null,
     null,
-    DataFactory.namedNode(document.asRef()),
+    null,
   )
 
   const asRef = () => isBlankNode(subjectRef) ? subjectRef.id : subjectRef;
@@ -442,11 +438,10 @@ export function initialiseSubject(document: TripleDocument, subjectRef: Referenc
     addRef: addRef,
     removeAll: removeAll,
     removeLiteral: (predicateRef, literal) => {
-      pendingDeletions.push(DataFactory.quad(
+      pendingDeletions.push(DataFactory.triple(
         subjectNode,
         DataFactory.namedNode(predicateRef),
         asLiteral(literal), 
-        DataFactory.namedNode(document.asRef()),
       ));
     },
     removeRef: removeRef,

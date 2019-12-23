@@ -1,6 +1,6 @@
 import LinkHeader from 'http-link-header';
 import { rdf } from 'rdf-namespaces';
-import { Quad, Store, N3Store, DataFactory } from 'n3';
+import { Quad, Store, N3Store, DataFactory, Triple } from 'n3';
 import { update, create, get } from './store';
 import { findSubjectInStore, FindEntityInStore, FindEntitiesInStore, findSubjectsInStore } from './getEntities';
 import { TripleSubject, initialiseSubject } from './subject';
@@ -212,7 +212,7 @@ function instantiateDocument(documentRef: Reference, triples: Quad[], metadata: 
   };
 
   const findSubject = (predicateRef: Reference, objectRef: Reference) => {
-    const findSubjectRef = withDocumentSingular(findSubjectInStore, documentRef, store);
+    const findSubjectRef = withDocumentSingular(findSubjectInStore, store);
     const subjectRef = findSubjectRef(predicateRef, objectRef);
     if (!subjectRef || !isReference(subjectRef)) {
       return null;
@@ -221,7 +221,7 @@ function instantiateDocument(documentRef: Reference, triples: Quad[], metadata: 
   };
 
   const findSubjects = (predicateRef: Reference, objectRef: Reference) => {
-    const findSubjectRefs = withDocumentPlural(findSubjectsInStore, documentRef, store);
+    const findSubjectRefs = withDocumentPlural(findSubjectsInStore, store);
     const subjectRefs = findSubjectRefs(predicateRef, objectRef);
     return subjectRefs.filter(isReference).map(getSubject);
   };
@@ -304,19 +304,17 @@ function instantiateDocument(documentRef: Reference, triples: Quad[], metadata: 
 
 const withDocumentSingular = (
   getEntityFromTriples: FindEntityInStore,
-  document: Reference,
   store: N3Store,
 ) => {
   return (knownEntity1: Reference, knownEntity2: Reference) =>
-    getEntityFromTriples(store, knownEntity1, knownEntity2, document);
+    getEntityFromTriples(store, knownEntity1, knownEntity2);
 };
 const withDocumentPlural = (
   getEntitiesFromTriples: FindEntitiesInStore,
-  document: Reference,
   store: N3Store,
 ) => {
   return (knownEntity1: Reference, knownEntity2: Reference) =>
-    getEntitiesFromTriples(store, knownEntity1, knownEntity2, document);
+    getEntitiesFromTriples(store, knownEntity1, knownEntity2);
 };
 
 /**

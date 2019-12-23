@@ -4,7 +4,7 @@ import { Response } from 'node-fetch';
 import { createDocument, fetchDocument } from './document';
 import { triplesToTurtle } from './turtle';
 
-const { namedNode, quad, blankNode } = DataFactory;
+const { namedNode, triple, blankNode } = DataFactory;
 
 const mockDocument = 'https://document.com/';
 const mockSubject = 'https://document.com/#subject1';
@@ -17,11 +17,11 @@ const mockObject= 'https://mock-object.com/';
 const mockBlankNode = 'arbitrary-blank-node';
 const mockUnusedObject= 'https://mock-unused-object.com/';
 const mockTriples = [
-  quad(namedNode(mockSubjectOfTypeMovie1), namedNode(rdf.type), namedNode(schema.Movie), namedNode(mockDocument)),
-  quad(namedNode(mockSubjectOfTypeMovie2), namedNode(rdf.type), namedNode(schema.Movie), namedNode(mockDocument)),
-  quad(namedNode(mockSubject), namedNode(mockPredicate), namedNode(mockObject), namedNode(mockDocument)),
-  quad(namedNode(mockSubject2), namedNode(mockPredicate), namedNode(mockObject), namedNode(mockDocument)),
-  quad(blankNode(mockBlankNode), namedNode(mockPredicate), namedNode(mockObject), namedNode(mockDocument)),
+  triple(namedNode(mockSubjectOfTypeMovie1), namedNode(rdf.type), namedNode(schema.Movie)),
+  triple(namedNode(mockSubjectOfTypeMovie2), namedNode(rdf.type), namedNode(schema.Movie)),
+  triple(namedNode(mockSubject), namedNode(mockPredicate), namedNode(mockObject)),
+  triple(namedNode(mockSubject2), namedNode(mockPredicate), namedNode(mockObject)),
+  triple(blankNode(mockBlankNode), namedNode(mockPredicate), namedNode(mockObject)),
 ];
 const turtlePromise = triplesToTurtle(mockTriples);
 let mockUpdater: jest.Mock;
@@ -244,6 +244,19 @@ describe('save', () => {
     // The Triples to add are the second argument:
     expect((mockUpdater.mock.calls[0][2] as Quad[]).length).toBe(1);
     expect((mockUpdater.mock.calls[0][2] as Quad[])[0].object.value).toBe('Some value');
+  });
+
+  it('should not return a new Document that includes Triples that were deleted', async () => {
+    const mockTripleDocument = await fetchDocument(mockDocument);
+    const newSubject = mockTripleDocument.addSubject();
+    newSubject.addLiteral(schema.name, 'Some value');
+    newSubject.addLiteral(schema.name, 'Some value that will be removed again');
+    newSubject.removeLiteral(schema.name, 'Some value that will be removed again');
+
+    const updatedDocument = await mockTripleDocument.save();
+
+    const savedSubject = updatedDocument.getSubject(newSubject.asRef());
+    expect(savedSubject.getAllStrings(schema.name)).toEqual(['Some value']);
   });
 });
 
