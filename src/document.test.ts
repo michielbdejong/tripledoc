@@ -29,7 +29,7 @@ let mockUpdater: jest.Mock;
 let mockCreater: jest.Mock;
 let mockGetter: jest.Mock;
 jest.mock('./store', () => {
-  mockUpdater = jest.fn(() => Promise.resolve());
+  mockUpdater = jest.fn(() => Promise.resolve(new Response));
   mockCreater = jest.fn(() => Promise.resolve(new Response));
   mockGetter = jest.fn(() => turtlePromise.then(turtle => new Response(turtle)));
   return {
@@ -204,6 +204,15 @@ describe('save', () => {
     expect((mockCreater.mock.calls[0][1] as Quad[])[0].object.value).toBe('Some value');
   });
 
+  it('should throw an error when saving a new Document fails', () => {
+    const mockTripleDocument = createDocument(mockDocument);
+
+    const errorResponse = new Response('Some error message.', { status: 404 });
+    mockCreater.mockReturnValueOnce(errorResponse);
+
+    expect(mockTripleDocument.save()).rejects.toEqual(new Error('Some error message.'));
+  });
+
   it('should return the ACL if received after creating a new Document', async () => {
     const mockTripleDocument = createDocument(mockDocument);
     const newSubject = mockTripleDocument.addSubject();
@@ -271,6 +280,15 @@ describe('save', () => {
       .toBe('https://pod.com/some-container/some-document-path#some-identifier');
   });
 
+  it('should throw an error when saving a new Document in a Container fails', () => {
+    const mockTripleDocument = createDocumentInContainer(mockContainer);
+
+    const errorResponse = new Response('Some error message.', { status: 404 });
+    mockCreater.mockReturnValueOnce(errorResponse);
+
+    expect(mockTripleDocument.save()).rejects.toEqual(new Error('Some error message.'));
+  });
+
   it('should ignore metadata that was not provided when creating a new Document in a Container', async () => {
     const mockTripleDocument = createDocumentInContainer(mockContainer);
 
@@ -302,6 +320,15 @@ describe('save', () => {
     // The Triples to add are the second argument:
     expect((mockUpdater.mock.calls[0][2] as Quad[]).length).toBe(1);
     expect((mockUpdater.mock.calls[0][2] as Quad[])[0].object.value).toBe('Some value');
+  });
+
+  it('should throw an error when updating an existing Document fails', async () => {
+    const mockTripleDocument = await fetchDocument(mockDocument);
+
+    const errorResponse = new Response('Some error message.', { status: 404 });
+    mockUpdater.mockReturnValueOnce(errorResponse);
+
+    expect(mockTripleDocument.save()).rejects.toEqual(new Error('Some error message.'));
   });
 
   it('should not return a new Document that includes Triples that were deleted', async () => {

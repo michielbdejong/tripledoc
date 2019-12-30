@@ -302,6 +302,10 @@ function instantiateDocument(
     let updatedMetadata: DocumentMetadata & { existsOnPod: true, documentRef: Reference };
     if (!metadata.existsOnPod && hasKnownRef(metadata)) {
       const response = await create(metadata.documentRef, allAdditions);
+      if (!response.ok) {
+        const message = await response.text();
+        throw new Error(message);
+      }
       updatedMetadata = {
         ...metadata,
         existsOnPod: true,
@@ -315,12 +319,20 @@ function instantiateDocument(
         updatedMetadata.webSocketRef = webSocketRef;
       }
     } else if (hasKnownRef(metadata)) {
-      await update(metadata.documentRef, allDeletions, allAdditions);
+      const response = await update(metadata.documentRef, allDeletions, allAdditions);
+      if (!response.ok) {
+        const message = await response.text();
+        throw new Error(message);
+      }
       updatedMetadata = { ...metadata, existsOnPod: true };
     } else {
       const response = await createInContainer(metadata.containerRef, allAdditions);
-      // TODO: Check what happens when creation was unsuccessful, and gracefully deal with that:
-      const documentRef = new URL(response.headers.get('Location')!, new URL(metadata.containerRef).origin).href;
+      const locationHeader = response.headers.get('Location');
+      if (!response.ok || locationHeader === null) {
+        const message = await response.text();
+        throw new Error(message);
+      }
+      const documentRef = new URL(locationHeader, new URL(metadata.containerRef).origin).href;
       updatedMetadata = {
         ...metadata,
         containerRef: undefined,
