@@ -1,6 +1,7 @@
 import { Quad } from 'n3';
 import SolidAuthClient from 'solid-auth-client';
 import { triplesToTurtle } from './turtle';
+import { Reference } from '.';
 
 /**
  * Utility function that gets Triples located at a URL
@@ -30,7 +31,7 @@ export async function get(url: string) {
  * @ignore Should not be used by library consumers directly.
  */
 /* istanbul ignore next Just a thin wrapper around solid-auth-client, yet cumbersome to test due to side effects */
-export async function update(url: string, triplesToDelete: Quad[], triplesToAdd: Quad[]) {
+export async function update(url: Reference, triplesToDelete: Quad[], triplesToAdd: Quad[]) {
   const rawTriplesToDelete = await triplesToTurtle(triplesToDelete);
   const rawTriplesToAdd = await triplesToTurtle(triplesToAdd);
   const deleteStatement = (triplesToDelete.length > 0)
@@ -58,7 +59,7 @@ export async function update(url: string, triplesToDelete: Quad[], triplesToAdd:
  * @ignore Should not be used by library consumers directly.
  */
 /* istanbul ignore next Just a thin wrapper around solid-auth-client, yet cumbersome to test due to side effects */
-export async function create(url: string, triplesToAdd: Quad[]): Promise<Response> {
+export async function create(url: Reference, triplesToAdd: Quad[]): Promise<Response> {
   const rawTurtle = await triplesToTurtle(triplesToAdd);
   const response = await SolidAuthClient.fetch(url, {
     method: 'PUT',
@@ -67,6 +68,35 @@ export async function create(url: string, triplesToAdd: Quad[]): Promise<Respons
       'Content-Type': 'text/turtle',
       'If-None-Match': '*',
     },
+  });
+  return response;
+}
+
+/**
+ * Utility function that sends a POST request to a Container in the Pod to create a new Document
+ *
+ * @param containerUrl URL of the Container in which the Document should be created.
+ * @param triplesToAdd Triples that should be added to the Document.
+ * @returns Promise that resolves with the response when the Document was created successfully, and rejects if not.
+ * @ignore Should not be used by library consumers directly.
+ */
+/* istanbul ignore next Just a thin wrapper around solid-auth-client, yet cumbersome to test due to side effects */
+export async function createInContainer(
+  containerUrl: Reference,
+  triplesToAdd: Quad[],
+  options: { slugSuggestion?: string } = {}
+): Promise<Response> {
+  const rawTurtle = await triplesToTurtle(triplesToAdd);
+  const headers: Record<string, string> = {
+    'Content-Type': 'text/turtle',
+  };
+  if (options.slugSuggestion){
+    headers.slug = options.slugSuggestion;
+  }
+  const response = await SolidAuthClient.fetch(containerUrl, {
+    method: 'POST',
+    body: rawTurtle,
+    headers: headers,
   });
   return response;
 }

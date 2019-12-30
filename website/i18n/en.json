@@ -12,6 +12,14 @@
         "title": "tripledoc",
         "sidebar_label": "Globals"
       },
+      "api/interfaces/baretripledocument": {
+        "title": "BareTripleDocument",
+        "sidebar_label": "BareTripleDocument"
+      },
+      "api/interfaces/localtripledocument": {
+        "title": "LocalTripleDocument",
+        "sidebar_label": "LocalTripleDocument"
+      },
       "api/interfaces/tripledocument": {
         "title": "TripleDocument",
         "sidebar_label": "TripleDocument"
