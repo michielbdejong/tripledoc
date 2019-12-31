@@ -43,6 +43,9 @@ class Footer extends React.Component {
           <div>
             <h5>More</h5>
             <a href="https://gitlab.com/vincenttunru/tripledoc">Source code</a>
+            <a href={this.docUrl('changelog', this.props.language)}>
+              Release notes
+            </a>
           </div>
         </section>
 
