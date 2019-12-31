@@ -4,6 +4,16 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+### Breaking changes
+
+- There are now two more types representing a Document in various states: a Document that is not stored yet, but whose IRI is known (`InMemoryTripleDocument`), and a Document which is not stored yet and for which no final IRI known yet (`BareTripleDocument`). Not all methods that used to be available on a regular TripleDocument are available on these new types, since they are do not apply to them. For example, calling `asRef()` on a Document for which no Reference is known yet is not very useful. The primary impact of this change is some methods now return these types, so if you use TypeScript, you might need to adjust some of your code to expect these new interfaces. In most cases, however, existing code should continue to work.
+- Calling `.save()` on a TripleDocument will now throw if the save fails. (Previously, it would only throw on errors making the requests, but not when a response would come in successfully - even if that response itself indicated an unsuccessful operation.)
+
+### New features
+
+- With the new `createDocumentInContainer()` API, it is now possible to initialise a Document in a given Container, i.e. for which the final IRI is not known yet. This is useful for e.g. creating a Document in a Container to which the user only has Append permissions, like someone's Inbox.
+- When saving a Document fails, `.save()` will now throw an error, allowing you to gracefully deal with that.
+
 ## [3.1.0] - 2019-12-31
 
 ### New features

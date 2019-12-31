@@ -1,12 +1,13 @@
 import { rdf, schema } from 'rdf-namespaces';
 import { DataFactory, Quad } from 'n3';
 import { Response } from 'node-fetch';
-import { createDocument, fetchDocument } from './document';
+import { createDocument, fetchDocument, createDocumentInContainer } from './document';
 import { triplesToTurtle } from './turtle';
 
-const { namedNode, quad, blankNode } = DataFactory;
+const { namedNode, triple, blankNode } = DataFactory;
 
 const mockDocument = 'https://document.com/';
+const mockContainer = 'https://pod.com/some-container/';
 const mockSubject = 'https://document.com/#subject1';
 const mockSubject2 = 'https://document.com/#subject2';
 const mockSubjectOfTypeMovie1 = 'https://document.com/#subject3';
@@ -17,24 +18,25 @@ const mockObject= 'https://mock-object.com/';
 const mockBlankNode = 'arbitrary-blank-node';
 const mockUnusedObject= 'https://mock-unused-object.com/';
 const mockTriples = [
-  quad(namedNode(mockSubjectOfTypeMovie1), namedNode(rdf.type), namedNode(schema.Movie), namedNode(mockDocument)),
-  quad(namedNode(mockSubjectOfTypeMovie2), namedNode(rdf.type), namedNode(schema.Movie), namedNode(mockDocument)),
-  quad(namedNode(mockSubject), namedNode(mockPredicate), namedNode(mockObject), namedNode(mockDocument)),
-  quad(namedNode(mockSubject2), namedNode(mockPredicate), namedNode(mockObject), namedNode(mockDocument)),
-  quad(blankNode(mockBlankNode), namedNode(mockPredicate), namedNode(mockObject), namedNode(mockDocument)),
+  triple(namedNode(mockSubjectOfTypeMovie1), namedNode(rdf.type), namedNode(schema.Movie)),
+  triple(namedNode(mockSubjectOfTypeMovie2), namedNode(rdf.type), namedNode(schema.Movie)),
+  triple(namedNode(mockSubject), namedNode(mockPredicate), namedNode(mockObject)),
+  triple(namedNode(mockSubject2), namedNode(mockPredicate), namedNode(mockObject)),
+  triple(blankNode(mockBlankNode), namedNode(mockPredicate), namedNode(mockObject)),
 ];
 const turtlePromise = triplesToTurtle(mockTriples);
 let mockUpdater: jest.Mock;
 let mockCreater: jest.Mock;
 let mockGetter: jest.Mock;
 jest.mock('./store', () => {
-  mockUpdater = jest.fn(() => Promise.resolve());
+  mockUpdater = jest.fn(() => Promise.resolve(new Response));
   mockCreater = jest.fn(() => Promise.resolve(new Response));
   mockGetter = jest.fn(() => turtlePromise.then(turtle => new Response(turtle)));
   return {
     get: mockGetter,
     update: mockUpdater,
     create: mockCreater,
+    createInContainer: mockCreater,
   }
 });
 
@@ -157,6 +159,14 @@ describe('addSubject', () => {
     });
     expect(newSubject.asNodeRef()).toBe(mockTripleDocument.asNodeRef() + '#some-prefix_some-id');
   });
+
+  it('should preserve the raw identifier (without the Document IRI prepended) if the Document does not exist yet', async () => {
+    const mockTripleDocument = createDocumentInContainer(mockContainer);
+    const newSubject = mockTripleDocument.addSubject({
+      identifier: 'some-id',
+    });
+    expect(newSubject.asNodeRef()).toBe('#some-id');
+  });
 });
 
 describe('save', () => {
@@ -194,11 +204,19 @@ describe('save', () => {
     expect((mockCreater.mock.calls[0][1] as Quad[])[0].object.value).toBe('Some value');
   });
 
+  it('should throw an error when saving a new Document fails', () => {
+    const mockTripleDocument = createDocument(mockDocument);
+
+    const errorResponse = new Response('Some error message.', { status: 404 });
+    mockCreater.mockReturnValueOnce(errorResponse);
+
+    expect(mockTripleDocument.save()).rejects.toEqual(new Error('Some error message.'));
+  });
+
   it('should return the ACL if received after creating a new Document', async () => {
     const mockTripleDocument = createDocument(mockDocument);
     const newSubject = mockTripleDocument.addSubject();
     newSubject.addLiteral(schema.name, 'Arbitrary value');
-    expect(mockTripleDocument.getAclRef()).toBeNull();
 
     mockCreater.mockReturnValueOnce(turtlePromise.then(turtle => new Response(turtle, {
       headers: {
@@ -206,16 +224,15 @@ describe('save', () => {
       },
     })));
 
-    await mockTripleDocument.save();
+    const updatedDocument = await mockTripleDocument.save();
 
-    expect(mockTripleDocument.getAclRef()).toBe('https://some-acl-url.example/');
+    expect(updatedDocument.getAclRef()).toBe('https://some-acl-url.example/');
   });
 
   it('should return the WebSocket update URL if received after creating a new Document', async () => {
     const mockTripleDocument = createDocument(mockDocument);
     const newSubject = mockTripleDocument.addSubject();
     newSubject.addLiteral(schema.name, 'Arbitrary value');
-    expect(mockTripleDocument.getWebSocketRef()).toBeNull();
 
     mockCreater.mockReturnValueOnce(turtlePromise.then(turtle => new Response(turtle, {
       headers: {
@@ -223,9 +240,68 @@ describe('save', () => {
       },
     })));
 
-    await mockTripleDocument.save();
+    const updatedDocument = await mockTripleDocument.save();
 
-    expect(mockTripleDocument.getWebSocketRef()).toBe('wss://some-websocket-url.com');
+    expect(updatedDocument.getWebSocketRef()).toBe('wss://some-websocket-url.com');
+  });
+
+  it('should return no WebSocket update URL if none was received after creating a new Document', async () => {
+    const mockTripleDocument = createDocument(mockDocument);
+    const newSubject = mockTripleDocument.addSubject();
+    newSubject.addLiteral(schema.name, 'Arbitrary value');
+
+    const updatedDocument = await mockTripleDocument.save();
+
+    expect(updatedDocument.getWebSocketRef()).toBeNull();
+  });
+
+  it('should correctly initialise all metadata when creating a new Document in a Container', async () => {
+    const mockTripleDocument = createDocumentInContainer('https://pod.com/some-container/');
+    const newSubject = mockTripleDocument.addSubject({ identifier: 'some-identifier' });
+    newSubject.addLiteral(schema.name, 'Arbitrary value');
+
+    mockCreater.mockReturnValueOnce(turtlePromise.then(turtle => new Response(turtle, {
+      headers: {
+        'Link': '<https://some-acl-url.example>; rel="acl"',
+        'Location': 'https://pod.com/some-container/some-document-path',
+        'Updates-Via': 'wss://some-websocket-url.com',
+      },
+    })));
+
+    const updatedDocument = await mockTripleDocument.save();
+
+    expect(updatedDocument.getAclRef()).toBe('https://some-acl-url.example/');
+    expect(updatedDocument.getWebSocketRef()).toBe('wss://some-websocket-url.com');
+    expect(updatedDocument.asRef()).toBe('https://pod.com/some-container/some-document-path');
+    const updatedSubject = updatedDocument.getSubject(
+      'https://pod.com/some-container/some-document-path#some-identifier'
+    );
+    expect(updatedSubject.asRef())
+      .toBe('https://pod.com/some-container/some-document-path#some-identifier');
+  });
+
+  it('should throw an error when saving a new Document in a Container fails', () => {
+    const mockTripleDocument = createDocumentInContainer(mockContainer);
+
+    const errorResponse = new Response('Some error message.', { status: 404 });
+    mockCreater.mockReturnValueOnce(errorResponse);
+
+    expect(mockTripleDocument.save()).rejects.toEqual(new Error('Some error message.'));
+  });
+
+  it('should ignore metadata that was not provided when creating a new Document in a Container', async () => {
+    const mockTripleDocument = createDocumentInContainer(mockContainer);
+
+    mockCreater.mockReturnValueOnce(turtlePromise.then(turtle => new Response(turtle, {
+      headers: {
+        'Location': mockContainer + 'arbitrary-document-path',
+      },
+    })));
+
+    const updatedDocument = await mockTripleDocument.save();
+
+    expect(updatedDocument.getAclRef()).toBeNull();
+    expect(updatedDocument.getWebSocketRef()).toBeNull();
   });
 
   it('should call `update` when modifying an existing Document', async () => {
@@ -244,6 +320,28 @@ describe('save', () => {
     // The Triples to add are the second argument:
     expect((mockUpdater.mock.calls[0][2] as Quad[]).length).toBe(1);
     expect((mockUpdater.mock.calls[0][2] as Quad[])[0].object.value).toBe('Some value');
+  });
+
+  it('should throw an error when updating an existing Document fails', async () => {
+    const mockTripleDocument = await fetchDocument(mockDocument);
+
+    const errorResponse = new Response('Some error message.', { status: 404 });
+    mockUpdater.mockReturnValueOnce(errorResponse);
+
+    expect(mockTripleDocument.save()).rejects.toEqual(new Error('Some error message.'));
+  });
+
+  it('should not return a new Document that includes Triples that were deleted', async () => {
+    const mockTripleDocument = await fetchDocument(mockDocument);
+    const newSubject = mockTripleDocument.addSubject();
+    newSubject.addLiteral(schema.name, 'Some value');
+    newSubject.addLiteral(schema.name, 'Some value that will be removed again');
+    newSubject.removeLiteral(schema.name, 'Some value that will be removed again');
+
+    const updatedDocument = await mockTripleDocument.save();
+
+    const savedSubject = updatedDocument.getSubject(newSubject.asRef());
+    expect(savedSubject.getAllStrings(schema.name)).toEqual(['Some value']);
   });
 });
 

@@ -15,14 +15,21 @@ import {
   isBlankNode,
 } from './index';
 import { findObjectsInStore } from './getEntities';
-import { TripleDocument } from './document';
+import { BareTripleDocument, isSavedToPod } from './document';
 import { rdf } from 'rdf-namespaces';
 
+/**
+ * Represents a single Subject in a [[TripleDocument]].
+ *
+ * Used to read and modify properties of a single Subject in a [[TripleDocument]], using the `get*`,
+ * `set*`, `add*` and `remove*` methods for the relevant data types. Note that those changes will
+ * not be persisted until you call [[TripleDocument.save]].
+ */
 export interface TripleSubject {
   /**
    * @returns The [[TripleDocument]] that contains this Subject.
    */
-  getDocument: () => TripleDocument;
+  getDocument: () => BareTripleDocument;
   /**
    * @deprecated
    * @ignore This is mostly a convenience function to make it easy to work with n3 and tripledoc
@@ -265,16 +272,17 @@ export interface TripleSubject {
  * @param document The Document this Subject is defined in.
  * @param subjectRef The URL that identifies this subject.
  */
-export function initialiseSubject(document: TripleDocument, subjectRef: Reference| BlankNode): TripleSubject {
+export function initialiseSubject(document: BareTripleDocument, subjectRef: Reference| BlankNode): TripleSubject {
   const subjectNode = isBlankNode(subjectRef) ? subjectRef : DataFactory.namedNode(subjectRef);
-  const triples = document.getStore()
-    .getQuads(subjectNode, null, null, DataFactory.namedNode(document.asNodeRef()));
+  const triples = (isSavedToPod(document))
+    ? document.getStore().getQuads(subjectNode, null, null, null)
+    : [];
   const store = new Store();
   store.addQuads(triples);
   let pendingAdditions: Quad[] = [];
   let pendingDeletions: Quad[] = [];
 
-  const get = (predicateNode: Reference) => findObjectsInStore(store, subjectRef, predicateNode, document.asRef());
+  const get = (predicateNode: Reference) => findObjectsInStore(store, subjectRef, predicateNode);
   const getString = (predicateNode: Reference) => {
     const objects = get(predicateNode);
     const firstStringLiteral = objects.find(isStringLiteral);
@@ -375,32 +383,29 @@ export function initialiseSubject(document: TripleDocument, subjectRef: Referenc
   }
 
   const addLiteral = (predicateRef: Reference, literal: LiteralTypes) => {
-    pendingAdditions.push(DataFactory.quad(
+    pendingAdditions.push(DataFactory.triple(
       subjectNode,
       DataFactory.namedNode(predicateRef),
       asLiteral(literal),
-      DataFactory.namedNode(document.asRef()),
     ));
   };
   const addRef = (predicateRef: Reference, nodeRef: Reference) => {
-    pendingAdditions.push(DataFactory.quad(
+    pendingAdditions.push(DataFactory.triple(
       subjectNode,
       DataFactory.namedNode(predicateRef),
       DataFactory.namedNode(nodeRef),
-      DataFactory.namedNode(document.asRef()),
     ));
   };
   const removeRef = (predicateRef: Reference, nodeRef: Reference) => {
-    pendingDeletions.push(DataFactory.quad(
+    pendingDeletions.push(DataFactory.triple(
       subjectNode,
       DataFactory.namedNode(predicateRef),
       DataFactory.namedNode(nodeRef),
-      DataFactory.namedNode(document.asRef()),
     ));
   };
   const removeAll = (predicateRef: Reference) => {
     pendingDeletions.push(...store.getQuads(
-      subjectNode, predicateRef, null, DataFactory.namedNode(document.asRef()),
+      subjectNode, predicateRef, null, null,
     ));
   }
   const clear = () => {
@@ -415,7 +420,7 @@ export function initialiseSubject(document: TripleDocument, subjectRef: Referenc
     subjectNode,
     null,
     null,
-    DataFactory.namedNode(document.asRef()),
+    null,
   )
 
   const asRef = () => isBlankNode(subjectRef) ? subjectRef.id : subjectRef;
@@ -442,11 +447,10 @@ export function initialiseSubject(document: TripleDocument, subjectRef: Referenc
     addRef: addRef,
     removeAll: removeAll,
     removeLiteral: (predicateRef, literal) => {
-      pendingDeletions.push(DataFactory.quad(
+      pendingDeletions.push(DataFactory.triple(
         subjectNode,
         DataFactory.namedNode(predicateRef),
         asLiteral(literal), 
-        DataFactory.namedNode(document.asRef()),
       ));
     },
     removeRef: removeRef,

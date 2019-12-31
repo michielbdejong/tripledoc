@@ -1,4 +1,4 @@
-import { DataFactory, Quad, Writer, Parser } from 'n3';
+import { DataFactory, Quad, Writer, Parser, Triple } from 'n3';
 import { Reference } from '.';
 
 /**
@@ -8,9 +8,9 @@ import { Reference } from '.';
 export async function triplesToTurtle(quads: Quad[]): Promise<string> {
   const format = 'text/turtle';
   const writer = new Writer({ format: format });
-  // Remove any references to Documents in the Quads;
+  // Remove any potentially lingering references to Documents in Quads;
   // they'll be determined by the URL the Turtle will be sent to:
-  const triples = quads.map(quad => DataFactory.quad(quad.subject, quad.predicate, quad.object)); 
+  const triples = quads.map(quad => DataFactory.triple(quad.subject, quad.predicate, quad.object));
   writer.addQuads(triples);
   const writePromise = new Promise<string>((resolve, reject) => {
     writer.end((error, result) => {
@@ -30,19 +30,18 @@ export async function triplesToTurtle(quads: Quad[]): Promise<string> {
  * @param raw Turtle that should be parsed into Triples
  * @ignore Utility method for internal use by Tripledoc; not part of the public API.
  */
-export async function turtleToTriples(raw: string, documentRef: Reference): Promise<Quad[]> {
+export async function turtleToTriples(raw: string, documentRef: Reference): Promise<Triple[]> {
   const format = 'text/turtle';
   const parser = new Parser({ format: format, baseIRI: documentRef });
 
-  const parsingPromise = new Promise<Quad[]>((resolve, reject) => {
-    const parsedTriples: Quad[] = [];
-    parser.parse(raw, (error, quad, _prefixes) => {
+  const parsingPromise = new Promise<Triple[]>((resolve, reject) => {
+    const parsedTriples: Triple[] = [];
+    parser.parse(raw, (error, triple, _prefixes) => {
       if (error) {
         return reject(error);
       }
-      if (quad) {
-        quad.graph = DataFactory.namedNode(documentRef);
-        parsedTriples.push(quad);
+      if (triple) {
+        parsedTriples.push(triple);
       } else {
         resolve(parsedTriples);
       }

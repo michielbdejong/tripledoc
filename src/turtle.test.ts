@@ -11,17 +11,15 @@ describe('turtleToTriples', () => {
       :someSubject a foaf:Person; foaf:name "Some name".
     `, 'https://example.com/some-path');
 
-    const expectedTriple1 = DataFactory.quad(
+    const expectedTriple1 = DataFactory.triple(
       DataFactory.namedNode('https://example.com/some-path#someSubject'),
       DataFactory.namedNode(rdf.type),
       DataFactory.namedNode(foaf.Person),
-      DataFactory.namedNode('https://example.com/some-path'),
     );
-    const expectedTriple2 = DataFactory.quad(
+    const expectedTriple2 = DataFactory.triple(
       DataFactory.namedNode('https://example.com/some-path#someSubject'),
       DataFactory.namedNode(foaf.name),
       DataFactory.literal('Some name'),
-      DataFactory.namedNode('https://example.com/some-path'),
     );
     expect(parsed).toEqual([expectedTriple1, expectedTriple2]);
   });
@@ -41,7 +39,7 @@ describe('turtleToTriples', () => {
 describe('triplesToTurtle', () => {
   it('should convert triples to a turtle string', async () => {
     const triples = [
-      DataFactory.quad(
+      DataFactory.triple(
         DataFactory.namedNode('https://vincentt.inrupt.net/profile/card#me'),
         DataFactory.namedNode(foaf.name),
         DataFactory.literal('Vincent'),
