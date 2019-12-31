@@ -154,9 +154,9 @@ to common vocabularies and their terms.
 
 The two primary data structures in Tripledoc are:
 
-- [TripleDocument](api/interfaces/tripledocument/), representing an
+- [TripleDocument](docs/api/interfaces/tripledocument/), representing an
 [RDF Document](https://www.w3.org/TR/2014/REC-rdf11-concepts-20140225/#dfn-rdf-document).
-- [TripleSubject](api/interfaces/triplesubject/). a node in the RDF graph that can be queried for
+- [TripleSubject](docs/api/interfaces/triplesubject/). a node in the RDF graph that can be queried for
 [Triples](https://www.w3.org/TR/2014/REC-rdf11-concepts-20140225/#dfn-rdf-triple)
 in which it occurs as the Subject.
 
