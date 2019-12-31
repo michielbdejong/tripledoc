@@ -4,6 +4,8 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+## [4.0.0] - 2019-12-31
+
 ### Breaking changes
 
 - There are now two more types representing a Document in various states: a Document that is not stored yet, but whose IRI is known (`InMemoryTripleDocument`), and a Document which is not stored yet and for which no final IRI known yet (`BareTripleDocument`). Not all methods that used to be available on a regular TripleDocument are available on these new types, since they are do not apply to them. For example, calling `asRef()` on a Document for which no Reference is known yet is not very useful. The primary impact of this change is some methods now return these types, so if you use TypeScript, you might need to adjust some of your code to expect these new interfaces. In most cases, however, existing code should continue to work.
