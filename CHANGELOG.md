@@ -4,6 +4,8 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+## [3.1.0] - 2019-12-31
+
 ### New features
 
 - When fetching a Document results in an invalid response (e.g. a 403 Response), the Promise will now reject with a sensible error message, rather than a cryptic message about being unable to parse the response.
