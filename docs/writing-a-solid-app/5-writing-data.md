@@ -10,10 +10,13 @@ already have our `notesList`](4-data-model), most of the heavy lifting is alread
 async function addNote(note, notesList) {
   // Initialise the new Subject:
   const newNote = notesList.addSubject();
+
   // Indicate that the Subject is a schema:TextDigitalDocument:
   newNote.addRef(rdf.type, schema.TextDigitalDocument);
+
   // Set the Subject's `schema:text` to the actual note contents:
   newNote.addLiteral(schema.text, note);
+
   // Store the date the note was created (i.e. now):
   newNote.addLiteral(schema.dateCreated, new Date(Date.now()))
 
@@ -28,8 +31,8 @@ app](https://codesandbox.io/s/github/Vinnl/notepod/tree/5-writing-data/?module=%
 
 So what's next? Start writing your own App! Find a Vocabulary that matches your use case; we've used
 Schema.org here, but you can find many more at [Linked Open
-Vocabularies](https://lov.linkeddata.es/dataset/lov/). And if you're stuck and need help, do not
-hesitate to ask your question at the [Solid Forum](https://forum.solidproject.org/).
+Vocabularies](https://lov.linkeddata.es/dataset/lov/). And if you're stuck and need help, please don't
+hesitate to ask questions at the [Solid Forum](https://forum.solidproject.org/).
 
 
 Good luck!

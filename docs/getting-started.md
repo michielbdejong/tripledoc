@@ -15,7 +15,7 @@ It is recommended to install Tripledoc together with
 [rdf-namespaces](https://www.npmjs.com/package/rdf-namespaces) for easy access
 to common vocabularies and their terms:
 
-    npm install --save tripledoc rdf-namespaces
+    npm install tripledoc rdf-namespaces
 
 The two primary data structures in Tripledoc are the
 [TripleDocument](api/interfaces/tripledocument/) and the
@@ -27,7 +27,7 @@ in which it occurs as the Subject.
 
 Following is an example that fetches the Document containing Tim Berners-Lee's
 profile, then queries the Subject that represents that Profile to retrieve his
-name, and to fetch another Document listing his friends:
+name, and then to fetch another Document listing his friends:
 
 ```typescript
 import { fetchDocument } from 'tripledoc';
