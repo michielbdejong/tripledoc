@@ -1,6 +1,6 @@
 ---
 id: 1-authentication
-title: Step 1: identifying the user
+title: Step 1: Identifying the user
 ---
 
 The starting point for any Solid Web App is to obtain the user's _WebID_. The WebID is a URL at
