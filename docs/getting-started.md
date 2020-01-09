@@ -34,8 +34,8 @@ import { fetchDocument } from 'tripledoc';
 import { foaf, rdfs } from 'rdf-namespaces';
 
 async function getTimblProfile() {
-  const profileDocument = await fetchDocument('https://www.w3.org/People/Berners-Lee/card');
-  const profile = profileDocument.getSubject('https://www.w3.org/People/Berners-Lee/card#i');
+  const webIdDoc = await fetchDocument('https://www.w3.org/People/Berners-Lee/card');
+  const profile = webIdDoc.getSubject('https://www.w3.org/People/Berners-Lee/card#i');
   return profile;
 }
 
