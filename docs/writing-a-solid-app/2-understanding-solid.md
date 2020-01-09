@@ -55,8 +55,8 @@ So now we might consider my Document to look as follows:
 But there's one more thing to consider: interoperability. An important tenet of Solid is being able
 to give multiple apps access to the same data: if I enter my name at service A, I don't want to have
 to re-enter it at service B. But if service A uses "name" to refer to a person's full name,
-whereas the service B uses "name" to refer to a person's last name only, that would nip interoperability in
-the bud.
+whereas service B uses "name" to refer to a person's last name only, that would nip interoperability
+in the bud.
 
 What's needed here is unique terms that have an agreed-upon definition. And just like we can have a
 Document describing me, we could also make Documents describing a term. And in fact, many people
