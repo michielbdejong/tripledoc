@@ -372,7 +372,7 @@ function instantiateDocument(
   const metadataWithKnownRef = metadata;
   const asRef = () => metadataWithKnownRef.documentRef;
 
-  const tripleDocumentWithRef = {
+  const tripleDocumentWithRef: LocalTripleDocument = {
     ...bareTripleDocument,
     asRef: asRef,
     // Deprecated alias:
