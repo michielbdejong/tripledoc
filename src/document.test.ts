@@ -88,6 +88,15 @@ describe('getSubject', () => {
   });
 });
 
+describe('getAllSubjects', () => {
+  it('should return all Subjects in the Document', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
+    const subjects = mockTripleDocument.experimental_getAllSubjects();
+    expect(subjects.map(subject => subject.asNodeRef()))
+      .toEqual([mockSubjectOfTypeMovie1, mockSubjectOfTypeMovie2, mockSubject, mockSubject2]);
+  });
+});
+
 describe('getSubjectsOfType', () => {
   it('should return all Subjects that are of a specific type', async () => {
     const mockTripleDocument = await getMockTripleDocument();

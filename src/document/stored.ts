@@ -1,6 +1,6 @@
 import { Reference, isReference } from '..';
 import { update } from '../pod';
-import { findSubjectInDataset, findSubjectsInDataset, FindEntityInDataset, FindEntitiesInDataset } from '../getEntities';
+import { findSubjectInDataset, findSubjectsInDataset, FindEntityInDataset, FindEntitiesInDataset, findEntitiesInDataset } from '../getEntities';
 import { Dataset } from '../n3dataset';
 import { SubjectCache, DocumentMetadata, TripleDocument, getPendingChanges, instantiateDocument } from '../document';
 import { instantiateLocalTripleDocument } from "./local";
@@ -42,6 +42,12 @@ export function instantiateFullTripleDocument(dataset: Dataset, subjectCache: Su
     return subjectRefs.filter(isReference).map(subjectCache.getSubject);
   };
 
+  const getAllSubjects = () => {
+    return findEntitiesInDataset(dataset, 'subject', null, null, null)
+      .filter(isReference)
+      .map(subjectRef => subjectCache.getSubject(subjectRef));
+  };
+
   const getSubjectsOfType = (typeRef: Reference) => {
     return findSubjects('http://www.w3.org/1999/02/22-rdf-syntax-ns#type', typeRef);
   };
@@ -78,7 +84,9 @@ export function instantiateFullTripleDocument(dataset: Dataset, subjectCache: Su
     findSubjects: findSubjects,
     getAclRef: getAclRef,
     getWebSocketRef: getWebSocketRef,
-    // Experimental methods that should not be necessary:
+    // Experimental methods:
+    experimental_getAllSubjects: getAllSubjects,
+    // Escape hatches, should not be necessary:
     getStore: getStore,
     getTriples: getTriples,
     // Deprecated aliases, included for backwards compatibility:

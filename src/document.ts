@@ -130,6 +130,13 @@ export interface TripleDocument extends LocalTripleDocumentWithRef {
    */
   getSubject: (subjectRef: Reference) => TripleSubject;
   /**
+   * Get all Subjects in this Document
+   *
+   * @returns All Subjects in this Document that are of the given type.
+   * @ignore Experimental API.
+   */
+  experimental_getAllSubjects: () => TripleSubject[];
+  /**
    * Get all Subjects in this Document of a given type.
    *
    * @param getSubjectsOfType.typeRef IRI of the type the desired Subjects should be of.
