@@ -42,9 +42,7 @@ https://codesandbox.io/s/vigilant-napier-i3tf4?fontsize=14
 import data from "@solid/query-ldflex";
 
 async function getName(webId) {
-  const person = data[webId];
-  const name = await person['http://xmlns.com/foaf/0.1/name'];
-  return name ? name.value : null;
+  return data[webId].name.value;
 }
 ```
 
@@ -91,14 +89,7 @@ https://codesandbox.io/s/festive-currying-z6s3n?fontsize=14
 import data from "@solid/query-ldflex";
 
 async function getNicknames(webId) {
-  const person = data[webId];
-  const nicknames = [];
-  for await (const nickname of person['http://xmlns.com/foaf/0.1/nick']) {
-    nicknames.push(nickname);
-  }
-  return nicknames
-    .filter(node => node.termType === 'Literal')
-    .map(nickname => nickname.value);
+  return data[webId].nick.values;
 }
 ```
 
@@ -147,11 +138,9 @@ async function addNicknames(webId, nicknames) {
 
 ```javascript
 import data from "@solid/query-ldflex";
-import { literal } from "@rdfjs/data-model";
 
 async function addNicknames(webId, nicknames) {
-  const person = data[webId];
-  await person['http://xmlns.com/foaf/0.1/nick'].add(...nicknames.map(nickname => literal(nickname)));
+  return data[webId].nick.add(...nicknames);
 }
 ```
 
@@ -202,13 +191,11 @@ async function addNameAndNickname(webId, name, nickname) {
 
 ```javascript
 import data from "@solid/query-ldflex";
-import { literal } from "@rdfjs/data-model";
 
 async function addNameAndNickname(webId, name, nickname) {
-  const person = data[webId];
-  // Note: this will execute two HTTP requests instead of one:
-  await person['http://xmlns.com/foaf/0.1/name'].add(literal(name));
-  await person['http://xmlns.com/foaf/0.1/nick'].add(literal(nickname));
+  // Note: the current implementation will execute two HTTP requests instead of one
+  await data[webId].name.add(name);
+  await data[webId].nick.add(nickname);
 }
 ```
 
@@ -256,11 +243,9 @@ async function setNicknames(webId, nicknames) {
 
 ```javascript
 import data from "@solid/query-ldflex";
-import { literal } from "@rdfjs/data-model";
 
 async function setNicknames(webId, nicknames) {
-  const person = data[webId];
-  await person['http://xmlns.com/foaf/0.1/nick'].set(...nicknames.map(nickname => literal(nickname)));
+  return data[webId].nick.set(...nicknames);
 }
 ```
 
@@ -310,8 +295,7 @@ async function removeNicknames(webId) {
 import data from "@solid/query-ldflex";
 
 async function removeNicknames(webId) {
-  const person = data[webId];
-  await person['http://xmlns.com/foaf/0.1/nick'].delete();
+  return data[webId].nick.delete();
 }
 ```
 
@@ -359,11 +343,9 @@ async function removeNickname(webId, nickname) {
 
 ```javascript
 import data from "@solid/query-ldflex";
-import { literal } from "@rdfjs/data-model";
 
 async function removeNickname(webId, nickname) {
-  const person = data[webId];
-  await person['http://xmlns.com/foaf/0.1/nick'].delete(literal(nickname));
+  return data[webId].nick.delete(nickname);
 }
 ```
 
@@ -407,18 +389,10 @@ async function createEmptyDocument(location) {
 ### ldflex
 
 ```javascript
-// Note: this is not ldflex-specific, as ldflex has no specific functionality for this use case.
-// We manually send the required HTTP request.
-async function createEmptyDocument(location) {
-  const options = {
-    body: '',
-    // Make sure to include credentials with the request, set by solid-auth-client:
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'text/turtle'
-    },
-    method: 'PUT',
-  };
-  await fetch(location, options);
+import data from "@solid/query-ldflex";
+
+async function createDocument(location) {
+  // Add any triple to start a document
+  return data[location].name.add('New document');
 };
 ```
