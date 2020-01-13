@@ -36,7 +36,7 @@ async function getName(webId) {
 
 https://codesandbox.io/s/vigilant-napier-i3tf4?fontsize=14
 
-### ldflex
+### LDflex for Solid
 
 ```javascript
 import data from "@solid/query-ldflex";
@@ -85,7 +85,7 @@ async function getNicknames(webId) {
 
 https://codesandbox.io/s/festive-currying-z6s3n?fontsize=14
 
-### ldflex
+### LDflex for Solid
 
 ```javascript
 import data from "@solid/query-ldflex";
@@ -143,7 +143,7 @@ async function addNicknames(webId, nicknames) {
 }
 ```
 
-### ldflex
+### LDflex for Solid
 
 ```javascript
 import data from "@solid/query-ldflex";
@@ -198,7 +198,7 @@ async function addNameAndNickname(webId, name, nickname) {
 }
 ```
 
-### ldflex
+### LDflex for Solid
 
 ```javascript
 import data from "@solid/query-ldflex";
@@ -252,7 +252,7 @@ async function setNicknames(webId, nicknames) {
 }
 ```
 
-### ldflex
+### LDflex for Solid
 
 ```javascript
 import data from "@solid/query-ldflex";
@@ -304,7 +304,7 @@ async function removeNicknames(webId) {
 ```
 
 
-### ldflex
+### LDflex for Solid
 
 ```javascript
 import data from "@solid/query-ldflex";
@@ -355,7 +355,7 @@ async function removeNickname(webId, nickname) {
 }
 ```
 
-### ldflex
+### LDflex for Solid
 
 ```javascript
 import data from "@solid/query-ldflex";
@@ -404,7 +404,7 @@ async function createEmptyDocument(location) {
 }
 ```
 
-### ldflex
+### LDflex for Solid
 
 ```javascript
 // Note: this is not ldflex-specific, as ldflex has no specific functionality for this use case.
