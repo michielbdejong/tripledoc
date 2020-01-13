@@ -48,6 +48,16 @@ async function getName(webId) {
 }
 ```
 
+which [can be condensed](https://www.npmjs.com/package/@solid/query-ldflex#specifying-properties) to:
+
+```javascript
+import data from "@solid/query-ldflex";
+
+function getName(webId) {
+  return data[webId].name.value;
+}
+```
+
 [CodeSandbox link not possible](https://github.com/codesandbox/codesandbox-client/issues/2368)
 
 ## Reading multiple values for a property
@@ -155,6 +165,16 @@ async function addNicknames(webId, nicknames) {
 }
 ```
 
+which [can be condensed](https://www.npmjs.com/package/@solid/query-ldflex#specifying-properties) to:
+
+```javascript
+import data from "@solid/query-ldflex";
+
+function addNicknames(webId, nicknames) {
+  return data[webId].nick.add(...nicknames);
+}
+```
+
 ## Adding values for multiple properties
 
 Note: the examples below assume the user [is logged in](writing-a-solid-app/1-authentication) and is
@@ -212,6 +232,19 @@ async function addNameAndNickname(webId, name, nickname) {
 }
 ```
 
+which [can be condensed](https://www.npmjs.com/package/@solid/query-ldflex#specifying-properties) to:
+
+```javascript
+import data from "@solid/query-ldflex";
+
+async function addNameAndNickname(webId, name, nickname) {
+  const person = data[webId];
+  // Note: this will execute two HTTP requests instead of one:
+  await data[webId].name.add(name);
+  await data[webId].nick.add(nickname);
+}
+```
+
 ## Replacing existing values with new ones
 
 Note: the examples below assume the user [is logged in](writing-a-solid-app/1-authentication) and is
@@ -261,6 +294,16 @@ import { literal } from "@rdfjs/data-model";
 async function setNicknames(webId, nicknames) {
   const person = data[webId];
   await person['http://xmlns.com/foaf/0.1/nick'].set(...nicknames.map(nickname => literal(nickname)));
+}
+```
+
+which [can be condensed](https://www.npmjs.com/package/@solid/query-ldflex#specifying-properties) to:
+
+```javascript
+import data from "@solid/query-ldflex";
+
+function setNicknames(webId, nicknames) {
+  return data[webId].nick.set(...nicknames);
 }
 ```
 
@@ -315,6 +358,15 @@ async function removeNicknames(webId) {
 }
 ```
 
+which [can be condensed](https://www.npmjs.com/package/@solid/query-ldflex#specifying-properties) to:
+
+```javascript
+import data from "@solid/query-ldflex";
+
+function removeNicknames(webId) {
+  return data[webId].nick.delete();
+}
+```
 
 ## Removing a single specific value for a property
 
@@ -367,6 +419,16 @@ async function removeNickname(webId, nickname) {
 }
 ```
 
+which [can be condensed](https://www.npmjs.com/package/@solid/query-ldflex#specifying-properties) to:
+
+```javascript
+import data from "@solid/query-ldflex";
+
+function removeNickname(webId, nickname) {
+  return data[webId].nick.delete(nickname);
+}
+```
+
 ## Create a new Document
 
 Note: the examples below assume the user [is logged in](writing-a-solid-app/1-authentication) and is allowed to
@@ -406,6 +468,10 @@ async function createEmptyDocument(location) {
 
 ### LDflex for Solid
 
+LDflex [does not have explicit support for creating a new Document
+yet](https://github.com/solid/query-ldflex/issues/7), so we can create the required HTTP request
+ourselves:
+
 ```javascript
 // Note: this is not ldflex-specific, as ldflex has no specific functionality for this use case.
 // We manually send the required HTTP request.
@@ -422,3 +488,14 @@ async function createEmptyDocument(location) {
   await fetch(location, options);
 };
 ```
+
+Alternatively, we can simply tell LDFlex to add a value to a Document that does not exist yet, which
+will cause it to be created:
+
+```javascript
+import data from "@solid/query-ldflex";
+
+async function createDocument(location) {
+  // Adding a value to a non-existing Document will create it for us:
+  return data[location].name.add('Dummy name');
+};
