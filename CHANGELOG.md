@@ -4,6 +4,8 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+## [4.0.1] - 2020-01-14
+
 ### Bugs fixed
 
 - After creating a Document in a Container, the experimental API `getAclRef()` would return the ACL of the Container rather than of the Document. It now returns the proper Document's ACL location.
