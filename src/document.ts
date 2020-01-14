@@ -1,7 +1,7 @@
 import LinkHeader from 'http-link-header';
 import { rdf } from 'rdf-namespaces';
 import { Quad, Store, N3Store } from 'n3';
-import { update, create, get, createInContainer } from './store';
+import { update, create, get, head, createInContainer } from './store';
 import { findSubjectInStore, FindEntityInStore, FindEntitiesInStore, findSubjectsInStore } from './getEntities';
 import { TripleSubject, initialiseSubject } from './subject';
 import { turtleToTriples } from './turtle';
@@ -326,10 +326,10 @@ function instantiateDocument(
       }
       updatedMetadata = { ...metadata, existsOnPod: true };
     } else {
-      const response = await createInContainer(metadata.containerRef, allAdditions);
-      const locationHeader = response.headers.get('Location');
-      if (!response.ok || locationHeader === null) {
-        const message = await response.text();
+      const containerResponse = await createInContainer(metadata.containerRef, allAdditions);
+      const locationHeader = containerResponse.headers.get('Location');
+      if (!containerResponse.ok || locationHeader === null) {
+        const message = await containerResponse.text();
         throw new Error(message);
       }
       const documentRef = new URL(locationHeader, new URL(metadata.containerRef).origin).href;
@@ -339,11 +339,12 @@ function instantiateDocument(
         documentRef: documentRef,
         existsOnPod: true,
       };
-      const aclRef = extractAclRef(response, documentRef);
+      const documentResponse = await head(documentRef);
+      const aclRef = extractAclRef(documentResponse, documentRef);
       if (aclRef) {
         updatedMetadata.aclRef = aclRef;
       }
-      const webSocketRef = response.headers.get('Updates-Via');
+      const webSocketRef = documentResponse.headers.get('Updates-Via');
       if (webSocketRef) {
         updatedMetadata.webSocketRef = webSocketRef;
       }

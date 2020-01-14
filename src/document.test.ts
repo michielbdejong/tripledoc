@@ -25,14 +25,17 @@ const mockTriples = [
   triple(blankNode(mockBlankNode), namedNode(mockPredicate), namedNode(mockObject)),
 ];
 const turtlePromise = triplesToTurtle(mockTriples);
+let mockHeadResponder: jest.Mock;
 let mockUpdater: jest.Mock;
 let mockCreater: jest.Mock;
 let mockGetter: jest.Mock;
 jest.mock('./store', () => {
+  mockHeadResponder = jest.fn(() => Promise.resolve(new Response));
   mockUpdater = jest.fn(() => Promise.resolve(new Response));
   mockCreater = jest.fn(() => Promise.resolve(new Response));
   mockGetter = jest.fn(() => turtlePromise.then(turtle => new Response(turtle)));
   return {
+    head: mockHeadResponder,
     get: mockGetter,
     update: mockUpdater,
     create: mockCreater,
@@ -262,15 +265,20 @@ describe('save', () => {
 
     mockCreater.mockReturnValueOnce(turtlePromise.then(turtle => new Response(turtle, {
       headers: {
-        'Link': '<https://some-acl-url.example>; rel="acl"',
+        'Link': '<https://container-acl-url.example>; rel="acl"',
         'Location': 'https://pod.com/some-container/some-document-path',
+      },
+    })));
+    mockHeadResponder.mockReturnValueOnce(Promise.resolve(new Response('', {
+      headers: {
+        'Link': '<https://document-acl-url.example>; rel="acl"',
         'Updates-Via': 'wss://some-websocket-url.com',
       },
     })));
 
     const updatedDocument = await mockTripleDocument.save();
 
-    expect(updatedDocument.getAclRef()).toBe('https://some-acl-url.example/');
+    expect(updatedDocument.getAclRef()).toBe('https://document-acl-url.example/');
     expect(updatedDocument.getWebSocketRef()).toBe('wss://some-websocket-url.com');
     expect(updatedDocument.asRef()).toBe('https://pod.com/some-container/some-document-path');
     const updatedSubject = updatedDocument.getSubject(
@@ -297,6 +305,7 @@ describe('save', () => {
         'Location': mockContainer + 'arbitrary-document-path',
       },
     })));
+    mockHeadResponder.mockReturnValueOnce(Promise.resolve(new Response()));
 
     const updatedDocument = await mockTripleDocument.save();
 

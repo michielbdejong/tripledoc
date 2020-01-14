@@ -22,6 +22,22 @@ export async function get(url: string) {
 }
 
 /**
+ * Utility function that gets a URL's metadata
+ *
+ * @param url Location of the Document to get the metadata of
+ * @returns Promise that resolves with the Response
+ * @ignore Should not be used by library consumers directly.
+ */
+/* istanbul ignore next Just a thin wrapper around solid-auth-client, yet cumbersome to test due to side effects */
+export async function head(url: string) {
+  const response = await SolidAuthClient.fetch(url, {
+    method: 'HEAD',
+  });
+
+  return response;
+}
+
+/**
  * Utility function that sends a PATCH request to the Pod to update a Document
  *
  * @param url Location of the Document that contains the Triples to delete, and should have the Triples to add.
