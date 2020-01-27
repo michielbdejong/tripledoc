@@ -1,6 +1,6 @@
 tripledoc
 ======
-Read, create and edit [RDF](https://en.wikipedia.org/wiki/Resource_Description_Framework) documents on [Solid](https://solid.inrupt.com/) Pods.
+Read, create and edit [RDF](https://en.wikipedia.org/wiki/Resource_Description_Framework) documents on [Solid](https://solidproject.org) Pods.
 
 Tripledoc aims to mesh well with the way of thinking of developers that are not necessarily well-versed in RDF or Linked Data, and just want to store their data on a Solid Pod. Its goal is to make it as easy as possible to get started writing Solid apps, and therefore tries to avoid [magic](https://en.wikipedia.org/wiki/Magic_(programming)), is extensively documented, and publishes type declarations for editors that support TypeScript.
 
@@ -40,7 +40,7 @@ fetchDocument('https://www.w3.org/People/Berners-Lee/card')
 
 # Changelog
 
-See [CHANGELOG](https://gitlab.com/vincenttunru/tripledoc/blob/master/CHANGELOG.md).
+See the [release notes](https://vincenttunru.gitlab.io/tripledoc/docs/changelog).
 
 # License
 
