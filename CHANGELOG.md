@@ -4,6 +4,10 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+### New features
+
+- [rdf-namespaces](https://www.npmjs.com/package/rdf-namespaces) is no longer a direct dependency, so if you use Tripledoc in an environment without [dead-code elimination](https://webpack.js.org/guides/tree-shaking/), the bundle size should now be a lot smaller.
+
 ## [4.0.1] - 2020-01-14
 
 ### Bugs fixed

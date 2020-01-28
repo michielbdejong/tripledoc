@@ -16,7 +16,6 @@ import {
 } from './index';
 import { findObjectsInStore } from './getEntities';
 import { BareTripleDocument, isSavedToPod } from './document';
-import { rdf } from 'rdf-namespaces';
 
 /**
  * Represents a single Subject in a [[TripleDocument]].
@@ -379,7 +378,7 @@ export function initialiseSubject(document: BareTripleDocument, subjectRef: Refe
   };
 
   const getType = () => {
-    return getRef(rdf.type);
+    return getRef('http://www.w3.org/1999/02/22-rdf-syntax-ns#type');
   }
 
   const addLiteral = (predicateRef: Reference, literal: LiteralTypes) => {

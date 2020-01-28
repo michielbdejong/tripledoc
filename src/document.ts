@@ -1,5 +1,4 @@
 import LinkHeader from 'http-link-header';
-import { rdf } from 'rdf-namespaces';
 import { Quad, Store, N3Store } from 'n3';
 import { update, create, get, head, createInContainer } from './store';
 import { findSubjectInStore, FindEntityInStore, FindEntitiesInStore, findSubjectsInStore } from './getEntities';
@@ -406,7 +405,7 @@ function instantiateDocument(
     return subjectRefs.filter(isReference).map(getSubject);
   };
   const getSubjectsOfType = (typeRef: Reference) => {
-    return findSubjects(rdf.type, typeRef);
+    return findSubjects('http://www.w3.org/1999/02/22-rdf-syntax-ns#type', typeRef);
   };
 
 
