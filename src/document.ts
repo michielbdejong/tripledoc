@@ -38,13 +38,6 @@ export interface BareTripleDocument {
    */
   addSubject: (options?: NewSubjectOptions) => TripleSubject;
   /**
-   * Given the IRI of a Subject, return an instantiated [[TripleSubject]] representing its values.
-   *
-   * @param getSubject.subjectRef IRI of the Subject to inspect.
-   * @returns Instantiation of the Subject at `subjectRef`, ready for inspection.
-   */
-  getSubject: (subjectRef: Reference) => TripleSubject;
-  /**
    * Persist Subjects in this Document to the Pod.
    *
    * @param save.subjects Optional array of specific Subjects within this Document that should be
@@ -108,6 +101,13 @@ export interface TripleDocument extends LocalTripleDocument {
    * @returns An array with every matching Subject, and an empty array if none match.
    */
   findSubjects: (predicateRef: Reference, objectRef: Reference) => TripleSubject[];
+  /**
+   * Given the IRI of a Subject, return an instantiated [[TripleSubject]] representing its values.
+   *
+   * @param getSubject.subjectRef IRI of the Subject to inspect.
+   * @returns Instantiation of the Subject at `subjectRef`, ready for inspection.
+   */
+  getSubject: (subjectRef: Reference) => TripleSubject;
   /**
    * Get all Subjects in this Document of a given type.
    *
@@ -358,7 +358,6 @@ function instantiateDocument(
 
   const bareTripleDocument: BareTripleDocument = {
     addSubject: addSubject,
-    getSubject: getSubject,
     save: save,
   };
 
@@ -409,9 +408,10 @@ function instantiateDocument(
   };
 
 
-  const tripleDocument = {
+  const tripleDocument: TripleDocument = {
     ...tripleDocumentWithRef,
     removeSubject: removeSubject,
+    getSubject: getSubject,
     getSubjectsOfType: getSubjectsOfType,
     findSubject: findSubject,
     findSubjects: findSubjects,

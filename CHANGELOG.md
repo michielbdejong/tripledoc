@@ -4,6 +4,10 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+### Bugs fixed
+
+- `getSubject` was exposed on `BareTripleDocument`s, which represents a Document that does not exist on the Pod yet, even though such a Document can by definition not contain any Subjects yet. The method is now only available when it can actually return a value.
+
 ## [4.1.0] - 2020-01-28
 
 ### New features

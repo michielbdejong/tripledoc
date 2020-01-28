@@ -1,7 +1,7 @@
 import { DataFactory } from 'n3';
 import { isLiteral, isReference } from './index';
 
-const { literal, namedNode } = DataFactory;
+const { literal } = DataFactory;
 
 describe('isLiteral', () => {
   it('should return true if a value is an N3 `Literal`', () => {
