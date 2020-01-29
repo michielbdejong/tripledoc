@@ -60,6 +60,79 @@ function getName(webId) {
 
 [CodeSandbox link not possible](https://github.com/codesandbox/codesandbox-client/issues/2368)
 
+## Reading values for multiple properties
+
+### Tripledoc
+
+```javascript
+import { fetchDocument } from "tripledoc";
+
+async function getNameAndNick(webId) {
+  const profileDoc = await fetchDocument(webId);
+  const profile = profileDoc.getSubject(webId);
+  return {
+    name: profile.getString('http://xmlns.com/foaf/0.1/name'),
+    nick: profile.getString('http://xmlns.com/foaf/0.1/nick'),
+ };
+}
+```
+
+https://codesandbox.io/s/gracious-feather-msref?fontsize=14
+
+### rdflib
+
+```javascript
+import { graph, Fetcher, sym } from "rdflib";
+
+async function getName(webId) {
+  const store = graph();
+  const fetcher = new Fetcher(store, {});
+  await fetcher.load(webId);
+  const me = sym(webId);
+  const name = store.any(me, sym('http://xmlns.com/foaf/0.1/name'), null, me.doc());
+  const nick = store.any(me, sym('http://xmlns.com/foaf/0.1/nick'), null, me.doc());
+  return {
+    name: (name && name.termType === 'Literal') ? name.value : null,
+    nick: (nick && nick.termType === 'Literal') ? nick.value : null,
+  };
+}
+```
+
+https://codesandbox.io/s/polished-brook-j03uo?fontsize=14
+
+### LDflex for Solid
+
+```javascript
+import data from "@solid/query-ldflex";
+
+async function getNameAndNick(webId) {
+  const person = data[webId];
+  // The following two lines will perform just one HTTP request; the response is cached by LDflex.
+  const name = await person['http://xmlns.com/foaf/0.1/name'];
+  const nick = await person['http://xmlns.com/foaf/0.1/nick'];
+  return {
+    name: name ? name.value : null,
+    nick: nick ? nick.value : null,
+  };
+}
+```
+
+which [can be condensed](https://www.npmjs.com/package/@solid/query-ldflex#specifying-properties) to:
+
+```javascript
+import data from "@solid/query-ldflex";
+
+async function getNameAndNick(webId) {
+  return {
+    // The following two lines will perform just one HTTP request; the response is cached by LDflex.
+    name: await data[webId].name.value,
+    nick: await data[webId].nick.value,
+  };
+}
+```
+
+[CodeSandbox link not possible](https://github.com/codesandbox/codesandbox-client/issues/2368)
+
 ## Reading multiple values for a property
 
 ### Tripledoc
