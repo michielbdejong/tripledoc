@@ -30,6 +30,7 @@ async function getName(webId) {
   await fetcher.load(webId);
   const me = sym(webId);
   const name = store.any(me, sym('http://xmlns.com/foaf/0.1/name'), null, me.doc());
+  // Note that this will also return invalid Literal data (integers, dates, etc.)
   return (name && name.termType === 'Literal') ? name.value : null;
 }
 ```
@@ -41,20 +42,23 @@ https://codesandbox.io/s/vigilant-napier-i3tf4?fontsize=14
 ```javascript
 import data from "@solid/query-ldflex";
 
-async function getName(webId) {
-  const person = data[webId];
-  const name = await person['http://xmlns.com/foaf/0.1/name'];
-  return name ? name.value : null;
+function getName(webId) {
+  // Note that this will also return invalid data (e.g. non-Literals, integers, etc.)
+  return data[webId].name.value;
 }
 ```
 
-which [can be condensed](https://www.npmjs.com/package/@solid/query-ldflex#specifying-properties) to:
+which is a [condensed](https://www.npmjs.com/package/@solid/query-ldflex#specifying-properties) version of:
 
 ```javascript
 import data from "@solid/query-ldflex";
 
-function getName(webId) {
-  return data[webId].name.value;
+async function getName(webId) {
+  const person = data[webId];
+  const name = await person['http://xmlns.com/foaf/0.1/name'];
+  return (name && name.termType === 'Literal' && name.datatype.id === 'http://www.w3.org/2001/XMLSchema#string')
+    ? name.value
+    : null;
 }
 ```
 
@@ -92,6 +96,7 @@ async function getName(webId) {
   const name = store.any(me, sym('http://xmlns.com/foaf/0.1/name'), null, me.doc());
   const nick = store.any(me, sym('http://xmlns.com/foaf/0.1/nick'), null, me.doc());
   return {
+    // Note that this will also return invalid Literal data (integers, dates, etc.)
     name: (name && name.termType === 'Literal') ? name.value : null,
     nick: (nick && nick.termType === 'Literal') ? nick.value : null,
   };
@@ -106,27 +111,33 @@ https://codesandbox.io/s/polished-brook-j03uo?fontsize=14
 import data from "@solid/query-ldflex";
 
 async function getNameAndNick(webId) {
-  const person = data[webId];
-  // The following two lines will perform just one HTTP request; the response is cached by LDflex.
-  const name = await person['http://xmlns.com/foaf/0.1/name'];
-  const nick = await person['http://xmlns.com/foaf/0.1/nick'];
   return {
-    name: name ? name.value : null,
-    nick: nick ? nick.value : null,
+    // The following two lines will perform just one HTTP request; the response is cached by LDflex.
+    // Also note that this will also return invalid data (e.g. non-Literals, integers, etc.)
+    name: await data[webId].name.value,
+    nick: await data[webId].nick.value,
   };
 }
 ```
 
-which [can be condensed](https://www.npmjs.com/package/@solid/query-ldflex#specifying-properties) to:
+which is a [condensed](https://www.npmjs.com/package/@solid/query-ldflex#specifying-properties) version of:
 
 ```javascript
 import data from "@solid/query-ldflex";
 
 async function getNameAndNick(webId) {
+  const person = data[webId];
+  // The following two lines will perform just one HTTP request; the response is cached by LDflex.
+  const name = await person['http://xmlns.com/foaf/0.1/name'];
+  const nick = await person['http://xmlns.com/foaf/0.1/nick'];
+
   return {
-    // The following two lines will perform just one HTTP request; the response is cached by LDflex.
-    name: await data[webId].name.value,
-    nick: await data[webId].nick.value,
+    name: (name && name.termType === 'Literal' && name.datatype.id === 'http://www.w3.org/2001/XMLSchema#string')
+      ? name.value
+      : null,
+    nick: (nick && nick.termType === 'Literal' && nick.datatype.id === 'http://www.w3.org/2001/XMLSchema#string')
+      ? nick.value
+      : null,
   };
 }
 ```
@@ -161,6 +172,7 @@ async function getNicknames(webId) {
   const me = sym(webId);
   const nicknames = store.each(me, sym('http://xmlns.com/foaf/0.1/nick'), null, me.doc());
   return nicknames
+    // Note that this will also return invalid Literal data (integers, dates, etc.)
     .filter(node => node.termType === "Literal")
     .map(nickname => nickname.value);
 }
@@ -173,6 +185,17 @@ https://codesandbox.io/s/festive-currying-z6s3n?fontsize=14
 ```javascript
 import data from "@solid/query-ldflex";
 
+function getNicknames(webId) {
+  // Note that this will also return invalid data (e.g. non-Literals, integers, etc.)
+  return data[webId].nick.values;
+}
+```
+
+which is a [condensed](https://www.npmjs.com/package/@solid/query-ldflex#specifying-properties) version of:
+
+```javascript
+import data from "@solid/query-ldflex";
+
 async function getNicknames(webId) {
   const person = data[webId];
   const nicknames = [];
@@ -180,7 +203,7 @@ async function getNicknames(webId) {
     nicknames.push(nickname);
   }
   return nicknames
-    .filter(node => node.termType === 'Literal')
+    .filter(node => node.termType === 'Literal' && node.datatype.id === 'http://www.w3.org/2001/XMLSchema#string')
     .map(nickname => nickname.value);
 }
 ```
@@ -230,21 +253,21 @@ async function addNicknames(webId, nicknames) {
 
 ```javascript
 import data from "@solid/query-ldflex";
+
+function addNicknames(webId, nicknames) {
+  return data[webId].nick.add(...nicknames);
+}
+```
+
+which is a [condensed](https://www.npmjs.com/package/@solid/query-ldflex#specifying-properties) version of:
+
+```javascript
+import data from "@solid/query-ldflex";
 import { literal } from "@rdfjs/data-model";
 
 async function addNicknames(webId, nicknames) {
   const person = data[webId];
   await person['http://xmlns.com/foaf/0.1/nick'].add(...nicknames.map(nickname => literal(nickname)));
-}
-```
-
-which [can be condensed](https://www.npmjs.com/package/@solid/query-ldflex#specifying-properties) to:
-
-```javascript
-import data from "@solid/query-ldflex";
-
-function addNicknames(webId, nicknames) {
-  return data[webId].nick.add(...nicknames);
 }
 ```
 
@@ -295,6 +318,18 @@ async function addNameAndNickname(webId, name, nickname) {
 
 ```javascript
 import data from "@solid/query-ldflex";
+
+async function addNameAndNickname(webId, name, nickname) {
+  // Note: this will execute two HTTP requests instead of one:
+  await data[webId].name.add(name);
+  await data[webId].nick.add(nickname);
+}
+```
+
+which is a [condensed](https://www.npmjs.com/package/@solid/query-ldflex#specifying-properties) version of:
+
+```javascript
+import data from "@solid/query-ldflex";
 import { literal } from "@rdfjs/data-model";
 
 async function addNameAndNickname(webId, name, nickname) {
@@ -302,19 +337,6 @@ async function addNameAndNickname(webId, name, nickname) {
   // Note: this will execute two HTTP requests instead of one:
   await person['http://xmlns.com/foaf/0.1/name'].add(literal(name));
   await person['http://xmlns.com/foaf/0.1/nick'].add(literal(nickname));
-}
-```
-
-which [can be condensed](https://www.npmjs.com/package/@solid/query-ldflex#specifying-properties) to:
-
-```javascript
-import data from "@solid/query-ldflex";
-
-async function addNameAndNickname(webId, name, nickname) {
-  const person = data[webId];
-  // Note: this will execute two HTTP requests instead of one:
-  await data[webId].name.add(name);
-  await data[webId].nick.add(nickname);
 }
 ```
 
@@ -362,21 +384,21 @@ async function setNicknames(webId, nicknames) {
 
 ```javascript
 import data from "@solid/query-ldflex";
+
+function setNicknames(webId, nicknames) {
+  return data[webId].nick.set(...nicknames);
+}
+```
+
+which is a [condensed](https://www.npmjs.com/package/@solid/query-ldflex#specifying-properties) version of:
+
+```javascript
+import data from "@solid/query-ldflex";
 import { literal } from "@rdfjs/data-model";
 
 async function setNicknames(webId, nicknames) {
   const person = data[webId];
   await person['http://xmlns.com/foaf/0.1/nick'].set(...nicknames.map(nickname => literal(nickname)));
-}
-```
-
-which [can be condensed](https://www.npmjs.com/package/@solid/query-ldflex#specifying-properties) to:
-
-```javascript
-import data from "@solid/query-ldflex";
-
-function setNicknames(webId, nicknames) {
-  return data[webId].nick.set(...nicknames);
 }
 ```
 
@@ -425,19 +447,19 @@ async function removeNicknames(webId) {
 ```javascript
 import data from "@solid/query-ldflex";
 
-async function removeNicknames(webId) {
-  const person = data[webId];
-  await person['http://xmlns.com/foaf/0.1/nick'].delete();
+function removeNicknames(webId) {
+  return data[webId].nick.delete();
 }
 ```
 
-which [can be condensed](https://www.npmjs.com/package/@solid/query-ldflex#specifying-properties) to:
+which is a [condensed](https://www.npmjs.com/package/@solid/query-ldflex#specifying-properties) version of:
 
 ```javascript
 import data from "@solid/query-ldflex";
 
-function removeNicknames(webId) {
-  return data[webId].nick.delete();
+async function removeNicknames(webId) {
+  const person = data[webId];
+  await person['http://xmlns.com/foaf/0.1/nick'].delete();
 }
 ```
 
@@ -484,21 +506,21 @@ async function removeNickname(webId, nickname) {
 
 ```javascript
 import data from "@solid/query-ldflex";
+
+function removeNickname(webId, nickname) {
+  return data[webId].nick.delete(nickname);
+}
+```
+
+which is a [condensed](https://www.npmjs.com/package/@solid/query-ldflex#specifying-properties) version of:
+
+```javascript
+import data from "@solid/query-ldflex";
 import { literal } from "@rdfjs/data-model";
 
 async function removeNickname(webId, nickname) {
   const person = data[webId];
   await person['http://xmlns.com/foaf/0.1/nick'].delete(literal(nickname));
-}
-```
-
-which [can be condensed](https://www.npmjs.com/package/@solid/query-ldflex#specifying-properties) to:
-
-```javascript
-import data from "@solid/query-ldflex";
-
-function removeNickname(webId, nickname) {
-  return data[webId].nick.delete(nickname);
 }
 ```
 
