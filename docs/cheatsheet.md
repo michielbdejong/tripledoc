@@ -56,7 +56,7 @@ import data from "@solid/query-ldflex";
 async function getName(webId) {
   const person = data[webId];
   const name = await person['http://xmlns.com/foaf/0.1/name'];
-  return (name && name.termType === 'Literal' && name.datatype.id === 'http://www.w3.org/2001/XMLSchema#string')
+  return (name && name.termType === 'Literal' && name.datatype.value === 'http://www.w3.org/2001/XMLSchema#string')
     ? name.value
     : null;
 }
@@ -132,10 +132,10 @@ async function getNameAndNick(webId) {
   const nick = await person['http://xmlns.com/foaf/0.1/nick'];
 
   return {
-    name: (name && name.termType === 'Literal' && name.datatype.id === 'http://www.w3.org/2001/XMLSchema#string')
+    name: (name && name.termType === 'Literal' && name.datatype.value === 'http://www.w3.org/2001/XMLSchema#string')
       ? name.value
       : null,
-    nick: (nick && nick.termType === 'Literal' && nick.datatype.id === 'http://www.w3.org/2001/XMLSchema#string')
+    nick: (nick && nick.termType === 'Literal' && nick.datatype.value === 'http://www.w3.org/2001/XMLSchema#string')
       ? nick.value
       : null,
   };
@@ -203,7 +203,7 @@ async function getNicknames(webId) {
     nicknames.push(nickname);
   }
   return nicknames
-    .filter(node => node.termType === 'Literal' && node.datatype.id === 'http://www.w3.org/2001/XMLSchema#string')
+    .filter(node => node.termType === 'Literal' && node.datatype.value === 'http://www.w3.org/2001/XMLSchema#string')
     .map(nickname => nickname.value);
 }
 ```
