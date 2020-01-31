@@ -422,7 +422,7 @@ export function initialiseSubject(document: BareTripleDocument, subjectRef: Refe
     null,
   )
 
-  const asRef = () => isBlankNode(subjectRef) ? subjectRef.id : subjectRef;
+  const asRef = () => isBlankNode(subjectRef) ? subjectRef.value : subjectRef;
 
   const subject: TripleSubject = {
     getDocument: () => document,
