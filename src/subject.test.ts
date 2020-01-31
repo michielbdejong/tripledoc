@@ -537,7 +537,7 @@ describe('addLiteral', () => {
     expect(pendingDeletions).toEqual([]);
     expect(pendingAdditions.length).toBe(1);
     expect(pendingAdditions[0].object.termType).toBe('Literal');
-    expect((pendingAdditions[0].object as Literal).datatype.id)
+    expect((pendingAdditions[0].object as Literal).datatype.value)
       .toBe('http://www.w3.org/2001/XMLSchema#dateTime');
     expect(pendingAdditions[0].object.value).toBe('4242-01-01T00:00:00Z');
   });
@@ -563,7 +563,7 @@ describe('removeLiteral', () => {
     expect(pendingAdditions).toEqual([]);
     expect(pendingDeletions.length).toBe(1);
     expect(pendingDeletions[0].object.termType).toBe('Literal');
-    expect((pendingDeletions[0].object as Literal).datatype.id)
+    expect((pendingDeletions[0].object as Literal).datatype.value)
       .toBe('http://www.w3.org/2001/XMLSchema#integer');
     expect(pendingDeletions[0].object.value).toBe(mockLiteralInteger.toString());
   });
@@ -576,7 +576,7 @@ describe('removeLiteral', () => {
     expect(pendingAdditions).toEqual([]);
     expect(pendingDeletions.length).toBe(1);
     expect(pendingDeletions[0].object.termType).toBe('Literal');
-    expect((pendingDeletions[0].object as Literal).datatype.id)
+    expect((pendingDeletions[0].object as Literal).datatype.value)
       .toBe('http://www.w3.org/2001/XMLSchema#decimal');
     expect(pendingDeletions[0].object.value).toBe(mockLiteralDecimal.toString());
   });
@@ -589,7 +589,7 @@ describe('removeLiteral', () => {
     expect(pendingAdditions).toEqual([]);
     expect(pendingDeletions.length).toBe(1);
     expect(pendingDeletions[0].object.termType).toBe('Literal');
-    expect((pendingDeletions[0].object as Literal).datatype.id)
+    expect((pendingDeletions[0].object as Literal).datatype.value)
       .toBe('http://www.w3.org/2001/XMLSchema#dateTime');
     expect(pendingDeletions[0].object.value).toBe(mockLiteralDateTimeString);
   });
