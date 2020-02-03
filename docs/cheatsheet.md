@@ -42,7 +42,7 @@ https://codesandbox.io/s/vigilant-napier-i3tf4?fontsize=14
 ```javascript
 import data from "@solid/query-ldflex";
 
-function getName(webId) {
+async function getName(webId) {
   // Note that this will also return invalid data (e.g. non-Literals, integers, etc.)
   return data[webId].name.value;
 }
@@ -185,7 +185,7 @@ https://codesandbox.io/s/festive-currying-z6s3n?fontsize=14
 ```javascript
 import data from "@solid/query-ldflex";
 
-function getNicknames(webId) {
+async function getNicknames(webId) {
   // Note that this will also return invalid data (e.g. non-Literals, integers, etc.)
   return data[webId].nick.values;
 }
@@ -254,7 +254,7 @@ async function addNicknames(webId, nicknames) {
 ```javascript
 import data from "@solid/query-ldflex";
 
-function addNicknames(webId, nicknames) {
+async function addNicknames(webId, nicknames) {
   return data[webId].nick.add(...nicknames);
 }
 ```
@@ -385,7 +385,7 @@ async function setNicknames(webId, nicknames) {
 ```javascript
 import data from "@solid/query-ldflex";
 
-function setNicknames(webId, nicknames) {
+async function setNicknames(webId, nicknames) {
   return data[webId].nick.set(...nicknames);
 }
 ```
@@ -447,7 +447,7 @@ async function removeNicknames(webId) {
 ```javascript
 import data from "@solid/query-ldflex";
 
-function removeNicknames(webId) {
+async function removeNicknames(webId) {
   return data[webId].nick.delete();
 }
 ```
@@ -507,7 +507,7 @@ async function removeNickname(webId, nickname) {
 ```javascript
 import data from "@solid/query-ldflex";
 
-function removeNickname(webId, nickname) {
+async function removeNickname(webId, nickname) {
   return data[webId].nick.delete(nickname);
 }
 ```
