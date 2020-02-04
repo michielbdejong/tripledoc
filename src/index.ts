@@ -48,6 +48,36 @@ export function isStringLiteral<T>(param: T | Literal): param is StringLiteral {
 /**
  * @ignore This is an internal TripleDoc data type that should not be exposed to library consumers.
  */
+export interface LocaleStringLiteral<Locale extends string> extends Literal {
+  datatype: NamedNode & { value: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#langString' };
+  language: Locale;
+}
+/**
+ * @ignore Tripledoc's methods should be explicit about whether they return or accept a specific
+ *         type, so this is merely an internal utility function, rather than a public API.
+ * @param param A value that might or might not be an N3 locale string Literal.
+ * @returns Whether `param` is an N3 locale string Literal with the given locale.
+ */
+export function isLocaleStringLiteral<T, Locale extends string>(
+  param: T | Literal,
+  locale: Locale,
+): param is LocaleStringLiteral<Locale> {
+  return isLiteral(param) &&
+    param.datatype.value === 'http://www.w3.org/1999/02/22-rdf-syntax-ns#langString' &&
+    param.language.toLowerCase() === locale.toLowerCase();
+}
+/**
+ * Primarily useful to create type guarsd for use in e.g. `Array.prototype.filter`.
+ * @ignore This is an internal TripleDoc data type that should not be exposed to library consumers.
+ */
+export function generateLocaleTypeGuard<Locale extends string>(locale: Locale) {
+  return function typeGuard<T>(param: T | Literal): param is LocaleStringLiteral<Locale> {
+    return isLocaleStringLiteral(param, locale);
+  }
+}
+/**
+ * @ignore This is an internal TripleDoc data type that should not be exposed to library consumers.
+ */
 export interface IntegerLiteral extends Literal {
   datatype: NamedNode & { value: 'http://www.w3.org/2001/XMLSchema#integer' };
 }

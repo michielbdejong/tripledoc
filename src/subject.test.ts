@@ -22,6 +22,11 @@ const mockSubjectWithIntegerLiteral = 'https://subject8.com/';
 const mockSubjectWithDecimalLiteral = 'https://subject9.com/';
 const mockSubjectWithDifferentTypesOfLiterals = 'https://subject10.com/';
 const mockSubjectWithDifferentPredicates = 'https://subject11.com/';
+const mockSubjectWithLocaleStringLiteral = 'https://subject12.com/';
+const mockSubjectWithLocaleAndRegularStringLiteral = 'https://subject13.com/';
+const mockSubjectWithMultipleLocaleStringLiterals = 'https://subject14.com/';
+const mockSubjectWithLangStringLiteral = 'https://subject15.com/';
+const mockSubjectWithMultipleSameLocaleStringLiterals = 'https://subject16.com/';
 const mockTypedSubject = 'https://subject7.com/';
 const mockEmptySubject = 'https://empty-subject.com/';
 const mockPredicate = 'https://mock-predicate.com/';
@@ -40,6 +45,14 @@ const mockLiteralInteger = 1337;
 const mockObjectIntegerLiteral = literal(mockLiteralInteger);
 const mockLiteralDecimal = 4.2;
 const mockObjectDecimalLiteral = literal(mockLiteralDecimal.toString(), namedNode('http://www.w3.org/2001/XMLSchema#decimal'));
+const mockLiteralLocaleString = 'Dutch (NL)';
+const mockLocale = 'nl-NL';
+const mockObjectLocaleStringLiteral = literal(mockLiteralLocaleString, mockLocale);
+const mockLiteralLocaleString2 = 'Dutch (NL) 2';
+const mockObjectLocaleStringLiteral2 = literal(mockLiteralLocaleString2, mockLocale);
+const mockLiteralLangString = 'Dutch (no country specified)';
+const mockLang = 'nl';
+const mockObjectLangStringLiteral = literal(mockLiteralLangString, mockLang);
 const mockTypeObject = 'https://mock-type-object.com/';
 const mockBlankNode = 'arbitrary-blank-node-id';
 const mockTriples = [
@@ -72,6 +85,13 @@ const mockTriples = [
   triple(namedNode(mockSubjectWithDifferentPredicates), namedNode(mockPredicate), mockObjectLiteral),
   triple(namedNode(mockSubjectWithDifferentPredicates), namedNode(mockPredicate), namedNode(mockObjectRef)),
   triple(namedNode(mockSubjectWithDifferentPredicates), namedNode(mockPredicate2), namedNode(mockObjectRef2)),
+  triple(namedNode(mockSubjectWithLocaleStringLiteral), namedNode(mockPredicate), mockObjectLocaleStringLiteral),
+  triple(namedNode(mockSubjectWithLocaleAndRegularStringLiteral), namedNode(mockPredicate), mockObjectLiteral),
+  triple(namedNode(mockSubjectWithLocaleAndRegularStringLiteral), namedNode(mockPredicate), mockObjectLocaleStringLiteral),
+  triple(namedNode(mockSubjectWithMultipleLocaleStringLiterals), namedNode(mockPredicate), mockObjectLangStringLiteral),
+  triple(namedNode(mockSubjectWithMultipleLocaleStringLiterals), namedNode(mockPredicate), mockObjectLocaleStringLiteral),
+  triple(namedNode(mockSubjectWithMultipleSameLocaleStringLiterals), namedNode(mockPredicate), mockObjectLocaleStringLiteral),
+  triple(namedNode(mockSubjectWithMultipleSameLocaleStringLiterals), namedNode(mockPredicate), mockObjectLocaleStringLiteral2),
 ];
 const turtle = triplesToTurtle(mockTriples);
 jest.mock('./store', () => ({
@@ -197,7 +217,6 @@ describe('getString', () => {
       .toBe(mockLiteralValue);
   });
 
-
   it('should return null if a Reference is found instead of a string Literal', async () => {
     const mockTripleDocument = await getMockTripleDocument();
     const subject = initialiseSubject(mockTripleDocument, mockSubjectWithRef);
@@ -209,6 +228,64 @@ describe('getString', () => {
     const mockTripleDocument = await getMockTripleDocument();
     const subject = initialiseSubject(mockTripleDocument, mockSubjectWithDateLiteral);
     expect(subject.getString(mockPredicate))
+      .toBeNull();
+  });
+
+  it('should return null if a locale string Literal is found', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithLocaleStringLiteral);
+    expect(subject.getString(mockPredicate))
+      .toBeNull();
+  });
+});
+
+describe('getLocaleString', () => {
+  it('should return a found locale string Literal', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithLocaleStringLiteral);
+    expect(subject.getLocaleString(mockPredicate, mockLocale))
+      .toBe(mockLiteralLocaleString);
+  });
+
+  it('should return the desired locale string Literal when multiple are present', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithMultipleLocaleStringLiterals);
+    expect(subject.getLocaleString(mockPredicate, mockLocale))
+      .toBe(mockLiteralLocaleString);
+  });
+
+  it('should return the desired locale string Literal when regular strings are present as well', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithLocaleAndRegularStringLiteral);
+    expect(subject.getLocaleString(mockPredicate, mockLocale))
+      .toBe(mockLiteralLocaleString);
+  });
+
+  it('should return null if the language matches but the full locale does not - picking the right one is left to the developer', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithLocaleStringLiteral);
+    expect(subject.getLocaleString(mockPredicate, mockLang))
+      .toBeNull();
+  });
+
+  it('should return null if the language matches but there is no info about the locale - it is up to developer to decide whether to look for those as well', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithLangStringLiteral);
+    expect(subject.getLocaleString(mockPredicate, mockLocale))
+      .toBeNull();
+  });
+
+  it('should return null if a non-locale-string Literal is found', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithDateLiteral);
+    expect(subject.getLocaleString(mockPredicate, mockLocale))
+      .toBeNull();
+  });
+
+  it('should return null if a non-locale string Literal is found', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithLiteral);
+    expect(subject.getLocaleString(mockPredicate, mockLocale))
       .toBeNull();
   });
 });
@@ -297,6 +374,22 @@ describe('getAllStrings', () => {
     const mockTripleDocument = await getMockTripleDocument();
     const subject = initialiseSubject(mockTripleDocument, mockEmptySubject);
     expect(subject.getAllStrings(mockPredicate))
+      .toEqual([]);
+  });
+});
+
+describe('getAllLocaleStrings', () => {
+  it('should only return locale string Literals that match the given locale', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithMultipleSameLocaleStringLiterals);
+    expect(subject.getAllLocaleStrings(mockPredicate, mockLocale))
+      .toEqual([mockLiteralLocaleString, mockLiteralLocaleString2]);
+  });
+
+  it('should return an empty array if nothing is found', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockEmptySubject);
+    expect(subject.getAllLocaleStrings(mockPredicate, mockLocale))
       .toEqual([]);
   });
 });

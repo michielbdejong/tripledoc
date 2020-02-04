@@ -13,6 +13,8 @@ import {
   DecimalLiteral,
   StringLiteral,
   isBlankNode,
+  generateLocaleTypeGuard,
+  LocaleStringLiteral,
 } from './index';
 import { findObjectsInStore } from './getEntities';
 import { BareTripleDocument, isSavedToPod } from './document';
@@ -50,6 +52,17 @@ export interface TripleSubject {
    * @returns The first literal string value satisfying `predicate`, if any, and `null` otherwise.
    */
   getString: (predicate: Reference) => string | null;
+  /**
+   * Find a literal string value in a given locale for `predicate` on this Subject.
+   *
+   * This retrieves _one_ string literal, or `null` if none (in the given locale) is found. If you
+   * want to find _all_ string literals in a locale for a predicate, see [[getAllLocaleStrings]].
+   *
+   * @param getLocaleString.predicate Which property of this Subject you want the value of.
+   * @param getLocaleString.locale Which locale the string should be in, e.g. 'nl-NL'.
+   * @returns The first literal string value satisfying `predicate` in the given locale, if any, and `null` otherwise.
+   */
+  getLocaleString: (predicate: Reference, locale: string) => string | null;
   /**
    * Find a literal integer value for `predicate` on this Subject.
    *
@@ -92,6 +105,12 @@ export interface TripleSubject {
    * @returns All literal string values satisfying `predicate`.
    */
   getAllStrings: (predicate: Reference) => string[];
+  /**
+   * @param getAllLocaleStrings.predicate Which property of this Subject you want the values of.
+   * @param getAllLocaleStrings.locale Which locale the values should be in, e.g. 'nl-NL'.
+   * @returns All literal string values satisfying `predicate` in the given locale.
+   */
+  getAllLocaleStrings: (predicate: Reference, locale: string) => string[];
   /**
    * @param getAllIntegers.predicate Which property of this Subject you want the values of.
    * @returns All literal integer values satisfying `predicate`.
@@ -290,6 +309,14 @@ export function initialiseSubject(document: BareTripleDocument, subjectRef: Refe
     }
     return firstStringLiteral.value;
   };
+  const getLocaleString = (predicateNode: Reference, locale: string) => {
+    const objects = get(predicateNode);
+    const firstStringLiteral = objects.find(generateLocaleTypeGuard(locale));
+    if (typeof firstStringLiteral === 'undefined') {
+      return null;
+    }
+    return firstStringLiteral.value;
+  };
   const getInteger = (predicateRef: Reference) => {
     const objects = get(predicateRef);
     const firstIntegerLiteral = objects.find(isIntegerLiteral);
@@ -328,6 +355,11 @@ export function initialiseSubject(document: BareTripleDocument, subjectRef: Refe
   const getAllStrings = (predicateRef: Reference) => {
     const objects = get(predicateRef);
     const literals = objects.filter(isStringLiteral);
+    return literals.map(fromStringLiteral);
+  };
+  const getAllLocaleStrings = (predicateRef: Reference, locale: string) => {
+    const objects = get(predicateRef);
+    const literals = objects.filter(generateLocaleTypeGuard(locale));
     return literals.map(fromStringLiteral);
   };
   const getAllIntegers = (predicateRef: Reference) => {
@@ -428,11 +460,13 @@ export function initialiseSubject(document: BareTripleDocument, subjectRef: Refe
     getDocument: () => document,
     getTriples: getTriples,
     getString: getString,
+    getLocaleString: getLocaleString,
     getInteger: getInteger,
     getDecimal: getDecimal,
     getDateTime: getDateTime,
     getLiteral: getLiteral,
     getAllStrings: getAllStrings,
+    getAllLocaleStrings: getAllLocaleStrings,
     getAllIntegers: getAllIntegers,
     getAllDecimals: getAllDecimals,
     getAllDateTimes: getAllDateTimes,
@@ -496,7 +530,7 @@ function fromIntegerLiteral(literal: IntegerLiteral): number {
 function fromDecimalLiteral(literal: DecimalLiteral): number {
   return parseFloat(literal.value);
 }
-function fromStringLiteral(literal: StringLiteral): string {
+function fromStringLiteral(literal: StringLiteral | LocaleStringLiteral<string>): string {
   return literal.value;
 }
 function fromLiteral(literal: Literal): LiteralTypes {

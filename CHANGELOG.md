@@ -4,6 +4,10 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+### New features
+
+- String literals that have been stored with a locale specified (e.g. `nl-nl` for strings in Dutch) can now be accessed through `TripleSubject.getLocaleString` and `TripleSubject.getAllLocaleStrings`. Note that this will not return strings without a locale specified, nor will it return strings whose locale partially matches (e.g. strings with the locale `nl` will not be returned when `nl-nl` is requested, nor vice versa). As was already the case, `getString()` and `getAllStrings()` will not return strings with a locale specified.
+
 ### Bugs fixed
 
 - `getSubject` was exposed on `BareTripleDocument`s, which represents a Document that does not exist on the Pod yet, even though such a Document can by definition not contain any Subjects yet. The method is now only available when it can actually return a value.
