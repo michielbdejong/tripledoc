@@ -25,7 +25,7 @@ fetchDocument('https://www.w3.org/People/Berners-Lee/card')
   console.log('The name in this profile is:', name);
 
   profile.addRef(foaf.knows, 'https://vincentt.inrupt.net/profile/card#me');
-  profile.addLiteral(foaf.nick, 'timbl');
+  profile.addString(foaf.nick, 'timbl');
 
   // Credentials are included [1] in this request, so make sure those are set
   // properly if needed. The package solid-auth-client [2] might be of assistance
