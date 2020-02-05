@@ -4,6 +4,8 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+## [4.2.0] - 2020-02-05
+
 ### Deprecations
 
 - The `addLiteral`, `setLiteral` and `removeLiteral` methods on `TripleSubject`s are now deprecated, and will be removed in a future major release. They can be replaced by their data type-specific equivalents (e.g. `addString`, `setInteger`, `removeDateTime`).
