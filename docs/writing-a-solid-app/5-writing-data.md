@@ -18,7 +18,7 @@ async function addNote(note, notesList) {
   newNote.addString(schema.text, note);
 
   // Store the date the note was created (i.e. now):
-  newNote.addString(schema.dateCreated, new Date(Date.now()));
+  newNote.addDateTime(schema.dateCreated, new Date(Date.now()));
 
   const success = await notesList.save([newNote]);
   return success;
