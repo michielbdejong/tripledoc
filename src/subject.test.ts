@@ -636,6 +636,112 @@ describe('addLiteral', () => {
   });
 });
 
+describe('addString', () => {
+  it('should produce Triples that the Document can store in the user\'s Pod', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithLiteral);
+    subject.addString(mockPredicate, 'Some string value');
+    const [pendingDeletions, pendingAdditions] = subject.getPendingTriples();
+    expect(pendingDeletions).toEqual([]);
+    expect(pendingAdditions.length).toBe(1);
+    expect(pendingAdditions[0].object.termType).toBe('Literal');
+    expect((pendingAdditions[0].object as Literal).datatype.value)
+      .toBe('http://www.w3.org/2001/XMLSchema#string');
+    expect(pendingAdditions[0].object.value).toBe('Some string value');
+  });
+
+  it('should throw an error when something other than a string was given', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithLiteral);
+    expect(() => subject.addString(mockPredicate, 1337 as any))
+      .toThrowError('The given value is not a string.');
+  });
+});
+
+describe('addInteger', () => {
+  it('should produce Triples that the Document can store in the user\'s Pod', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithLiteral);
+    subject.addInteger(mockPredicate, 42);
+    const [pendingDeletions, pendingAdditions] = subject.getPendingTriples();
+    expect(pendingDeletions).toEqual([]);
+    expect(pendingAdditions.length).toBe(1);
+    expect(pendingAdditions[0].object.termType).toBe('Literal');
+    expect((pendingAdditions[0].object as Literal).datatype.value)
+      .toBe('http://www.w3.org/2001/XMLSchema#integer');
+    expect(pendingAdditions[0].object.value).toBe('42');
+  });
+
+  it('should throw an error when something other than a number was given', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithLiteral);
+    expect(() => subject.addInteger(mockPredicate, new Date() as any))
+      .toThrowError('The given value is not an integer.');
+  });
+
+  it('should throw an error when a decimal number was given', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithLiteral);
+    expect(() => subject.addInteger(mockPredicate, 13.37))
+      .toThrowError('The given value is not an integer.');
+  });
+});
+
+describe('addDecimal', () => {
+  it('should produce Triples that the Document can store in the user\'s Pod', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithLiteral);
+    subject.addDecimal(mockPredicate, 13.37);
+    const [pendingDeletions, pendingAdditions] = subject.getPendingTriples();
+    expect(pendingDeletions).toEqual([]);
+    expect(pendingAdditions.length).toBe(1);
+    expect(pendingAdditions[0].object.termType).toBe('Literal');
+    expect((pendingAdditions[0].object as Literal).datatype.value)
+      .toBe('http://www.w3.org/2001/XMLSchema#decimal');
+    expect(pendingAdditions[0].object.value).toBe('13.37');
+  });
+
+  it('should store an integer as a decimal number', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithLiteral);
+    subject.addDecimal(mockPredicate, 42);
+    const [pendingDeletions, pendingAdditions] = subject.getPendingTriples();
+    expect(pendingDeletions).toEqual([]);
+    expect(pendingAdditions.length).toBe(1);
+    expect(pendingAdditions[0].object.termType).toBe('Literal');
+    expect(pendingAdditions[0].object.value).toBe('42');
+  });
+
+  it('should throw an error when something other than a number was given', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithLiteral);
+    expect(() => subject.addDecimal(mockPredicate, 'Not a number' as any))
+      .toThrowError('The given value is not a decimal.');
+  });
+});
+
+describe('addDateTime', () => {
+  it('should produce Triples that the Document can store in the user\'s Pod', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithLiteral);
+    subject.addDateTime(mockPredicate, new Date(Date.UTC(1970, 0)));
+    const [pendingDeletions, pendingAdditions] = subject.getPendingTriples();
+    expect(pendingDeletions).toEqual([]);
+    expect(pendingAdditions.length).toBe(1);
+    expect(pendingAdditions[0].object.termType).toBe('Literal');
+    expect((pendingAdditions[0].object as Literal).datatype.value)
+      .toBe('http://www.w3.org/2001/XMLSchema#dateTime');
+    expect(pendingAdditions[0].object.value).toBe('1970-01-01T00:00:00Z');
+  });
+
+  it('should throw an error when something other than a Date was given', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithLiteral);
+    expect(() => subject.addDateTime(mockPredicate, 'Not a Date' as any))
+      .toThrowError('The given value is not a DateTime.');
+  });
+});
+
 describe('removeLiteral', () => {
   it('should produce Triples that the Document can apply to the user\'s Pod', async () => {
     const mockTripleDocument = await getMockTripleDocument();
@@ -688,6 +794,114 @@ describe('removeLiteral', () => {
   });
 });
 
+describe('removeString', () => {
+  it('should produce Triples that the Document can apply to the user\'s Pod', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithTwoLiterals);
+    subject.removeString(mockPredicate, 'Some string');
+    const [pendingDeletions, pendingAdditions] = subject.getPendingTriples();
+    expect(pendingAdditions).toEqual([]);
+    expect(pendingDeletions.length).toBe(1);
+    expect(pendingDeletions[0].object.termType).toBe('Literal');
+    expect((pendingDeletions[0].object as Literal).datatype.value)
+      .toBe('http://www.w3.org/2001/XMLSchema#string');
+    expect(pendingDeletions[0].object.value).toBe('Some string');
+  });
+
+  it('should throw an error if something other than a string was given', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithIntegerLiteral);
+    expect(() => subject.removeString(mockPredicate, new Date() as any))
+      .toThrowError('The given value is not a string.');
+  });
+});
+
+describe('removeInteger', () => {
+  it('should produce Triples that the Document can apply to the user\'s Pod', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithIntegerLiteral);
+    subject.removeInteger(mockPredicate, 42);
+    const [pendingDeletions, pendingAdditions] = subject.getPendingTriples();
+    expect(pendingAdditions).toEqual([]);
+    expect(pendingDeletions.length).toBe(1);
+    expect(pendingDeletions[0].object.termType).toBe('Literal');
+    expect((pendingDeletions[0].object as Literal).datatype.value)
+      .toBe('http://www.w3.org/2001/XMLSchema#integer');
+    expect(pendingDeletions[0].object.value).toBe('42');
+  });
+
+  it('should throw an error if something other than a number was given', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithIntegerLiteral);
+    expect(() => subject.removeInteger(mockPredicate, 'Not a number' as any))
+      .toThrowError('The given value is not an integer.');
+  });
+
+  it('should throw an error if a non-integer number was given', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithIntegerLiteral);
+    expect(() => subject.removeInteger(mockPredicate, 13.37))
+      .toThrowError('The given value is not an integer.');
+  });
+});
+
+describe('removeDecimal', () => {
+  it('should produce Triples that the Document can apply to the user\'s Pod', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithDecimalLiteral);
+    subject.removeDecimal(mockPredicate, 13.37);
+    const [pendingDeletions, pendingAdditions] = subject.getPendingTriples();
+    expect(pendingAdditions).toEqual([]);
+    expect(pendingDeletions.length).toBe(1);
+    expect(pendingDeletions[0].object.termType).toBe('Literal');
+    expect((pendingDeletions[0].object as Literal).datatype.value)
+      .toBe('http://www.w3.org/2001/XMLSchema#decimal');
+    expect(pendingDeletions[0].object.value).toBe('13.37');
+  });
+
+  it('should store integers as decimals', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithDecimalLiteral);
+    subject.removeDecimal(mockPredicate, 42);
+    const [pendingDeletions, pendingAdditions] = subject.getPendingTriples();
+    expect(pendingAdditions).toEqual([]);
+    expect(pendingDeletions.length).toBe(1);
+    expect(pendingDeletions[0].object.termType).toBe('Literal');
+    expect((pendingDeletions[0].object as Literal).datatype.value)
+      .toBe('http://www.w3.org/2001/XMLSchema#decimal');
+    expect(pendingDeletions[0].object.value).toBe('42');
+  });
+
+  it('should throw an error if something other than a number was given', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithDecimalLiteral);
+    expect(() => subject.removeDecimal(mockPredicate, 'Not a number' as any))
+      .toThrowError('The given value is not a decimal.');
+  });
+});
+
+describe('removeDateTime', () => {
+  it('should produce Triples that the Document can apply to the user\'s Pod', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithDateLiteral);
+    subject.removeDateTime(mockPredicate, new Date(Date.UTC(1970, 0)));
+    const [pendingDeletions, pendingAdditions] = subject.getPendingTriples();
+    expect(pendingAdditions).toEqual([]);
+    expect(pendingDeletions.length).toBe(1);
+    expect(pendingDeletions[0].object.termType).toBe('Literal');
+    expect((pendingDeletions[0].object as Literal).datatype.value)
+      .toBe('http://www.w3.org/2001/XMLSchema#dateTime');
+    expect(pendingDeletions[0].object.value).toBe('1970-01-01T00:00:00Z');
+  });
+
+  it('should throw an error if something other than a DateTime was given', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithDateLiteral);
+    expect(() => subject.removeDateTime(mockPredicate, 42 as any))
+      .toThrowError('The given value is not a DateTime.');
+  });
+});
+
 describe('setLiteral', () => {
   it('should remove all existing values, whether Literal or Reference', async () => {
     const mockTripleDocument = await getMockTripleDocument();
@@ -709,6 +923,110 @@ describe('setLiteral', () => {
     expect(pendingAdditions.length).toBe(1);
     expect(pendingAdditions[0].object.termType).toBe('Literal');
     expect(pendingAdditions[0].object.value).toBe(mockLiteralValue2);
+  });
+});
+
+describe('setString', () => {
+  it('should remove all existing values, whether Literal or Reference', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithLiteralThenRef);
+    subject.setString(mockPredicate, 'Some string');
+    const [pendingDeletions, pendingAdditions] = subject.getPendingTriples();
+    expect(pendingDeletions).toEqual([
+      triple(
+        namedNode(mockSubjectWithLiteralThenRef),
+        namedNode(mockPredicate),
+        mockObjectLiteral,
+      ),
+      triple(
+        namedNode(mockSubjectWithLiteralThenRef),
+        namedNode(mockPredicate),
+        namedNode(mockObjectRef),
+      ),
+    ]);
+    expect(pendingAdditions.length).toBe(1);
+    expect(pendingAdditions[0].object.termType).toBe('Literal');
+    expect((pendingAdditions[0].object as Literal).datatype.value)
+      .toBe('http://www.w3.org/2001/XMLSchema#string');
+    expect(pendingAdditions[0].object.value).toBe('Some string');
+  });
+});
+
+describe('setInteger', () => {
+  it('should remove all existing values, whether Literal or Reference', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithLiteralThenRef);
+    subject.setInteger(mockPredicate, 42);
+    const [pendingDeletions, pendingAdditions] = subject.getPendingTriples();
+    expect(pendingDeletions).toEqual([
+      triple(
+        namedNode(mockSubjectWithLiteralThenRef),
+        namedNode(mockPredicate),
+        mockObjectLiteral,
+      ),
+      triple(
+        namedNode(mockSubjectWithLiteralThenRef),
+        namedNode(mockPredicate),
+        namedNode(mockObjectRef),
+      ),
+    ]);
+    expect(pendingAdditions.length).toBe(1);
+    expect(pendingAdditions[0].object.termType).toBe('Literal');
+    expect((pendingAdditions[0].object as Literal).datatype.value)
+      .toBe('http://www.w3.org/2001/XMLSchema#integer');
+    expect(pendingAdditions[0].object.value).toBe('42');
+  });
+});
+
+describe('setDecimal', () => {
+  it('should remove all existing values, whether Literal or Reference', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithLiteralThenRef);
+    subject.setDecimal(mockPredicate, 13.37);
+    const [pendingDeletions, pendingAdditions] = subject.getPendingTriples();
+    expect(pendingDeletions).toEqual([
+      triple(
+        namedNode(mockSubjectWithLiteralThenRef),
+        namedNode(mockPredicate),
+        mockObjectLiteral,
+      ),
+      triple(
+        namedNode(mockSubjectWithLiteralThenRef),
+        namedNode(mockPredicate),
+        namedNode(mockObjectRef),
+      ),
+    ]);
+    expect(pendingAdditions.length).toBe(1);
+    expect(pendingAdditions[0].object.termType).toBe('Literal');
+    expect((pendingAdditions[0].object as Literal).datatype.value)
+      .toBe('http://www.w3.org/2001/XMLSchema#decimal');
+    expect(pendingAdditions[0].object.value).toBe('13.37');
+  });
+});
+
+describe('setDateTime', () => {
+  it('should remove all existing values, whether Literal or Reference', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithLiteralThenRef);
+    subject.setDateTime(mockPredicate, new Date(Date.UTC(1970, 0)));
+    const [pendingDeletions, pendingAdditions] = subject.getPendingTriples();
+    expect(pendingDeletions).toEqual([
+      triple(
+        namedNode(mockSubjectWithLiteralThenRef),
+        namedNode(mockPredicate),
+        mockObjectLiteral,
+      ),
+      triple(
+        namedNode(mockSubjectWithLiteralThenRef),
+        namedNode(mockPredicate),
+        namedNode(mockObjectRef),
+      ),
+    ]);
+    expect(pendingAdditions.length).toBe(1);
+    expect(pendingAdditions[0].object.termType).toBe('Literal');
+    expect((pendingAdditions[0].object as Literal).datatype.value)
+      .toBe('http://www.w3.org/2001/XMLSchema#dateTime');
+    expect(pendingAdditions[0].object.value).toBe('1970-01-01T00:00:00Z');
   });
 });
 

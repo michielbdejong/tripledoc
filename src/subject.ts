@@ -97,7 +97,7 @@ export interface TripleSubject {
    * @param getLiteral.predicate Which property of this Subject you want the value of.
    * @returns The first literal value satisfying `predicate`, if any, and `null` otherwise.
    * @deprecated This method has been superseded by the type-specific methods [[getString]],
-   *             [[getNumber]] and [[getDateTime]].
+   *             [[getInteger]], [[getDecimal]] and [[getDateTime]].
    */
   getLiteral: (predicate: Reference) => LiteralTypes | null;
   /**
@@ -130,7 +130,7 @@ export interface TripleSubject {
    * @param getAllLiterals.predicate Which property of this Subject you want the values of.
    * @returns All literal values satisfying `predicate`.
    * @deprecated This method has been superseded by the type-specific methods [[getAllStrings]],
-   *             [[getAllNumbers]] and [[getAllDates]].
+   *             [[getAllIntegers]], [[getAllDecimals]] and [[getAllDates]].
    */
   getAllLiterals: (predicate: Reference) => LiteralTypes[];
   /**
@@ -182,12 +182,50 @@ export interface TripleSubject {
    */
   getAllNodeRefs: (predicate: Reference) => Array<Reference>;
   /**
+   * Set a property of this Subject to a Literal string value.
+   *
+   * Note that this value is not saved to the user's Pod until you save the containing Document.
+   *
+   * @param addString.predicate The property you want to add another value of.
+   * @param addString.object The Literal string value you want to add.
+   */
+  addString: (predicate: Reference, object: string) => void;
+  /**
+   * Set a property of this Subject to a Literal integer value.
+   *
+   * Note that this value is not saved to the user's Pod until you save the containing Document.
+   *
+   * @param addInteger.predicate The property you want to add another value of.
+   * @param addInteger.object The Literal integer value you want to add.
+   */
+  addInteger: (predicate: Reference, object: number) => void;
+  /**
+   * Set a property of this Subject to a Literal decimal value.
+   *
+   * Note that this value is not saved to the user's Pod until you save the containing Document.
+   *
+   * @param addDecimal.predicate The property you want to add another value of.
+   * @param addDecimal.object The Literal decimal value you want to add.
+   */
+  addDecimal: (predicate: Reference, object: number) => void;
+  /**
+   * Set a property of this Subject to a Literal DateTime value.
+   *
+   * Note that this value is not saved to the user's Pod until you save the containing Document.
+   *
+   * @param addDateTime.predicate The property you want to add another value of.
+   * @param addDateTime.object The Literal DateTime value you want to add.
+   */
+  addDateTime: (predicate: Reference, object: Date) => void;
+  /**
    * Set a property of this Subject to a Literal value (i.e. not a URL).
    *
    * Note that this value is not saved to the user's Pod until you save the containing Document.
    *
    * @param addLiteral.predicate The property you want to add another value of.
    * @param addLiteral.object The Literal value you want to add, the type of which is one of [[LiteralTypes]].
+   * @deprecated This method has been superseded by the type-specific methods [[addString]],
+   *             [[addInteger]], [[addDecimal]] and [[addDateTime]].
    */
   addLiteral: (predicate: Reference, object: LiteralTypes) => void;
   /**
@@ -205,12 +243,50 @@ export interface TripleSubject {
    */
   addNodeRef: (predicate: Reference, object: Reference) => void;
   /**
+   * Remove a Literal string value for a property of this Subject.
+   *
+   * Note that this value is not removed from the user's Pod until you save the containing Document.
+   *
+   * @param removeString.predicate The property you want to remove a value of.
+   * @param removeString.object The Literal string value you want to remove.
+   */
+  removeString: (predicate: Reference, object: string) => void;
+  /**
+   * Remove a Literal integer value for a property of this Subject.
+   *
+   * Note that this value is not removed from the user's Pod until you save the containing Document.
+   *
+   * @param removeInteger.predicate The property you want to remove a value of.
+   * @param removeInteger.object The Literal integer value you want to remove.
+   */
+  removeInteger: (predicate: Reference, object: number) => void;
+  /**
+   * Remove a Literal decimal value for a property of this Subject.
+   *
+   * Note that this value is not removed from the user's Pod until you save the containing Document.
+   *
+   * @param removeDecimal.predicate The property you want to remove a value of.
+   * @param removeDecimal.object The Literal decimal value you want to remove.
+   */
+  removeDecimal: (predicate: Reference, object: number) => void;
+  /**
+   * Remove a Literal DateTime value for a property of this Subject.
+   *
+   * Note that this value is not removed from the user's Pod until you save the containing Document.
+   *
+   * @param removeDateTime.predicate The property you want to remove a value of.
+   * @param removeDateTime.object The Literal DateTime value you want to remove.
+   */
+  removeDateTime: (predicate: Reference, object: Date) => void;
+  /**
    * Remove a Literal value for a property of this Subject.
    *
    * Note that this value is not removed from the user's Pod until you save the containing Document.
    *
    * @param removeLiteral.predicate The property you want to remove a value of.
    * @param removeLiteral.object The Literal value you want to remove, the type of which is one of [[LiteralTypes]].
+   * @deprecated This method has been superseded by the type-specific methods [[removeString]],
+   *             [[removeNumber]] and [[removeDateTime]].
    */
   removeLiteral: (predicate: Reference, object: LiteralTypes) => void;
   /**
@@ -237,12 +313,50 @@ export interface TripleSubject {
    */
   removeAll: (predicate: Reference) => void;
   /**
+   * Set a property of this Subject to a string Literal value, clearing all existing values.
+   *
+   * Note that this change is not saved to the user's Pod until you save the containing Document.
+   *
+   * @param setString.predicate The property you want to set the value of.
+   * @param setString.object The string Literal value you want to set.
+   */
+  setString: (predicate: Reference, object: string) => void;
+  /**
+   * Set a property of this Subject to an integer Literal value, clearing all existing values.
+   *
+   * Note that this change is not saved to the user's Pod until you save the containing Document.
+   *
+   * @param setInteger.predicate The property you want to set the value of.
+   * @param setInteger.object The integer Literal value you want to set.
+   */
+  setInteger: (predicate: Reference, object: number) => void;
+  /**
+   * Set a property of this Subject to a decimal Literal value, clearing all existing values.
+   *
+   * Note that this change is not saved to the user's Pod until you save the containing Document.
+   *
+   * @param setDecimal.predicate The property you want to set the value of.
+   * @param setDecimal.object The decimal Literal value you want to set.
+   */
+  setDecimal: (predicate: Reference, object: number) => void;
+  /**
+   * Set a property of this Subject to a DateTime Literal value, clearing all existing values.
+   *
+   * Note that this change is not saved to the user's Pod until you save the containing Document.
+   *
+   * @param setDateTime.predicate The property you want to set the value of.
+   * @param setDateTime.object The DateTime Literal value you want to set.
+   */
+  setDateTime: (predicate: Reference, object: Date) => void;
+  /**
    * Set a property of this Subject to a Literal value, clearing all existing values.
    *
    * Note that this change is not saved to the user's Pod until you save the containing Document.
    *
    * @param setLiteral.predicate The property you want to set the value of.
    * @param setLiteral.object The Literal value you want to set, the type of which is one of [[LiteralTypes]].
+   * @deprecated This method has been superseded by the type-specific methods [[setString]],
+   *             [[setInteger]], [[setDecimal]] and [[setDateTime]].
    */
   setLiteral: (predicate: Reference, object: LiteralTypes) => void;
   /**
@@ -420,6 +534,34 @@ export function initialiseSubject(document: BareTripleDocument, subjectRef: Refe
       asLiteral(literal),
     ));
   };
+  const addString = (predicateRef: Reference, literal: string) => {
+    if (typeof literal !== 'string') {
+      throw new Error('The given value is not a string.');
+    }
+    return addLiteral(predicateRef, literal);
+  };
+  const addInteger = (predicateRef: Reference, literal: number) => {
+    if (typeof literal !== 'number' || !Number.isInteger(literal)) {
+      throw new Error('The given value is not an integer.');
+    }
+    return addLiteral(predicateRef, literal);
+  };
+  const addDecimal = (predicateRef: Reference, literal: number) => {
+    if (typeof literal !== 'number') {
+      throw new Error('The given value is not a decimal.');
+    }
+    pendingAdditions.push(DataFactory.triple(
+      subjectNode,
+      DataFactory.namedNode(predicateRef),
+      DataFactory.literal(literal, DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#decimal')),
+    ));
+  };
+  const addDateTime = (predicateRef: Reference, literal: Date) => {
+    if (literal instanceof Date === false) {
+      throw new Error('The given value is not a DateTime.');
+    }
+    return addLiteral(predicateRef, literal);
+  };
   const addRef = (predicateRef: Reference, nodeRef: Reference) => {
     pendingAdditions.push(DataFactory.triple(
       subjectNode,
@@ -434,17 +576,73 @@ export function initialiseSubject(document: BareTripleDocument, subjectRef: Refe
       DataFactory.namedNode(nodeRef),
     ));
   };
+  const removeLiteral = (predicateRef: Reference, literal: LiteralTypes) => {
+    pendingDeletions.push(DataFactory.triple(
+      subjectNode,
+      DataFactory.namedNode(predicateRef),
+      asLiteral(literal), 
+    ));
+  };
+  const removeString = (predicateRef: Reference, literal: string) => {
+    if (typeof literal !== 'string') {
+      throw new Error('The given value is not a string.');
+    }
+    return removeLiteral(predicateRef, literal);
+  };
+  const removeInteger = (predicateRef: Reference, literal: number) => {
+    if (typeof literal !== 'number' || !Number.isInteger(literal)) {
+      throw new Error('The given value is not an integer.');
+    }
+    return removeLiteral(predicateRef, literal);
+  };
+  const removeDecimal = (predicateRef: Reference, literal: number) => {
+    if (typeof literal !== 'number') {
+      throw new Error('The given value is not a decimal.');
+    }
+    // We cannot re-use `removeLiteral` here because it will parse `42.0` as an integer:
+    pendingDeletions.push(DataFactory.triple(
+      subjectNode,
+      DataFactory.namedNode(predicateRef),
+      DataFactory.literal(literal, DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#decimal')), 
+    ));
+  };
+  const removeDateTime = (predicateRef: Reference, literal: Date) => {
+    if (literal instanceof Date === false) {
+      throw new Error('The given value is not a DateTime.');
+    }
+    return removeLiteral(predicateRef, literal);
+  };
   const removeAll = (predicateRef: Reference) => {
     pendingDeletions.push(...store.getQuads(
       subjectNode, predicateRef, null, null,
     ));
-  }
+  };
   const clear = () => {
     pendingDeletions.push(...getTriples());
-  }
+  };
   const setRef = (predicateRef: Reference, nodeRef: Reference) => {
     removeAll(predicateRef);
     addRef(predicateRef, nodeRef);
+  };
+  const setLiteral = (predicateRef: Reference, literal: LiteralTypes) => {
+    removeAll(predicateRef);
+    addLiteral(predicateRef, literal);
+  };
+  const setString = (predicateRef: Reference, literal: string) => {
+    removeAll(predicateRef);
+    addString(predicateRef, literal);
+  };
+  const setInteger = (predicateRef: Reference, literal: number) => {
+    removeAll(predicateRef);
+    addInteger(predicateRef, literal);
+  };
+  const setDecimal = (predicateRef: Reference, literal: number) => {
+    removeAll(predicateRef);
+    addDecimal(predicateRef, literal);
+  };
+  const setDateTime = (predicateRef: Reference, literal: Date) => {
+    removeAll(predicateRef);
+    addDateTime(predicateRef, literal);
   };
 
   const getTriples = () => store.getQuads(
@@ -476,22 +674,22 @@ export function initialiseSubject(document: BareTripleDocument, subjectRef: Refe
     getRef: getRef,
     getAllRefs: getAllRefs,
     getType: getType,
-    addLiteral: addLiteral,
+    addString: addString,
+    addInteger: addInteger,
+    addDecimal: addDecimal,
+    addDateTime: addDateTime,
     addRef: addRef,
     removeAll: removeAll,
-    removeLiteral: (predicateRef, literal) => {
-      pendingDeletions.push(DataFactory.triple(
-        subjectNode,
-        DataFactory.namedNode(predicateRef),
-        asLiteral(literal), 
-      ));
-    },
+    removeString: removeString,
+    removeInteger: removeInteger,
+    removeDecimal: removeDecimal,
+    removeDateTime: removeDateTime,
     removeRef: removeRef,
-    setLiteral: (predicateRef, literal) => {
-      removeAll(predicateRef);
-      addLiteral(predicateRef, literal);
-    },
     setRef: setRef,
+    setString: setString,
+    setInteger: setInteger,
+    setDecimal: setDecimal,
+    setDateTime: setDateTime,
     clear: clear,
     getPendingTriples: () => [pendingDeletions, pendingAdditions],
     asRef: asRef,
@@ -499,8 +697,11 @@ export function initialiseSubject(document: BareTripleDocument, subjectRef: Refe
     getNodeRef: getRef,
     getAllNodeRefs: getAllRefs,
     addNodeRef: addRef,
+    addLiteral: addLiteral,
     removeNodeRef: removeRef,
+    removeLiteral: removeLiteral,
     setNodeRef: setRef,
+    setLiteral: setLiteral,
     asNodeRef: asRef,
   };
 
