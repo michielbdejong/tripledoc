@@ -658,6 +658,30 @@ describe('addString', () => {
   });
 });
 
+describe('addLocaleString', () => {
+  it('should produce Triples that the Document can store in the user\'s Pod', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithLiteral);
+    subject.addLocaleString(mockPredicate, 'Some localised string value', 'en-GB');
+    const [pendingDeletions, pendingAdditions] = subject.getPendingTriples();
+    expect(pendingDeletions).toEqual([]);
+    expect(pendingAdditions.length).toBe(1);
+    expect(pendingAdditions[0].object.termType).toBe('Literal');
+    expect((pendingAdditions[0].object as Literal).datatype.value)
+      .toBe('http://www.w3.org/1999/02/22-rdf-syntax-ns#langString');
+    expect((pendingAdditions[0].object as Literal).language)
+      .toBe('en-gb');
+    expect(pendingAdditions[0].object.value).toBe('Some localised string value');
+  });
+
+  it('should throw an error when something other than a string was given', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithLiteral);
+    expect(() => subject.addLocaleString(mockPredicate, 1337 as any, 'nl-NL'))
+      .toThrowError('The given value is not a string.');
+  });
+});
+
 describe('addInteger', () => {
   it('should produce Triples that the Document can store in the user\'s Pod', async () => {
     const mockTripleDocument = await getMockTripleDocument();
@@ -816,6 +840,29 @@ describe('removeString', () => {
   });
 });
 
+describe('removeLocaleString', () => {
+  it('should produce Triples that the Document can apply to the user\'s Pod', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithTwoLiterals);
+    subject.removeLocaleString(mockPredicate, 'Some string', 'en-GB');
+    const [pendingDeletions, pendingAdditions] = subject.getPendingTriples();
+    expect(pendingAdditions).toEqual([]);
+    expect(pendingDeletions.length).toBe(1);
+    expect(pendingDeletions[0].object.termType).toBe('Literal');
+    expect((pendingDeletions[0].object as Literal).datatype.value)
+      .toBe('http://www.w3.org/1999/02/22-rdf-syntax-ns#langString');
+    expect((pendingDeletions[0].object as Literal).language).toBe('en-gb');
+    expect(pendingDeletions[0].object.value).toBe('Some string');
+  });
+
+  it('should throw an error if something other than a string was given', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithIntegerLiteral);
+    expect(() => subject.removeLocaleString(mockPredicate, 42 as any, 'nl-NL'))
+      .toThrowError('The given value is not a string.');
+  });
+});
+
 describe('removeInteger', () => {
   it('should produce Triples that the Document can apply to the user\'s Pod', async () => {
     const mockTripleDocument = await getMockTripleDocument();
@@ -948,6 +995,33 @@ describe('setString', () => {
     expect(pendingAdditions[0].object.termType).toBe('Literal');
     expect((pendingAdditions[0].object as Literal).datatype.value)
       .toBe('http://www.w3.org/2001/XMLSchema#string');
+    expect(pendingAdditions[0].object.value).toBe('Some string');
+  });
+});
+
+describe('setLocaleString', () => {
+  it('should remove all existing values, whether Literal or Reference', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
+    const subject = initialiseSubject(mockTripleDocument, mockSubjectWithLiteralThenRef);
+    subject.setLocaleString(mockPredicate, 'Some string', 'en-GB');
+    const [pendingDeletions, pendingAdditions] = subject.getPendingTriples();
+    expect(pendingDeletions).toEqual([
+      triple(
+        namedNode(mockSubjectWithLiteralThenRef),
+        namedNode(mockPredicate),
+        mockObjectLiteral,
+      ),
+      triple(
+        namedNode(mockSubjectWithLiteralThenRef),
+        namedNode(mockPredicate),
+        namedNode(mockObjectRef),
+      ),
+    ]);
+    expect(pendingAdditions.length).toBe(1);
+    expect(pendingAdditions[0].object.termType).toBe('Literal');
+    expect((pendingAdditions[0].object as Literal).datatype.value)
+      .toBe('http://www.w3.org/1999/02/22-rdf-syntax-ns#langString');
+    expect((pendingAdditions[0].object as Literal).language).toBe('en-gb');
     expect(pendingAdditions[0].object.value).toBe('Some string');
   });
 });

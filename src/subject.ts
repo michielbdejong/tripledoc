@@ -191,6 +191,16 @@ export interface TripleSubject {
    */
   addString: (predicate: Reference, object: string) => void;
   /**
+   * Set a property of this Subject to a Literal localised string value.
+   *
+   * Note that this value is not saved to the user's Pod until you save the containing Document.
+   *
+   * @param addLocaleString.predicate The property you want to add another value of.
+   * @param addLocaleString.object The Literal string value you want to add.
+   * @param addLocaleString.locale The locale the given string is in.
+   */
+  addLocaleString: (predicate: Reference, object: string, locale: string) => void;
+  /**
    * Set a property of this Subject to a Literal integer value.
    *
    * Note that this value is not saved to the user's Pod until you save the containing Document.
@@ -251,6 +261,16 @@ export interface TripleSubject {
    * @param removeString.object The Literal string value you want to remove.
    */
   removeString: (predicate: Reference, object: string) => void;
+  /**
+   * Remove a Literal localised string value for a property of this Subject.
+   *
+   * Note that this value is not removed from the user's Pod until you save the containing Document.
+   *
+   * @param removeLocaleString.predicate The property you want to remove a value of.
+   * @param removeLocaleString.object The Literal string value you want to remove.
+   * @param removeLocaleString.locale The locale of the string to remove.
+   */
+  removeLocaleString: (predicate: Reference, object: string, locale: string) => void;
   /**
    * Remove a Literal integer value for a property of this Subject.
    *
@@ -321,6 +341,16 @@ export interface TripleSubject {
    * @param setString.object The string Literal value you want to set.
    */
   setString: (predicate: Reference, object: string) => void;
+  /**
+   * Set a property of this Subject to a localised string Literal value, clearing all existing values.
+   *
+   * Note that this change is not saved to the user's Pod until you save the containing Document.
+   *
+   * @param setLocaleString.predicate The property you want to set the value of.
+   * @param setLocaleString.object The string Literal value you want to set.
+   * @param setLocaleString.locale The locale of the given string.
+   */
+  setLocaleString: (predicate: Reference, object: string, locale: string) => void;
   /**
    * Set a property of this Subject to an integer Literal value, clearing all existing values.
    *
@@ -540,6 +570,16 @@ export function initialiseSubject(document: BareTripleDocument, subjectRef: Refe
     }
     return addLiteral(predicateRef, literal);
   };
+  const addLocaleString = (predicateRef: Reference, literal: string, locale: string) => {
+    if (typeof literal !== 'string') {
+      throw new Error('The given value is not a string.');
+    }
+    pendingAdditions.push(DataFactory.triple(
+      subjectNode,
+      DataFactory.namedNode(predicateRef),
+      DataFactory.literal(literal, locale),
+    ));
+  };
   const addInteger = (predicateRef: Reference, literal: number) => {
     if (typeof literal !== 'number' || !Number.isInteger(literal)) {
       throw new Error('The given value is not an integer.');
@@ -589,6 +629,16 @@ export function initialiseSubject(document: BareTripleDocument, subjectRef: Refe
     }
     return removeLiteral(predicateRef, literal);
   };
+  const removeLocaleString = (predicateRef: Reference, literal: string, locale: string) => {
+    if (typeof literal !== 'string') {
+      throw new Error('The given value is not a string.');
+    }
+    pendingDeletions.push(DataFactory.triple(
+      subjectNode,
+      DataFactory.namedNode(predicateRef),
+      DataFactory.literal(literal, locale),
+    ));
+  };
   const removeInteger = (predicateRef: Reference, literal: number) => {
     if (typeof literal !== 'number' || !Number.isInteger(literal)) {
       throw new Error('The given value is not an integer.');
@@ -631,6 +681,10 @@ export function initialiseSubject(document: BareTripleDocument, subjectRef: Refe
   const setString = (predicateRef: Reference, literal: string) => {
     removeAll(predicateRef);
     addString(predicateRef, literal);
+  };
+  const setLocaleString = (predicateRef: Reference, literal: string, locale: string) => {
+    removeAll(predicateRef);
+    addLocaleString(predicateRef, literal, locale);
   };
   const setInteger = (predicateRef: Reference, literal: number) => {
     removeAll(predicateRef);
@@ -675,18 +729,21 @@ export function initialiseSubject(document: BareTripleDocument, subjectRef: Refe
     getAllRefs: getAllRefs,
     getType: getType,
     addString: addString,
+    addLocaleString: addLocaleString,
     addInteger: addInteger,
     addDecimal: addDecimal,
     addDateTime: addDateTime,
     addRef: addRef,
     removeAll: removeAll,
     removeString: removeString,
+    removeLocaleString: removeLocaleString,
     removeInteger: removeInteger,
     removeDecimal: removeDecimal,
     removeDateTime: removeDateTime,
     removeRef: removeRef,
     setRef: setRef,
     setString: setString,
+    setLocaleString: setLocaleString,
     setInteger: setInteger,
     setDecimal: setDecimal,
     setDateTime: setDateTime,
