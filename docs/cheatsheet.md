@@ -224,7 +224,7 @@ async function addNicknames(webId, nicknames) {
   const profileDoc = await fetchDocument(webId);
   const profile = profileDoc.getSubject(webId);
 
-  nicknames.forEach((nickname) => profile.addLiteral('http://xmlns.com/foaf/0.1/nick', nickname));
+  nicknames.forEach((nickname) => profile.addString('http://xmlns.com/foaf/0.1/nick', nickname));
   await webIdDoc.save();
 }
 ```
@@ -285,8 +285,8 @@ async function addNameAndNickname(webId, name, nickname) {
   const profileDoc = await fetchDocument(webId);
   const profile = profileDoc.getSubject(webId);
 
-  profile.addLiteral('http://xmlns.com/foaf/0.1/name', name);
-  profile.addLiteral('http://xmlns.com/foaf/0.1/nick', nickname);
+  profile.addString('http://xmlns.com/foaf/0.1/name', name);
+  profile.addString('http://xmlns.com/foaf/0.1/nick', nickname);
   await webIdDoc.save();
 }
 ```
@@ -355,7 +355,7 @@ async function setNicknames(webId, nicknames) {
   const profile = profileDoc.getSubject(webId);
 
   profile.removeAll('http://xmlns.com/foaf/0.1/nick');
-  nicknames.forEach((nickname) => profile.addLiteral('http://xmlns.com/foaf/0.1/nick', nickname));
+  nicknames.forEach((nickname) => profile.addString('http://xmlns.com/foaf/0.1/nick', nickname));
   await webIdDoc.save();
 }
 ```
@@ -477,7 +477,7 @@ async function removeNickname(webId, nickname) {
   const profileDoc = await fetchDocument(webId);
   const profile = profileDoc.getSubject(webId);
 
-  profile.removeLiteral('http://xmlns.com/foaf/0.1/nick', nickname);
+  profile.removeString('http://xmlns.com/foaf/0.1/nick', nickname);
   await webIdDoc.save();
 }
 ```
