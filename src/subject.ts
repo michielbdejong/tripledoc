@@ -306,7 +306,7 @@ export interface TripleSubject {
    * @param removeLiteral.predicate The property you want to remove a value of.
    * @param removeLiteral.object The Literal value you want to remove, the type of which is one of [[LiteralTypes]].
    * @deprecated This method has been superseded by the type-specific methods [[removeString]],
-   *             [[removeNumber]] and [[removeDateTime]].
+   *             [[removeInteger]], [[removeDecimal]] and [[removeDateTime]].
    */
   removeLiteral: (predicate: Reference, object: LiteralTypes) => void;
   /**
