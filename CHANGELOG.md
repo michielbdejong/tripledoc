@@ -4,6 +4,8 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+## [4.2.1] - 2020-02-13
+
 ### Bugs fixed
 
 - When sending requests to the Solid server to update a Document, the `DELETE` and `INSERT` statements were not separated by a semi-colon, which some Solid servers might expect.
