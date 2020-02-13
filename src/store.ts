@@ -51,10 +51,10 @@ export async function update(url: Reference, triplesToDelete: Quad[], triplesToA
   const rawTriplesToDelete = await triplesToTurtle(triplesToDelete);
   const rawTriplesToAdd = await triplesToTurtle(triplesToAdd);
   const deleteStatement = (triplesToDelete.length > 0)
-    ? `DELETE DATA {${rawTriplesToDelete}}`
+    ? `DELETE DATA {${rawTriplesToDelete}};`
     : '';
   const insertStatement = (triplesToAdd.length > 0)
-    ? `INSERT DATA {${rawTriplesToAdd}}`
+    ? `INSERT DATA {${rawTriplesToAdd}};`
     : '';
   const response = await SolidAuthClient.fetch(url, {
     method: 'PATCH',
