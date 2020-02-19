@@ -669,7 +669,7 @@ async function getReviewDocUrl(webId) {
 import { fetchDocument, describeSubject, describeContainer, describeDocument } from "plandoc";
 import { solid, schema, space, rdf } from "rdf-namespaces";
 
-export async function getReviewDocUrl(webId) {
+async function getReviewDocUrl(webId) {
   // 1. Tell Plandoc where the public type index can be found
   const virtualProfile = describeSubject().isFoundAt(webId);
 
