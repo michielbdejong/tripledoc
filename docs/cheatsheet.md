@@ -3,6 +3,9 @@ id: cheatsheet
 title: Cheatsheet
 ---
 
+Most examples on these page are for simple operations. For a more extensive comparison bringing many
+of these operations together, see the example [Setting up a data model](#setting-up-a-data-model).
+
 ## Reading a single value for a property
 
 ### Tripledoc
@@ -594,3 +597,149 @@ async function createDocument(location) {
   // Adding a value to a non-existing Document will create it for us:
   return data[location].name.add('Dummy name');
 };
+```
+
+## Setting up a data model
+
+The following examples bring together many different concepts used to perform a common operation:
+finding a Document to store data of a specific type in (in this case `schema:TextDigitalDocument`),
+creating it if it doesn't exist.
+
+At a high level, each example performs the following tasks:
+
+1. On the user's profile, find a reference to their Public Type Index, and fetch that Document.
+2. In that type index, see if there's a type registration for the type `schema:TextDigitalDocument`.
+   If there is, return the reference listed as its `solid:instance`.
+3. If no such type registration exists, find a reference to the user's storage root on their
+   profile. In that root, create a new Document. Then, add a type registration to the Public Type
+   Index referring to that Document as its `solid:instance`.
+
+(This might look familiar — indeed, it's the steps described in the [documentation on setting up
+your data model](writing-a-solid-app/4-data-model).)
+
+### Tripledoc
+
+Note that there's a companion project to Tripledoc called Plandoc that streamlines the fetching and
+creation of Documents. An example of an alternative approach using Plandoc can be found after this one.
+
+```javascript
+import { fetchDocument, createDocument } from "tripledoc";
+import { solid, schema, space, rdf } from "rdf-namespaces";
+
+async function getReviewDocUrl(webId) {
+  // 1. Find the Public Type Index, then fetch it.
+  const profileDocument = await fetchDocument(webId);
+  const profile = profileDocument.getSubject(webId);
+  const publicTypeIndexRef = profile.getRef(solid.publicTypeIndex);
+  if (typeof publicTypeIndexRef !== "string") {
+    return null;
+  }
+  const publicTypeIndexDocument = await fetchDocument(publicTypeIndexRef);
+  // 2. If there is a type registration for TextDigitalDocuments, return the instance reference.
+  const typeRegistration = publicTypeIndexDocument.findSubject(
+    solid.forClass,
+    schema.TextDigitalDocument
+  );
+  if (typeRegistration) {
+    return typeRegistration.getRef(solid.instance);
+  } else {
+    // 3. If no type registration exists, create a new Document in the storage root, and register it
+    //    for TextDigitalDocuments.
+    const storageRef = profile.getRef(space.storage);
+    // Generate a random name for the Document that is to contain the Reviews:
+    const documentName = Math.random().toString().substring(2);
+    const newDocumentUrl = new URL(documentName, storageRef).href;
+    const document = createDocument(newDocumentUrl);
+    const newDocument = await document.save();
+
+    const typeRegistration = publicTypeIndexDocument.addSubject();
+    typeRegistration.addRef(rdf.type, solid.TypeRegistration);
+    typeRegistration.addRef(solid.instance, newDocument.asRef());
+    typeRegistration.addRef(solid.forClass, schema.TextDigitalDocument);
+    publicTypeIndexDocument.save([typeRegistration]);
+
+    return newDocument.asRef();
+  }
+}
+```
+
+### Tripledoc with Plandoc
+
+```javascript
+import { fetchDocument, describeSubject, describeContainer, describeDocument } from "plandoc";
+import { solid, schema, space, rdf } from "rdf-namespaces";
+
+export async function getReviewDocUrl(webId) {
+  // 1. Tell Plandoc where the public type index can be found
+  const virtualProfile = describeSubject().isFoundAt(webId);
+
+  const virtualStorage = describeContainer().isFoundOn(virtualProfile, space.storage);
+
+  const virtualPublicTypeIndex = describeDocument().isFoundOn(virtualProfile, solid.publicTypeIndex);
+
+  // 2. Tell Plandoc what the type registration should look like,
+  // 3. and that it should be created if it does not exist yet (`isEnsured…`).
+  const virtualNotesTypeRegistration = describeSubject()
+    .isEnsuredIn(virtualPublicTypeIndex)
+    .withRef(rdf.type, solid.TypeRegistration)
+    .withRef(solid.forClass, schema.TextDigitalDocument);
+
+  const virtualNotesDoc = describeDocument()
+    .isEnsuredOn(virtualNotesTypeRegistration, solid.instance, virtualStorage);
+
+  // Let Plandoc fetch the described Documents, creating everything that's needed:
+  const notesDoc = await fetchDocument(virtualNotesDoc);
+  return notesDoc.asRef();
+}
+```
+
+### rdflib
+
+Still to do — [contributions welcome](https://gitlab.com/vincenttunru/tripledoc/-/edit/master/docs/cheatsheet.md).
+
+### LDflex for Solid
+
+```javascript
+import data from "@solid/query-ldflex";
+import { namedNode } from "@rdfjs/data-model";
+import { solid, schema } from "rdf-namespaces";
+
+async function getReviewDocUrl(webId) {
+  // 1. Find the Public Type Index, then fetch it.
+  const publicTypeIndex = await data[webId].publicTypeIndex;
+
+  // 2. If there is a type registration for TextDigitalDocuments, return the instance reference.
+  let notesDoc = undefined;
+  for await (const typeRegistration of data[publicTypeIndex].subjects) {
+    const forClass = await data[typeRegistration.value][solid.forClass];
+    if (forClass && forClass.value === schema.TextDigitalDocument) {
+      notesDoc = await typeRegistration[solid.instance];
+      break;
+    }
+  }
+
+  if (notesDoc) {
+    return notesDoc.value;
+  } else {
+    // 3. If no type registration exists, create a new Document in the storage root, and register it
+    //    for TextDigitalDocuments.
+    const storageContainer = await data[webId].storage;
+    // Generate a random name for the Document that is to contain the Reviews:
+    const documentName = Math.random().toString().substring(2);
+    const newDocumentUrl = new URL(documentName, storageContainer.value).href;
+    // Create a dummy value, then remove it, to create the Document:
+    await data[newDocumentUrl].name.add('Dummy value');
+    await data[newDocumentUrl].name.delete();
+    // Generate a random name for the Subject that links from the Public Type Index
+    // to the Document that is to contain the Reviews:
+    const typeRegistrationName = new URL(
+      '#' + Math.random().toString().substring(2),
+      publicTypeIndex.value
+    ).href;
+    await data[typeRegistrationName][solid.forClass].set(schema.TextDigitalDocument)
+    await data[typeRegistrationName][solid.instance].set(namedNode(newDocumentUrl));
+    await data[typeRegistrationName].type.set(solid.TypeRegistration);
+    return newDocumentUrl;
+  }
+}
+```
