@@ -636,12 +636,12 @@ async function getReviewDocUrl(webId) {
   }
   const publicTypeIndexDocument = await fetchDocument(publicTypeIndexRef);
   // 2. If there is a type registration for TextDigitalDocuments, return the instance reference.
-  const typeRegistration = publicTypeIndexDocument.findSubject(
+  const existingTypeRegistration = publicTypeIndexDocument.findSubject(
     solid.forClass,
     schema.TextDigitalDocument
   );
-  if (typeRegistration) {
-    return typeRegistration.getRef(solid.instance);
+  if (existingTypeRegistration) {
+    return existingTypeRegistration.getRef(solid.instance);
   } else {
     // 3. If no type registration exists, create a new Document in the storage root, and register it
     //    for TextDigitalDocuments.
@@ -649,11 +649,11 @@ async function getReviewDocUrl(webId) {
     const document = createDocumentInContainer(storageRef);
     const newDocument = await document.save();
 
-    const typeRegistration = publicTypeIndexDocument.addSubject();
-    typeRegistration.addRef(rdf.type, solid.TypeRegistration);
-    typeRegistration.addRef(solid.instance, newDocument.asRef());
-    typeRegistration.addRef(solid.forClass, schema.TextDigitalDocument);
-    publicTypeIndexDocument.save([typeRegistration]);
+    const newTypeRegistration = publicTypeIndexDocument.addSubject();
+    newTypeRegistration.addRef(rdf.type, solid.TypeRegistration);
+    newTypeRegistration.addRef(solid.instance, newDocument.asRef());
+    newTypeRegistration.addRef(solid.forClass, schema.TextDigitalDocument);
+    publicTypeIndexDocument.save([newTypeRegistration]);
 
     return newDocument.asRef();
   }
