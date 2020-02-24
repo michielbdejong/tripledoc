@@ -623,7 +623,7 @@ Note that there's a companion project to Tripledoc called Plandoc that streamlin
 creation of Documents. An example of an alternative approach using Plandoc can be found after this one.
 
 ```javascript
-import { fetchDocument, createDocument } from "tripledoc";
+import { fetchDocument, createDocumentInContainer } from "tripledoc";
 import { solid, schema, space, rdf } from "rdf-namespaces";
 
 async function getReviewDocUrl(webId) {
@@ -646,10 +646,7 @@ async function getReviewDocUrl(webId) {
     // 3. If no type registration exists, create a new Document in the storage root, and register it
     //    for TextDigitalDocuments.
     const storageRef = profile.getRef(space.storage);
-    // Generate a random name for the Document that is to contain the Reviews:
-    const documentName = Math.random().toString().substring(2);
-    const newDocumentUrl = new URL(documentName, storageRef).href;
-    const document = createDocument(newDocumentUrl);
+    const document = createDocumentInContainer(storageRef);
     const newDocument = await document.save();
 
     const typeRegistration = publicTypeIndexDocument.addSubject();
