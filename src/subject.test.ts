@@ -95,7 +95,7 @@ const mockTriples = [
   triple(namedNode(mockSubjectWithMultipleSameLocaleStringLiterals), namedNode(mockPredicate), mockObjectLocaleStringLiteral2),
 ];
 const turtle = triplesToTurtle(mockTriples);
-jest.mock('./store', () => ({
+jest.mock('./pod', () => ({
   get: jest.fn(() => Promise.resolve({
     headers: { get: () => null },
     text: jest.fn(() => Promise.resolve(turtle)),

@@ -1,11 +1,11 @@
 import { DataFactory, initialiseDataset } from './n3dataset';
 import {
-  findSubjectInStore,
-  findSubjectsInStore,
-  findPredicateInStore,
-  findPredicatesInStore,
-  findObjectInStore,
-  findObjectsInStore,
+  findSubjectInDataset,
+  findSubjectsInDataset,
+  findPredicateInDataset,
+  findPredicatesInDataset,
+  findObjectInDataset,
+  findObjectsInDataset,
 } from './getEntities';
 
 const { triple, namedNode, blankNode } = DataFactory;
@@ -22,7 +22,7 @@ const mockObject2 = 'https://object2.com';
 const mockBlankNode = blankNode('mock_blank_node');
 const mockSubjectWithBlankNode = 'https://subject-with-blank-node.com';
 const mockObjectForBlankNode = 'https://object-for-blank-node.com';
-function getMockStore() {
+function getMockDataset() {
   const triples = [
     triple(namedNode(mockSubject1), namedNode(mockPredicate1), namedNode(mockObject1)),
     triple(namedNode(mockSubject1), namedNode(mockPredicate1), namedNode(mockObject2)),
@@ -35,103 +35,103 @@ function getMockStore() {
     triple(namedNode(mockSubjectWithBlankNode), namedNode(mockPredicate1), mockBlankNode),
     triple(mockBlankNode, namedNode(mockPredicate1), namedNode(mockObjectForBlankNode)),
   ];
-  const store = initialiseDataset();
-  store.addAll(triples);
-  return store;
+  const dataset = initialiseDataset();
+  dataset.addAll(triples);
+  return dataset;
 }
 
-describe('findSubjectInStore', () => {
+describe('findSubjectInDataset', () => {
   it('should retrieve the first subject matching a specific predicate and object', () => {
-    const mockStore = getMockStore();
-    expect(findSubjectInStore(mockStore, mockPredicate1, mockObject2))
+    const mockDataset = getMockDataset();
+    expect(findSubjectInDataset(mockDataset, mockPredicate1, mockObject2))
     .toEqual(mockSubject1);
   });
 
   it('should return null if no subject could be found', () => {
-    const mockStore = getMockStore();
-    expect(findSubjectInStore(mockStore, unusedPredicate, unusedObject))
+    const mockDataset = getMockDataset();
+    expect(findSubjectInDataset(mockDataset, unusedPredicate, unusedObject))
     .toBeNull();
   });
 });
 
-describe('findSubjectsInStore', () => {
+describe('findSubjectsInDataset', () => {
   it('should retrieve all subjects matching a specific predicate and object', () => {
-    const mockStore = getMockStore();
-    expect(findSubjectsInStore(mockStore, mockPredicate1, mockObject2))
+    const mockDataset = getMockDataset();
+    expect(findSubjectsInDataset(mockDataset, mockPredicate1, mockObject2))
     .toEqual([mockSubject1, mockSubject2]);
   });
 
   it('should return an empty array if no subjects could be found', () => {
-    const mockStore = getMockStore();
-    expect(findSubjectsInStore(mockStore, unusedPredicate, unusedObject))
+    const mockDataset = getMockDataset();
+    expect(findSubjectsInDataset(mockDataset, unusedPredicate, unusedObject))
     .toEqual([]);
   });
 
   it('should be able to return blank nodes', () => {
-    const mockStore = getMockStore();
-    expect(findSubjectsInStore(mockStore, mockPredicate1, mockObjectForBlankNode))
+    const mockDataset = getMockDataset();
+    expect(findSubjectsInDataset(mockDataset, mockPredicate1, mockObjectForBlankNode))
     .toEqual([mockBlankNode]);
   });
 });
 
-describe('findPredicateInStore', () => {
+describe('findPredicateInDataset', () => {
   it('should retrieve the first predicate matching a specific subject and object', () => {
-    const mockStore = getMockStore();
-    expect(findPredicateInStore(mockStore, mockSubject1, mockObject2))
+    const mockDataset = getMockDataset();
+    expect(findPredicateInDataset(mockDataset, mockSubject1, mockObject2))
     .toEqual(mockPredicate1);
   });
 
   it('should return null if no predicate could be found', () => {
-    const mockStore = getMockStore();
-    expect(findPredicateInStore(mockStore, unusedSubject, unusedObject))
+    const mockDataset = getMockDataset();
+    expect(findPredicateInDataset(mockDataset, unusedSubject, unusedObject))
     .toBeNull();
   });
 });
 
-describe('findPredicatesInStore', () => {
+describe('findPredicatesInDataset', () => {
   it('should retrieve all predicates matching a specific subject and object', () => {
-    const mockStore = getMockStore();
-    expect(findPredicatesInStore(mockStore, mockSubject1, mockObject2))
+    const mockDataset = getMockDataset();
+    expect(findPredicatesInDataset(mockDataset, mockSubject1, mockObject2))
     .toEqual([mockPredicate1, mockPredicate2]);
   });
 
   it('should return an empty array if no predicates could be found', () => {
-    const mockStore = getMockStore();
-    expect(findPredicatesInStore(mockStore, unusedSubject, unusedObject))
+    const mockDataset = getMockDataset();
+    expect(findPredicatesInDataset(mockDataset, unusedSubject, unusedObject))
     .toEqual([]);
   });
 });
 
-describe('findObjectInStore', () => {
+describe('findObjectInDataset', () => {
   it('should retrieve the first object matching a specific subject and predicate', () => {
-    const mockStore = getMockStore();
-    expect(findObjectInStore(mockStore, mockSubject1, mockPredicate1))
+    const mockDataset = getMockDataset();
+    expect(findObjectInDataset(mockDataset, mockSubject1, mockPredicate1))
     .toEqual(mockObject1);
   });
 
   it('should return null if no object could be found', () => {
-    const mockStore = getMockStore();
-    expect(findObjectInStore(mockStore, unusedSubject, unusedPredicate))
+    const mockDataset = getMockDataset();
+    expect(findObjectInDataset(mockDataset, unusedSubject, unusedPredicate))
     .toBeNull();
   });
 
   it('should be able to return blank nodes', () => {
-    const mockStore = getMockStore();
-    expect(findObjectInStore(mockStore, mockSubjectWithBlankNode, mockPredicate1))
+    const mockDataset = getMockDataset();
+    expect(findObjectInDataset(mockDataset, mockSubjectWithBlankNode, mockPredicate1))
       .toEqual(mockBlankNode);
   });
 });
 
-describe('findObjectsInStore', () => {
+describe('findObjectsInDataset', () => {
   it('should retrieve all objects matching a specific subject and predicate', () => {
-    const mockStore = getMockStore();
-    expect(findObjectsInStore(mockStore, mockSubject1, mockPredicate1))
+    const mockDataset = getMockDataset();
+    expect(findObjectsInDataset(mockDataset, mockSubject1, mockPredicate1))
     .toEqual([mockObject1, mockObject2]);
   });
 
   it('should return an empty array if no objects could be found', () => {
-    const mockStore = getMockStore();
-    expect(findObjectsInStore(mockStore, unusedSubject, unusedPredicate))
+    const mockDataset = getMockDataset();
+    expect(findObjectsInDataset(mockDataset, unusedSubject, unusedPredicate))
     .toEqual([]);
   });
 });

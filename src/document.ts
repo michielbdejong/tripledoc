@@ -1,7 +1,7 @@
 import LinkHeader from 'http-link-header';
 import { Quad } from 'rdf-js';
-import { update, create, get, head, createInContainer } from './store';
-import { findSubjectInStore, FindEntityInStore, FindEntitiesInStore, findSubjectsInStore } from './getEntities';
+import { update, create, get, head, createInContainer } from './pod';
+import { findSubjectInDataset, FindEntityInDataset, FindEntitiesInDataset, findSubjectsInDataset } from './getEntities';
 import { TripleSubject, initialiseSubject } from './subject';
 import { turtleToTriples } from './turtle';
 import { Reference, isReference } from '.';
@@ -253,8 +253,8 @@ function instantiateDocument(
   triples: Quad[],
   metadata: DocumentMetadata,
 ): BareTripleDocument | LocalTripleDocument | TripleDocument {
-  const store = initialiseDataset();
-  store.addAll(triples);
+  const dataset = initialiseDataset();
+  dataset.addAll(triples);
 
   const accessedSubjects: { [iri: string]: TripleSubject } = {};
   const getSubject = (subjectRef: Reference) => {
@@ -354,8 +354,8 @@ function instantiateDocument(
     return instantiateDocument(newTriples, updatedMetadata);
   };
 
-  const getStore = () => store;
-  const getTriples = () => store.toArray();
+  const getStore = () => dataset;
+  const getTriples = () => dataset.toArray();
 
   const bareTripleDocument: BareTripleDocument = {
     addSubject: addSubject,
@@ -391,7 +391,7 @@ function instantiateDocument(
   };
 
   const findSubject = (predicateRef: Reference, objectRef: Reference) => {
-    const findSubjectRef = withDocumentSingular(findSubjectInStore, store);
+    const findSubjectRef = withDocumentSingular(findSubjectInDataset, dataset);
     const subjectRef = findSubjectRef(predicateRef, objectRef);
     if (!subjectRef || !isReference(subjectRef)) {
       return null;
@@ -400,7 +400,7 @@ function instantiateDocument(
   };
 
   const findSubjects = (predicateRef: Reference, objectRef: Reference) => {
-    const findSubjectRefs = withDocumentPlural(findSubjectsInStore, store);
+    const findSubjectRefs = withDocumentPlural(findSubjectsInDataset, dataset);
     const subjectRefs = findSubjectRefs(predicateRef, objectRef);
     return subjectRefs.filter(isReference).map(getSubject);
   };
@@ -428,18 +428,18 @@ function instantiateDocument(
 }
 
 const withDocumentSingular = (
-  getEntityFromTriples: FindEntityInStore,
-  store: Dataset,
+  getEntityFromTriples: FindEntityInDataset,
+  dataset: Dataset,
 ) => {
   return (knownEntity1: Reference, knownEntity2: Reference) =>
-    getEntityFromTriples(store, knownEntity1, knownEntity2);
+    getEntityFromTriples(dataset, knownEntity1, knownEntity2);
 };
 const withDocumentPlural = (
-  getEntitiesFromTriples: FindEntitiesInStore,
-  store: Dataset,
+  getEntitiesFromTriples: FindEntitiesInDataset,
+  dataset: Dataset,
 ) => {
   return (knownEntity1: Reference, knownEntity2: Reference) =>
-    getEntitiesFromTriples(store, knownEntity1, knownEntity2);
+    getEntitiesFromTriples(dataset, knownEntity1, knownEntity2);
 };
 
 /**

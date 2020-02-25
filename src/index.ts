@@ -2,7 +2,7 @@ import { Literal, BlankNode, NamedNode } from 'rdf-js';
 
 export * from './document';
 export * from './subject';
-export * from './store';
+export * from './pod';
 
 /**
  * Literal values, i.e. values that do not point to other nodes in the Linked Data graph.

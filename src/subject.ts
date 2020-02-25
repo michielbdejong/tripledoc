@@ -17,7 +17,7 @@ import {
   generateLocaleTypeGuard,
   LocaleStringLiteral,
 } from './index';
-import { findObjectsInStore } from './getEntities';
+import { findObjectsInDataset } from './getEntities';
 import { BareTripleDocument, isSavedToPod } from './document';
 import { initialiseDataset } from './n3dataset';
 
@@ -441,12 +441,12 @@ export function initialiseSubject(document: BareTripleDocument, subjectRef: Refe
   const triples = (isSavedToPod(document))
     ? document.getStore().match(subjectNode, null, null, null).toArray()
     : [];
-  const store = initialiseDataset();
-  store.addAll(triples);
+  const dataset = initialiseDataset();
+  dataset.addAll(triples);
   let pendingAdditions: Quad[] = [];
   let pendingDeletions: Quad[] = [];
 
-  const get = (predicateNode: Reference) => findObjectsInStore(store, subjectRef, predicateNode);
+  const get = (predicateNode: Reference) => findObjectsInDataset(dataset, subjectRef, predicateNode);
   const getString = (predicateNode: Reference) => {
     const objects = get(predicateNode);
     const firstStringLiteral = objects.find(isStringLiteral);
@@ -665,7 +665,7 @@ export function initialiseSubject(document: BareTripleDocument, subjectRef: Refe
     return removeLiteral(predicateRef, literal);
   };
   const removeAll = (predicateRef: Reference) => {
-    pendingDeletions.push(...store.match(
+    pendingDeletions.push(...dataset.match(
       subjectNode, DataFactory.namedNode(predicateRef), null, null,
     ).toArray());
   };
@@ -701,7 +701,7 @@ export function initialiseSubject(document: BareTripleDocument, subjectRef: Refe
     addDateTime(predicateRef, literal);
   };
 
-  const getTriples = () => store.match(
+  const getTriples = () => dataset.match(
     subjectNode,
     null,
     null,

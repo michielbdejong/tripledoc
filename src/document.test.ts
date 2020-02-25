@@ -30,7 +30,7 @@ let mockHeadResponder: jest.Mock;
 let mockUpdater: jest.Mock;
 let mockCreater: jest.Mock;
 let mockGetter: jest.Mock;
-jest.mock('./store', () => {
+jest.mock('./pod', () => {
   mockHeadResponder = jest.fn(() => Promise.resolve(new Response));
   mockUpdater = jest.fn(() => Promise.resolve(new Response));
   mockCreater = jest.fn(() => Promise.resolve(new Response));
