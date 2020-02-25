@@ -1,6 +1,7 @@
 import { rdf, schema } from 'rdf-namespaces';
-import { DataFactory, Quad } from 'n3';
+import { Quad } from 'rdf-js';
 import { Response } from 'node-fetch';
+import { DataFactory } from './n3dataset';
 import { createDocument, fetchDocument, createDocumentInContainer } from './document';
 import { triplesToTurtle } from './turtle';
 

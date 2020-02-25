@@ -1,4 +1,5 @@
-import { BlankNode, NamedNode, Literal, DataFactory, Term, N3Store } from 'n3';
+import { BlankNode, NamedNode, Literal, Term } from 'rdf-js';
+import { DataFactory, Dataset } from './n3dataset';
 import { Reference, isLiteral } from './index';
 
 /*
@@ -12,7 +13,7 @@ import { Reference, isLiteral } from './index';
  * @ignore This is a utility type for other parts of the code, and not part of the public API.
  */
 export type FindEntityInStore = (
-  store: N3Store,
+  store: Dataset,
   knownEntity1: Reference,
   knownEntity2: Reference,
 ) => Reference | Literal | BlankNode | null;
@@ -20,7 +21,7 @@ export type FindEntityInStore = (
  * @ignore This is a utility type for other parts of the code, and not part of the public API.
  */
 export type FindEntitiesInStore = (
-  store: N3Store,
+  store: Dataset,
   knownEntity1: Reference | BlankNode,
   knownEntity2: Reference | BlankNode,
 ) => Array<Reference | Literal | BlankNode>;
@@ -68,7 +69,7 @@ export const findObjectsInStore: FindEntitiesInStore = (store, subjectRef, predi
  * @ignore This is a utility method for other parts of the code, and not part of the public API.
  */
 export function findEntityInStore(
-  store: N3Store,
+  store: Dataset,
   type: 'subject' | 'predicate' | 'object',
   subjectRef: null | Reference | BlankNode,
   predicateRef: null | Reference | BlankNode,
@@ -77,7 +78,7 @@ export function findEntityInStore(
   const targetSubject = subjectRef ? toNode(subjectRef) : null;
   const targetPredicate = predicateRef ? toNode(predicateRef) : null;
   const targetObject = objectRef ? toNode(objectRef) : null;
-  const matchingTriples = store.getQuads(targetSubject, targetPredicate, targetObject, null);
+  const matchingTriples = store.match(targetSubject, targetPredicate, targetObject, null).toArray();
   const foundTriple = matchingTriples.find((triple) => (typeof triple[type] !== 'undefined'));
 
   return (typeof foundTriple !== 'undefined') ? normaliseEntity(foundTriple[type]) : null;
@@ -87,7 +88,7 @@ export function findEntityInStore(
  * @ignore This is a utility method for other parts of the code, and not part of the public API.
  */
 export function findEntitiesInStore(
-  store: N3Store,
+  store: Dataset,
   type: 'subject' | 'predicate' | 'object',
   subjectRef: null | Reference | BlankNode,
   predicateRef: null | Reference | BlankNode,
@@ -96,7 +97,7 @@ export function findEntitiesInStore(
   const targetSubject = subjectRef ? toNode(subjectRef) : null;
   const targetPredicate = predicateRef ? toNode(predicateRef) : null;
   const targetObject = objectRef ? toNode(objectRef) : null;
-  const matchingTriples = store.getQuads(targetSubject, targetPredicate, targetObject, null);
+  const matchingTriples = store.match(targetSubject, targetPredicate, targetObject, null).toArray();
   const foundTriples = matchingTriples.filter((triple) => (typeof triple[type] !== 'undefined'));
 
   return foundTriples.map(triple => normaliseEntity(triple[type])).filter(isEntity);

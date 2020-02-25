@@ -1,4 +1,4 @@
-import { DataFactory } from 'n3';
+import { DataFactory } from './n3dataset';
 import { isLiteral, isReference } from './index';
 
 const { literal } = DataFactory;

@@ -1,10 +1,11 @@
 import LinkHeader from 'http-link-header';
-import { Quad, Store, N3Store } from 'n3';
+import { Quad } from 'rdf-js';
 import { update, create, get, head, createInContainer } from './store';
 import { findSubjectInStore, FindEntityInStore, FindEntitiesInStore, findSubjectsInStore } from './getEntities';
 import { TripleSubject, initialiseSubject } from './subject';
 import { turtleToTriples } from './turtle';
 import { Reference, isReference } from '.';
+import { initialiseDataset, Dataset } from './n3dataset';
 
 /**
  * @ignore This is documented on use.
@@ -134,11 +135,11 @@ export interface TripleDocument extends LocalTripleDocument {
    *         simultaneously. If you rely on this, it's probably best to either file an issue
    *         describing what you want to do that Tripledoc can't do directly, or to just use n3
    *         directly.
-   * @returns An N3 Store containing the Triples pertaining to this Document that are stored on the
-   *          user's Pod. Note that this does not contain Triples that have not been saved yet -
-   *          those can be retrieved from the respective [[TripleSubject]]s.
+   * @returns An RDF/JS Dataset containing the Triples pertaining to this Document that are stored
+   *          on the user's Pod. Note that this does not contain Triples that have not been saved
+   *          yet - those can be retrieved from the respective [[TripleSubject]]s.
    */
-  getStore: () => N3Store;
+  getStore: () => Dataset;
   /**
    * @deprecated
    * @ignore This is mostly a convenience function to make it easy to work with n3 and tripledoc
@@ -252,8 +253,8 @@ function instantiateDocument(
   triples: Quad[],
   metadata: DocumentMetadata,
 ): BareTripleDocument | LocalTripleDocument | TripleDocument {
-  const store = new Store();
-  store.addQuads(triples);
+  const store = initialiseDataset();
+  store.addAll(triples);
 
   const accessedSubjects: { [iri: string]: TripleSubject } = {};
   const getSubject = (subjectRef: Reference) => {
@@ -354,7 +355,7 @@ function instantiateDocument(
   };
 
   const getStore = () => store;
-  const getTriples = () => store.getQuads(null, null, null, null);
+  const getTriples = () => store.toArray();
 
   const bareTripleDocument: BareTripleDocument = {
     addSubject: addSubject,
@@ -428,14 +429,14 @@ function instantiateDocument(
 
 const withDocumentSingular = (
   getEntityFromTriples: FindEntityInStore,
-  store: N3Store,
+  store: Dataset,
 ) => {
   return (knownEntity1: Reference, knownEntity2: Reference) =>
     getEntityFromTriples(store, knownEntity1, knownEntity2);
 };
 const withDocumentPlural = (
   getEntitiesFromTriples: FindEntitiesInStore,
-  store: N3Store,
+  store: Dataset,
 ) => {
   return (knownEntity1: Reference, knownEntity2: Reference) =>
     getEntitiesFromTriples(store, knownEntity1, knownEntity2);

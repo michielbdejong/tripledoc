@@ -1,4 +1,5 @@
-import { Literal, BlankNode, DataFactory, Quad, Store } from 'n3';
+import { Literal, BlankNode, Quad } from 'rdf-js';
+import { DataFactory } from './n3dataset';
 import {
   Reference,
   isLiteral,
@@ -18,6 +19,7 @@ import {
 } from './index';
 import { findObjectsInStore } from './getEntities';
 import { BareTripleDocument, isSavedToPod } from './document';
+import { initialiseDataset } from './n3dataset';
 
 /**
  * Represents a single Subject in a [[TripleDocument]].
@@ -437,10 +439,10 @@ export interface TripleSubject {
 export function initialiseSubject(document: BareTripleDocument, subjectRef: Reference| BlankNode): TripleSubject {
   const subjectNode = isBlankNode(subjectRef) ? subjectRef : DataFactory.namedNode(subjectRef);
   const triples = (isSavedToPod(document))
-    ? document.getStore().getQuads(subjectNode, null, null, null)
+    ? document.getStore().match(subjectNode, null, null, null).toArray()
     : [];
-  const store = new Store();
-  store.addQuads(triples);
+  const store = initialiseDataset();
+  store.addAll(triples);
   let pendingAdditions: Quad[] = [];
   let pendingDeletions: Quad[] = [];
 
@@ -593,7 +595,7 @@ export function initialiseSubject(document: BareTripleDocument, subjectRef: Refe
     pendingAdditions.push(DataFactory.triple(
       subjectNode,
       DataFactory.namedNode(predicateRef),
-      DataFactory.literal(literal, DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#decimal')),
+      DataFactory.literal(literal.toString(), DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#decimal')),
     ));
   };
   const addDateTime = (predicateRef: Reference, literal: Date) => {
@@ -653,7 +655,7 @@ export function initialiseSubject(document: BareTripleDocument, subjectRef: Refe
     pendingDeletions.push(DataFactory.triple(
       subjectNode,
       DataFactory.namedNode(predicateRef),
-      DataFactory.literal(literal, DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#decimal')), 
+      DataFactory.literal(literal.toString(), DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#decimal')),
     ));
   };
   const removeDateTime = (predicateRef: Reference, literal: Date) => {
@@ -663,9 +665,9 @@ export function initialiseSubject(document: BareTripleDocument, subjectRef: Refe
     return removeLiteral(predicateRef, literal);
   };
   const removeAll = (predicateRef: Reference) => {
-    pendingDeletions.push(...store.getQuads(
-      subjectNode, predicateRef, null, null,
-    ));
+    pendingDeletions.push(...store.match(
+      subjectNode, DataFactory.namedNode(predicateRef), null, null,
+    ).toArray());
   };
   const clear = () => {
     pendingDeletions.push(...getTriples());
@@ -699,12 +701,12 @@ export function initialiseSubject(document: BareTripleDocument, subjectRef: Refe
     addDateTime(predicateRef, literal);
   };
 
-  const getTriples = () => store.getQuads(
+  const getTriples = () => store.match(
     subjectNode,
     null,
     null,
     null,
-  )
+  ).toArray();
 
   const asRef = () => isBlankNode(subjectRef) ? subjectRef.value : subjectRef;
 
@@ -818,10 +820,10 @@ function asLiteral(literal: LiteralTypes): Literal {
     return DataFactory.literal(rdflibStyleString, DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#dateTime'));
   }
   if (typeof literal === 'number' && Number.isInteger(literal)) {
-    return DataFactory.literal(literal, DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#integer'))
+    return DataFactory.literal(literal.toString(), DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#integer'))
   }
   if (typeof literal === 'number' && !Number.isInteger(literal)) {
-    return DataFactory.literal(literal, DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#decimal'))
+    return DataFactory.literal(literal.toString(), DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#decimal'))
   }
-  return DataFactory.literal(literal);
+  return DataFactory.literal(literal.toString());
 }

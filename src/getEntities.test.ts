@@ -1,4 +1,4 @@
-import { DataFactory, Store } from 'n3';
+import { DataFactory, initialiseDataset } from './n3dataset';
 import {
   findSubjectInStore,
   findSubjectsInStore,
@@ -35,8 +35,8 @@ function getMockStore() {
     triple(namedNode(mockSubjectWithBlankNode), namedNode(mockPredicate1), mockBlankNode),
     triple(mockBlankNode, namedNode(mockPredicate1), namedNode(mockObjectForBlankNode)),
   ];
-  const store = new Store();
-  store.addQuads(triples);
+  const store = initialiseDataset();
+  store.addAll(triples);
   return store;
 }
 

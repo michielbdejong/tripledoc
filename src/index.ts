@@ -1,4 +1,4 @@
-import { Literal, BlankNode, NamedNode } from 'n3';
+import { Literal, BlankNode, NamedNode } from 'rdf-js';
 
 export * from './document';
 export * from './subject';
