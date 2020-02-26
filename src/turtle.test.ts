@@ -1,5 +1,5 @@
-import { DataFactory } from 'n3';
 import { foaf, rdf } from 'rdf-namespaces';
+import { DataFactory } from './n3dataset';
 import { triplesToTurtle, turtleToTriples } from './turtle';
 
 describe('turtleToTriples', () => {

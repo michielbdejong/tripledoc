@@ -29,6 +29,7 @@
   "devDependencies": {
     "@types/jest": "^23.3.10",
     "@types/node-fetch": "^2.5.4",
+    "@types/rdf-js": "^2.0.11",
     "concat-md": "^0.3.0",
     "jest": "^24.9.0",
     "jest-junit": "^6.0.1",

@@ -1,4 +1,5 @@
-import { Literal, BlankNode, DataFactory, Quad, Store } from 'n3';
+import { Literal, BlankNode, Quad } from 'rdf-js';
+import { DataFactory } from './n3dataset';
 import {
   Reference,
   isLiteral,
@@ -16,8 +17,9 @@ import {
   generateLocaleTypeGuard,
   LocaleStringLiteral,
 } from './index';
-import { findObjectsInStore } from './getEntities';
+import { findObjectsInDataset } from './getEntities';
 import { BareTripleDocument, isSavedToPod } from './document';
+import { initialiseDataset } from './n3dataset';
 
 /**
  * Represents a single Subject in a [[TripleDocument]].
@@ -437,14 +439,14 @@ export interface TripleSubject {
 export function initialiseSubject(document: BareTripleDocument, subjectRef: Reference| BlankNode): TripleSubject {
   const subjectNode = isBlankNode(subjectRef) ? subjectRef : DataFactory.namedNode(subjectRef);
   const triples = (isSavedToPod(document))
-    ? document.getStore().getQuads(subjectNode, null, null, null)
+    ? document.getStore().match(subjectNode, null, null, null).toArray()
     : [];
-  const store = new Store();
-  store.addQuads(triples);
+  const dataset = initialiseDataset();
+  dataset.addAll(triples);
   let pendingAdditions: Quad[] = [];
   let pendingDeletions: Quad[] = [];
 
-  const get = (predicateNode: Reference) => findObjectsInStore(store, subjectRef, predicateNode);
+  const get = (predicateNode: Reference) => findObjectsInDataset(dataset, subjectRef, predicateNode);
   const getString = (predicateNode: Reference) => {
     const objects = get(predicateNode);
     const firstStringLiteral = objects.find(isStringLiteral);
@@ -593,7 +595,7 @@ export function initialiseSubject(document: BareTripleDocument, subjectRef: Refe
     pendingAdditions.push(DataFactory.triple(
       subjectNode,
       DataFactory.namedNode(predicateRef),
-      DataFactory.literal(literal, DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#decimal')),
+      DataFactory.literal(literal.toString(), DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#decimal')),
     ));
   };
   const addDateTime = (predicateRef: Reference, literal: Date) => {
@@ -653,7 +655,7 @@ export function initialiseSubject(document: BareTripleDocument, subjectRef: Refe
     pendingDeletions.push(DataFactory.triple(
       subjectNode,
       DataFactory.namedNode(predicateRef),
-      DataFactory.literal(literal, DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#decimal')), 
+      DataFactory.literal(literal.toString(), DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#decimal')),
     ));
   };
   const removeDateTime = (predicateRef: Reference, literal: Date) => {
@@ -663,9 +665,9 @@ export function initialiseSubject(document: BareTripleDocument, subjectRef: Refe
     return removeLiteral(predicateRef, literal);
   };
   const removeAll = (predicateRef: Reference) => {
-    pendingDeletions.push(...store.getQuads(
-      subjectNode, predicateRef, null, null,
-    ));
+    pendingDeletions.push(...dataset.match(
+      subjectNode, DataFactory.namedNode(predicateRef), null, null,
+    ).toArray());
   };
   const clear = () => {
     pendingDeletions.push(...getTriples());
@@ -699,12 +701,12 @@ export function initialiseSubject(document: BareTripleDocument, subjectRef: Refe
     addDateTime(predicateRef, literal);
   };
 
-  const getTriples = () => store.getQuads(
+  const getTriples = () => dataset.match(
     subjectNode,
     null,
     null,
     null,
-  )
+  ).toArray();
 
   const asRef = () => isBlankNode(subjectRef) ? subjectRef.value : subjectRef;
 
@@ -818,10 +820,10 @@ function asLiteral(literal: LiteralTypes): Literal {
     return DataFactory.literal(rdflibStyleString, DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#dateTime'));
   }
   if (typeof literal === 'number' && Number.isInteger(literal)) {
-    return DataFactory.literal(literal, DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#integer'))
+    return DataFactory.literal(literal.toString(), DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#integer'))
   }
   if (typeof literal === 'number' && !Number.isInteger(literal)) {
-    return DataFactory.literal(literal, DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#decimal'))
+    return DataFactory.literal(literal.toString(), DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#decimal'))
   }
-  return DataFactory.literal(literal);
+  return DataFactory.literal(literal.toString());
 }

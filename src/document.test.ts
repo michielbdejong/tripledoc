@@ -1,6 +1,7 @@
 import { rdf, schema } from 'rdf-namespaces';
-import { DataFactory, Quad } from 'n3';
+import { Quad } from 'rdf-js';
 import { Response } from 'node-fetch';
+import { DataFactory } from './n3dataset';
 import { createDocument, fetchDocument, createDocumentInContainer } from './document';
 import { triplesToTurtle } from './turtle';
 
@@ -29,7 +30,7 @@ let mockHeadResponder: jest.Mock;
 let mockUpdater: jest.Mock;
 let mockCreater: jest.Mock;
 let mockGetter: jest.Mock;
-jest.mock('./store', () => {
+jest.mock('./pod', () => {
   mockHeadResponder = jest.fn(() => Promise.resolve(new Response));
   mockUpdater = jest.fn(() => Promise.resolve(new Response));
   mockCreater = jest.fn(() => Promise.resolve(new Response));

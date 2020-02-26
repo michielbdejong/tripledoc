@@ -1,4 +1,4 @@
-import { Quad } from 'n3';
+import { Quad } from 'rdf-js';
 import SolidAuthClient from 'solid-auth-client';
 import { triplesToTurtle } from './turtle';
 import { Reference } from '.';

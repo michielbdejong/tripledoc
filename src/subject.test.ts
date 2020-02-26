@@ -1,5 +1,6 @@
-import { DataFactory, Literal } from 'n3';
+import { Literal } from 'rdf-js';
 import { rdf } from 'rdf-namespaces';
+import { DataFactory } from './n3dataset';
 import {
   initialiseSubject, TripleSubject
 } from './subject';
@@ -42,7 +43,7 @@ const mockLiteralDateTime = new Date(0);
 const mockLiteralDateTimeString = '1970-01-01T00:00:00Z';
 const mockObjectDateTimeLiteral = literal(mockLiteralDateTimeString, namedNode('http://www.w3.org/2001/XMLSchema#dateTime'));
 const mockLiteralInteger = 1337;
-const mockObjectIntegerLiteral = literal(mockLiteralInteger);
+const mockObjectIntegerLiteral = literal(mockLiteralInteger.toString(), namedNode('http://www.w3.org/2001/XMLSchema#integer'));
 const mockLiteralDecimal = 4.2;
 const mockObjectDecimalLiteral = literal(mockLiteralDecimal.toString(), namedNode('http://www.w3.org/2001/XMLSchema#decimal'));
 const mockLiteralLocaleString = 'Dutch (NL)';
@@ -94,7 +95,7 @@ const mockTriples = [
   triple(namedNode(mockSubjectWithMultipleSameLocaleStringLiterals), namedNode(mockPredicate), mockObjectLocaleStringLiteral2),
 ];
 const turtle = triplesToTurtle(mockTriples);
-jest.mock('./store', () => ({
+jest.mock('./pod', () => ({
   get: jest.fn(() => Promise.resolve({
     headers: { get: () => null },
     text: jest.fn(() => Promise.resolve(turtle)),

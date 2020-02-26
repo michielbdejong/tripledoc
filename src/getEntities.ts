@@ -1,4 +1,5 @@
-import { BlankNode, NamedNode, Literal, DataFactory, Term, N3Store } from 'n3';
+import { BlankNode, NamedNode, Literal, Term } from 'rdf-js';
+import { DataFactory, Dataset } from './n3dataset';
 import { Reference, isLiteral } from './index';
 
 /*
@@ -11,16 +12,16 @@ import { Reference, isLiteral } from './index';
 /**
  * @ignore This is a utility type for other parts of the code, and not part of the public API.
  */
-export type FindEntityInStore = (
-  store: N3Store,
+export type FindEntityInDataset = (
+  dataset: Dataset,
   knownEntity1: Reference,
   knownEntity2: Reference,
 ) => Reference | Literal | BlankNode | null;
 /**
  * @ignore This is a utility type for other parts of the code, and not part of the public API.
  */
-export type FindEntitiesInStore = (
-  store: N3Store,
+export type FindEntitiesInDataset = (
+  dataset: Dataset,
   knownEntity1: Reference | BlankNode,
   knownEntity2: Reference | BlankNode,
 ) => Array<Reference | Literal | BlankNode>;
@@ -28,47 +29,47 @@ export type FindEntitiesInStore = (
 /**
  * @ignore This is a utility method for other parts of the code, and not part of the public API.
  */
-export const findSubjectInStore: FindEntityInStore = (store, predicateRef, objectRef) => {
-  return findEntityInStore(store, 'subject', null, predicateRef, objectRef);
+export const findSubjectInDataset: FindEntityInDataset = (dataset, predicateRef, objectRef) => {
+  return findEntityInDataset(dataset, 'subject', null, predicateRef, objectRef);
 }
 /**
  * @ignore This is a utility method for other parts of the code, and not part of the public API.
  */
-export const findSubjectsInStore: FindEntitiesInStore = (store, predicateRef, objectRef) => {
-  return findEntitiesInStore(store, 'subject', null, predicateRef, objectRef);
-}
-
-/**
- * @ignore This is a utility method for other parts of the code, and not part of the public API.
- */
-export const findPredicateInStore: FindEntityInStore = (store, subjectRef, objectRef) => {
-  return findEntityInStore(store, 'predicate', subjectRef, null, objectRef);
-}
-/**
- * @ignore This is a utility method for other parts of the code, and not part of the public API.
- */
-export const findPredicatesInStore: FindEntitiesInStore = (store, subjectRef, objectRef) => {
-  return findEntitiesInStore(store, 'predicate', subjectRef, null, objectRef);
+export const findSubjectsInDataset: FindEntitiesInDataset = (dataset, predicateRef, objectRef) => {
+  return findEntitiesInDataset(dataset, 'subject', null, predicateRef, objectRef);
 }
 
 /**
  * @ignore This is a utility method for other parts of the code, and not part of the public API.
  */
-export const findObjectInStore: FindEntityInStore = (store, subjectRef, predicateRef) => {
-  return findEntityInStore(store, 'object', subjectRef, predicateRef, null);
+export const findPredicateInDataset: FindEntityInDataset = (dataset, subjectRef, objectRef) => {
+  return findEntityInDataset(dataset, 'predicate', subjectRef, null, objectRef);
 }
 /**
  * @ignore This is a utility method for other parts of the code, and not part of the public API.
  */
-export const findObjectsInStore: FindEntitiesInStore = (store, subjectRef, predicateRef) => {
-  return findEntitiesInStore(store, 'object', subjectRef, predicateRef, null);
+export const findPredicatesInDataset: FindEntitiesInDataset = (dataset, subjectRef, objectRef) => {
+  return findEntitiesInDataset(dataset, 'predicate', subjectRef, null, objectRef);
 }
 
 /**
  * @ignore This is a utility method for other parts of the code, and not part of the public API.
  */
-export function findEntityInStore(
-  store: N3Store,
+export const findObjectInDataset: FindEntityInDataset = (dataset, subjectRef, predicateRef) => {
+  return findEntityInDataset(dataset, 'object', subjectRef, predicateRef, null);
+}
+/**
+ * @ignore This is a utility method for other parts of the code, and not part of the public API.
+ */
+export const findObjectsInDataset: FindEntitiesInDataset = (dataset, subjectRef, predicateRef) => {
+  return findEntitiesInDataset(dataset, 'object', subjectRef, predicateRef, null);
+}
+
+/**
+ * @ignore This is a utility method for other parts of the code, and not part of the public API.
+ */
+export function findEntityInDataset(
+  dataset: Dataset,
   type: 'subject' | 'predicate' | 'object',
   subjectRef: null | Reference | BlankNode,
   predicateRef: null | Reference | BlankNode,
@@ -77,7 +78,7 @@ export function findEntityInStore(
   const targetSubject = subjectRef ? toNode(subjectRef) : null;
   const targetPredicate = predicateRef ? toNode(predicateRef) : null;
   const targetObject = objectRef ? toNode(objectRef) : null;
-  const matchingTriples = store.getQuads(targetSubject, targetPredicate, targetObject, null);
+  const matchingTriples = dataset.match(targetSubject, targetPredicate, targetObject, null).toArray();
   const foundTriple = matchingTriples.find((triple) => (typeof triple[type] !== 'undefined'));
 
   return (typeof foundTriple !== 'undefined') ? normaliseEntity(foundTriple[type]) : null;
@@ -86,8 +87,8 @@ export function findEntityInStore(
 /**
  * @ignore This is a utility method for other parts of the code, and not part of the public API.
  */
-export function findEntitiesInStore(
-  store: N3Store,
+export function findEntitiesInDataset(
+  dataset: Dataset,
   type: 'subject' | 'predicate' | 'object',
   subjectRef: null | Reference | BlankNode,
   predicateRef: null | Reference | BlankNode,
@@ -96,7 +97,7 @@ export function findEntitiesInStore(
   const targetSubject = subjectRef ? toNode(subjectRef) : null;
   const targetPredicate = predicateRef ? toNode(predicateRef) : null;
   const targetObject = objectRef ? toNode(objectRef) : null;
-  const matchingTriples = store.getQuads(targetSubject, targetPredicate, targetObject, null);
+  const matchingTriples = dataset.match(targetSubject, targetPredicate, targetObject, null).toArray();
   const foundTriples = matchingTriples.filter((triple) => (typeof triple[type] !== 'undefined'));
 
   return foundTriples.map(triple => normaliseEntity(triple[type])).filter(isEntity);

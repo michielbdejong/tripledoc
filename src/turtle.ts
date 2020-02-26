@@ -1,4 +1,5 @@
-import { DataFactory, Quad, Writer, Parser, Triple } from 'n3';
+import { DataFactory, Writer, Parser } from 'n3';
+import { Quad, Triple } from 'rdf-js';
 import { Reference } from '.';
 
 /**
