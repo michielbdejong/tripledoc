@@ -1,8 +1,16 @@
 import { Literal, BlankNode, NamedNode } from 'rdf-js';
 
-export * from './document';
-export * from './subject';
-export * from './pod';
+export {
+  LocalTripleDocument,
+  LocalTripleDocumentForContainer,
+  TripleDocument,
+  createDocument,
+  createDocumentInContainer,
+  fetchDocument,
+} from './document';
+export {
+  TripleSubject,
+} from './subject';
 
 /**
  * Literal values, i.e. values that do not point to other nodes in the Linked Data graph.
