@@ -29,18 +29,24 @@ const turtlePromise = triplesToTurtle(mockTriples);
 let mockHeadResponder: jest.Mock;
 let mockUpdater: jest.Mock;
 let mockCreater: jest.Mock;
+let mockContainerCreater: jest.Mock;
 let mockGetter: jest.Mock;
 jest.mock('./pod', () => {
-  mockHeadResponder = jest.fn(() => Promise.resolve(new Response));
-  mockUpdater = jest.fn(() => Promise.resolve(new Response));
-  mockCreater = jest.fn(() => Promise.resolve(new Response));
+  mockHeadResponder = jest.fn(() => Promise.resolve(new Response()));
+  mockUpdater = jest.fn(() => Promise.resolve(new Response()));
+  mockCreater = jest.fn(() => Promise.resolve(new Response()));
+  mockContainerCreater = jest.fn(() => Promise.resolve(new Response('', {
+    headers: {
+      'Location': mockContainer + 'arbitrary-document-path',
+    },
+  })));
   mockGetter = jest.fn(() => turtlePromise.then(turtle => new Response(turtle)));
   return {
     head: mockHeadResponder,
     get: mockGetter,
     update: mockUpdater,
     create: mockCreater,
-    createInContainer: mockCreater,
+    createInContainer: mockContainerCreater,
   }
 });
 
@@ -173,9 +179,9 @@ describe('addSubject', () => {
   });
 });
 
-describe('save', () => {
+describe('save for local TripleDocuments for Containers', () => {
   it('should allow only saving specific subjects', async () => {
-    const mockTripleDocument = await getMockTripleDocument();
+    const mockTripleDocument = createDocumentInContainer('https://pod.com/some-container/');
     const subjectToSave = mockTripleDocument.addSubject();
     subjectToSave.addLiteral(schema.name, 'Some value to save');
     const subjectNotToSave = mockTripleDocument.addSubject();
@@ -183,9 +189,77 @@ describe('save', () => {
 
     await mockTripleDocument.save([ subjectToSave ]);
 
-    const deletedTriples = mockUpdater.mock.calls[0][1] as Quad[];
-    const savedTriples = mockUpdater.mock.calls[0][2] as Quad[];
-    expect(deletedTriples.length).toBe(0);
+    const savedTriples = mockContainerCreater.mock.calls[0][1] as Quad[];
+    expect(savedTriples.length).toBe(1);
+    expect(savedTriples[0].subject.value).toBe(subjectToSave.asNodeRef());
+    expect(savedTriples[0].predicate.value).toBe(schema.name);
+    expect(savedTriples[0].object.value).toBe('Some value to save');
+  });
+
+  it('should throw an error when saving fails', () => {
+    const mockTripleDocument = createDocumentInContainer(mockContainer);
+
+    const errorResponse = new Response('Some error message.', { status: 404 });
+    mockContainerCreater.mockReturnValueOnce(errorResponse);
+
+    expect(mockTripleDocument.save()).rejects.toEqual(new Error('Some error message.'));
+  });
+
+  it('should return the ACL if received', async () => {
+    const mockTripleDocument = createDocumentInContainer('https://pod.com/some-container/');
+    const newSubject = mockTripleDocument.addSubject();
+    newSubject.addLiteral(schema.name, 'Arbitrary value');
+
+    mockHeadResponder.mockReturnValueOnce(Promise.resolve(new Response('', {
+      headers: {
+        Link: '<https://some-acl-url.example>; rel="acl"',
+      },
+    })));
+
+    const updatedDocument = await mockTripleDocument.save();
+
+    expect(updatedDocument.getAclRef()).toBe('https://some-acl-url.example/');
+  });
+
+  it('should return the WebSocket update URL if received', async () => {
+    const mockTripleDocument = createDocumentInContainer('https://pod.com/some-container/');
+    const newSubject = mockTripleDocument.addSubject();
+    newSubject.addLiteral(schema.name, 'Arbitrary value');
+
+    mockHeadResponder.mockReturnValueOnce(Promise.resolve(new Response('', {
+      headers: {
+        'Updates-Via': 'wss://some-websocket-url.com',
+      },
+    })));
+
+    const updatedDocument = await mockTripleDocument.save();
+
+    expect(updatedDocument.getWebSocketRef()).toBe('wss://some-websocket-url.com');
+  });
+
+  it('should ignore metadata that was not provided', async () => {
+    const mockTripleDocument = createDocumentInContainer(mockContainer);
+
+    mockHeadResponder.mockReturnValueOnce(Promise.resolve(new Response()));
+
+    const updatedDocument = await mockTripleDocument.save();
+
+    expect(updatedDocument.getAclRef()).toBeNull();
+    expect(updatedDocument.getWebSocketRef()).toBeNull();
+  });
+});
+
+describe('save for local TripleDocuments', () => {
+  it('should allow only saving specific subjects', async () => {
+    const mockTripleDocument = createDocument(mockDocument);
+    const subjectToSave = mockTripleDocument.addSubject();
+    subjectToSave.addLiteral(schema.name, 'Some value to save');
+    const subjectNotToSave = mockTripleDocument.addSubject();
+    subjectNotToSave.addLiteral(schema.name, 'Some value not to save');
+
+    await mockTripleDocument.save([ subjectToSave ]);
+
+    const savedTriples = mockCreater.mock.calls[0][1] as Quad[];
     expect(savedTriples.length).toBe(1);
     expect(savedTriples[0].subject.value).toBe(subjectToSave.asNodeRef());
     expect(savedTriples[0].predicate.value).toBe(schema.name);
@@ -249,69 +323,33 @@ describe('save', () => {
     expect(updatedDocument.getWebSocketRef()).toBe('wss://some-websocket-url.com');
   });
 
-  it('should return no WebSocket update URL if none was received after creating a new Document', async () => {
+  it('should ignore metadata that was not provided', async () => {
     const mockTripleDocument = createDocument(mockDocument);
-    const newSubject = mockTripleDocument.addSubject();
-    newSubject.addLiteral(schema.name, 'Arbitrary value');
-
-    const updatedDocument = await mockTripleDocument.save();
-
-    expect(updatedDocument.getWebSocketRef()).toBeNull();
-  });
-
-  it('should correctly initialise all metadata when creating a new Document in a Container', async () => {
-    const mockTripleDocument = createDocumentInContainer('https://pod.com/some-container/');
-    const newSubject = mockTripleDocument.addSubject({ identifier: 'some-identifier' });
-    newSubject.addLiteral(schema.name, 'Arbitrary value');
-
-    mockCreater.mockReturnValueOnce(turtlePromise.then(turtle => new Response(turtle, {
-      headers: {
-        'Link': '<https://container-acl-url.example>; rel="acl"',
-        'Location': 'https://pod.com/some-container/some-document-path',
-      },
-    })));
-    mockHeadResponder.mockReturnValueOnce(Promise.resolve(new Response('', {
-      headers: {
-        'Link': '<https://document-acl-url.example>; rel="acl"',
-        'Updates-Via': 'wss://some-websocket-url.com',
-      },
-    })));
-
-    const updatedDocument = await mockTripleDocument.save();
-
-    expect(updatedDocument.getAclRef()).toBe('https://document-acl-url.example/');
-    expect(updatedDocument.getWebSocketRef()).toBe('wss://some-websocket-url.com');
-    expect(updatedDocument.asRef()).toBe('https://pod.com/some-container/some-document-path');
-    const updatedSubject = updatedDocument.getSubject(
-      'https://pod.com/some-container/some-document-path#some-identifier'
-    );
-    expect(updatedSubject.asRef())
-      .toBe('https://pod.com/some-container/some-document-path#some-identifier');
-  });
-
-  it('should throw an error when saving a new Document in a Container fails', () => {
-    const mockTripleDocument = createDocumentInContainer(mockContainer);
-
-    const errorResponse = new Response('Some error message.', { status: 404 });
-    mockCreater.mockReturnValueOnce(errorResponse);
-
-    expect(mockTripleDocument.save()).rejects.toEqual(new Error('Some error message.'));
-  });
-
-  it('should ignore metadata that was not provided when creating a new Document in a Container', async () => {
-    const mockTripleDocument = createDocumentInContainer(mockContainer);
-
-    mockCreater.mockReturnValueOnce(turtlePromise.then(turtle => new Response(turtle, {
-      headers: {
-        'Location': mockContainer + 'arbitrary-document-path',
-      },
-    })));
-    mockHeadResponder.mockReturnValueOnce(Promise.resolve(new Response()));
 
     const updatedDocument = await mockTripleDocument.save();
 
     expect(updatedDocument.getAclRef()).toBeNull();
     expect(updatedDocument.getWebSocketRef()).toBeNull();
+  });
+});
+
+describe('save for full TripleDocuments', () => {
+  it('should allow only saving specific subjects', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
+    const subjectToSave = mockTripleDocument.addSubject();
+    subjectToSave.addLiteral(schema.name, 'Some value to save');
+    const subjectNotToSave = mockTripleDocument.addSubject();
+    subjectNotToSave.addLiteral(schema.name, 'Some value not to save');
+
+    await mockTripleDocument.save([ subjectToSave ]);
+
+    const deletedTriples = mockUpdater.mock.calls[0][1] as Quad[];
+    const savedTriples = mockUpdater.mock.calls[0][2] as Quad[];
+    expect(deletedTriples.length).toBe(0);
+    expect(savedTriples.length).toBe(1);
+    expect(savedTriples[0].subject.value).toBe(subjectToSave.asNodeRef());
+    expect(savedTriples[0].predicate.value).toBe(schema.name);
+    expect(savedTriples[0].object.value).toBe('Some value to save');
   });
 
   it('should call `update` when modifying an existing Document', async () => {
@@ -429,5 +467,15 @@ describe('getWebSocketRef', () => {
     })));
     const mockTripleDocument = await fetchDocument(mockDocument);
     expect(mockTripleDocument.getWebSocketRef()).toBe('wss://some-websocket-url.com');
+  });
+});
+
+describe('getTriples (deprecated method)', () => {
+  it('should provide access to all Triples in the Document', async () => {
+    const mockTripleDocument = await getMockTripleDocument();
+
+    const triples = mockTripleDocument.getTriples();
+
+    expect(triples.length).toBe(mockTriples.length);
   });
 });

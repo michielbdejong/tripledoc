@@ -1,11 +1,13 @@
 import LinkHeader from 'http-link-header';
 import { Quad } from 'rdf-js';
-import { update, create, get, head, createInContainer } from './pod';
-import { findSubjectInDataset, FindEntityInDataset, FindEntitiesInDataset, findSubjectsInDataset } from './getEntities';
+import { Reference } from '.';
+import { get } from './pod';
 import { TripleSubject, initialiseSubject } from './subject';
 import { turtleToTriples } from './turtle';
-import { Reference, isReference } from '.';
 import { initialiseDataset, Dataset } from './n3dataset';
+import { instantiateFullTripleDocument } from './document/stored';
+import { instantiateLocalTripleDocument } from './document/local';
+import { instantiateLocalTripleDocumentForContainer } from './document/localForContainer';
 
 /**
  * @ignore This is documented on use.
@@ -15,12 +17,12 @@ export interface NewSubjectOptions {
   identifierPrefix?: string;
 };
 /**
- * An initialised Document that has not been stored in a Pod yet, and has no known location.
+ * Methods that are shared by Documents in every state.
  *
- * You will obtain a BareTripleDocument when calling [[createDocumentInContainer]]. It differs from
- * a regular [[TripleDocument]] in that methods like [[TripleDocument.asRef]] are not available, because the
- * Reference for this Document is not known yet. When you [[save]] this Document to the Pod, you
- * will get a fully initialised [[TripleDocument]] as a return value.
+ * Note that this does not include the `.save()` method, because that method is implemented
+ * separately for every Document state.
+ *
+ * @ignore For internal use only, to combine with the other Document types.
  */
 export interface BareTripleDocument {
   /**
@@ -38,6 +40,17 @@ export interface BareTripleDocument {
    * @returns A [[TripleSubject]] instance that can be used to define its properties.
    */
   addSubject: (options?: NewSubjectOptions) => TripleSubject;
+};
+
+/**
+ * An initialised Document that has not been stored in a Pod yet, and has no known location.
+ *
+ * You will obtain a LocalTripleDocumentForContainer when calling [[createDocumentInContainer]]. It
+ * differs from a regular [[TripleDocument]] in that methods like [[TripleDocument.asRef]] are not
+ * available, because the Reference for this Document is not known yet. When you [[save]] this
+ * Document to the Pod, you will get a fully initialised [[TripleDocument]] as a return value.
+ */
+export interface LocalTripleDocumentForContainer extends BareTripleDocument {
   /**
    * Persist Subjects in this Document to the Pod.
    *
@@ -55,7 +68,7 @@ export interface BareTripleDocument {
  * [[TripleDocument]], some methods relating to manipulating existing values on the Pod are not
  * available yet. They will be available on the [[TripleDocument]] returned when you call [[save]].
  */
-export interface LocalTripleDocument extends BareTripleDocument {
+export interface LocalTripleDocumentWithRef extends LocalTripleDocumentForContainer {
   /**
    * @returns The IRI of this Document.
    */
@@ -68,6 +81,13 @@ export interface LocalTripleDocument extends BareTripleDocument {
 };
 
 /**
+ * @ignore For internal use only
+ */
+export function hasRef(document: BareTripleDocument): document is LocalTripleDocumentWithRef {
+  return typeof (document as LocalTripleDocumentWithRef).asRef === 'function';
+}
+
+/**
  * Local representation of a Document in a Pod.
  *
  * A TripleDocument gives you access to the values in the respective Document located on a Pod. They
@@ -78,7 +98,7 @@ export interface LocalTripleDocument extends BareTripleDocument {
  * Note that these changes can not be _read_ from this TripleDocument; they will be available
  * on the TripleDocument that is returned when you call [[save]].
  */
-export interface TripleDocument extends LocalTripleDocument {
+export interface TripleDocument extends LocalTripleDocumentWithRef {
   /**
    * Remove a Subject - note that it is not removed from the Pod until you call [[save]].
    *
@@ -171,7 +191,7 @@ export function isSavedToPod(document: BareTripleDocument): document is TripleDo
  *
  * @param ref URL where this document should live
  */
-export function createDocument(ref: Reference): LocalTripleDocument {
+export function createDocument(ref: Reference): LocalTripleDocumentWithRef {
   return instantiateDocument([], { documentRef: ref, existsOnPod: false });
 }
 
@@ -182,7 +202,7 @@ export function createDocument(ref: Reference): LocalTripleDocument {
  *
  * @param containerRef URL of the Container in which this document should live
  */
-export function createDocumentInContainer(containerRef: Reference): BareTripleDocument {
+export function createDocumentInContainer(containerRef: Reference): LocalTripleDocumentForContainer {
   return instantiateDocument([], { containerRef: containerRef, existsOnPod: false });
 }
 
@@ -218,7 +238,10 @@ export async function fetchDocument(uri: Reference): Promise<TripleDocument> {
   );
 }
 
-function extractAclRef(response: Response, documentRef: Reference) {
+/**
+ * @ignore For internal use only
+ */
+export function extractAclRef(response: Response, documentRef: Reference) {
   let aclRef: Reference | undefined;
   const linkHeader = response.headers.get('Link');
   // `LinkHeader` might not be present when using the UMD build in the browser,
@@ -235,7 +258,10 @@ function extractAclRef(response: Response, documentRef: Reference) {
 }
 
 type DocOrContainerMetadata = { documentRef: Reference } | { containerRef: Reference };
-type DocumentMetadata = DocOrContainerMetadata & {
+/**
+ * @ignore For internal use only
+ */
+export type DocumentMetadata = DocOrContainerMetadata & {
   aclRef?: Reference;
   webSocketRef?: Reference;
   existsOnPod?: boolean;
@@ -246,29 +272,75 @@ function hasKnownRef<Metadata extends DocumentMetadata>(metadata: Metadata): met
 function existsOnPod<Metadata extends DocumentMetadata>(metadata: Metadata): metadata is Metadata & { existsOnPod: true } {
   return (metadata as { existsOnPod?: boolean }).existsOnPod === true;
 }
-function instantiateDocument(triples: Quad[], metadata: DocumentMetadata & {existsOnPod: true, documentRef: Reference}): TripleDocument;
-function instantiateDocument(triples: Quad[], metadata: DocumentMetadata & {documentRef: Reference}): LocalTripleDocument;
-function instantiateDocument(triples: Quad[], metadata: DocumentMetadata): BareTripleDocument;
-function instantiateDocument(
+/**
+ * @ignore For internal use only
+ */
+export function instantiateDocument(triples: Quad[], metadata: DocumentMetadata & {existsOnPod: true, documentRef: Reference}): TripleDocument;
+export function instantiateDocument(triples: Quad[], metadata: DocumentMetadata & {documentRef: Reference}): LocalTripleDocumentWithRef;
+export function instantiateDocument(triples: Quad[], metadata: DocumentMetadata): LocalTripleDocumentForContainer;
+export function instantiateDocument(
   triples: Quad[],
   metadata: DocumentMetadata,
-): BareTripleDocument | LocalTripleDocument | TripleDocument {
+): LocalTripleDocumentForContainer | LocalTripleDocumentWithRef | TripleDocument {
   const dataset = initialiseDataset();
   dataset.addAll(triples);
 
+  const subjectCache = initialiseSubjectCache();
+
+  if (!hasKnownRef(metadata)) {
+    return instantiateLocalTripleDocumentForContainer(dataset, subjectCache, metadata);
+  }
+
+  if (!existsOnPod(metadata)) {
+    return instantiateLocalTripleDocument(dataset, subjectCache, metadata);
+  }
+
+  return instantiateFullTripleDocument(dataset, subjectCache, metadata);
+}
+
+/**
+ * @ignore For internal use only
+ */
+export interface SubjectCache {
+  getSubject: TripleDocument['getSubject'];
+  setDocument: (document: BareTripleDocument) => void;
+  getAccessedSubjects: () => { [iri: string]: TripleSubject };
+};
+function initialiseSubjectCache(): SubjectCache {
+  let sourceDocument: BareTripleDocument;
   const accessedSubjects: { [iri: string]: TripleSubject } = {};
+
+  const setDocument = (newDocument: BareTripleDocument) => {
+    sourceDocument = newDocument;
+  };
+
   const getSubject = (subjectRef: Reference) => {
     // Allow relative URLs to access Subjects if we know where the Document is:
-    subjectRef = hasKnownRef(metadata) ? new URL(subjectRef, metadata.documentRef).href : subjectRef;
+    subjectRef = hasRef(sourceDocument)
+      ? new URL(subjectRef, sourceDocument.asRef()).href
+      : subjectRef;
     if (!accessedSubjects[subjectRef]) {
-      accessedSubjects[subjectRef] = initialiseSubject(
-        tripleDocument ?? tripleDocumentWithRef ?? bareTripleDocument,
-        subjectRef,
-      );
+      accessedSubjects[subjectRef] = initialiseSubject(sourceDocument, subjectRef);
     }
     return accessedSubjects[subjectRef];
   };
 
+  const getAccessedSubjects = () => accessedSubjects;
+
+  return {
+    getSubject,
+    setDocument,
+    getAccessedSubjects,
+  };
+}
+
+/**
+ * @ignore For internal use only
+ */
+export function instantiateBareTripleDocument(
+  subjectCache: SubjectCache,
+  metadata: DocumentMetadata,
+): BareTripleDocument {
   const addSubject = (
     {
       identifier = generateIdentifier(),
@@ -277,170 +349,44 @@ function instantiateDocument(
   ) => {
     const subjectRef: Reference =
       (hasKnownRef(metadata) ? metadata.documentRef : '') + '#' + identifierPrefix + identifier;
-    return getSubject(subjectRef);
+    return subjectCache.getSubject(subjectRef);
   };
-
-  const removeSubject = (subjectRef: Reference) => {
-    const subject = getSubject(subjectRef);
-    return subject.clear();
-  };
-
-  const save = async (subjects = Object.values(accessedSubjects)) => {
-    const relevantSubjects = subjects.filter(subject => [bareTripleDocument, tripleDocumentWithRef, tripleDocument].includes(subject.getDocument()));
-    type UpdateTriples = [Quad[], Quad[]];
-    const [allDeletions, allAdditions] = relevantSubjects.reduce<UpdateTriples>(
-      ([deletionsSoFar, additionsSoFar], subject) => {
-        const [deletions, additions] = subject.getPendingTriples();
-        return [deletionsSoFar.concat(deletions), additionsSoFar.concat(additions)];
-      },
-      [[], []],
-    );
-
-    let newTriples: Quad[] = getTriples()
-      .concat(allAdditions)
-      .filter(tripleToDelete => allDeletions.findIndex((triple) => triple.equals(tripleToDelete)) === -1);
-    let updatedMetadata: DocumentMetadata & { existsOnPod: true, documentRef: Reference };
-    if (!metadata.existsOnPod && hasKnownRef(metadata)) {
-      const response = await create(metadata.documentRef, allAdditions);
-      if (!response.ok) {
-        const message = await response.text();
-        throw new Error(message);
-      }
-      updatedMetadata = {
-        ...metadata,
-        existsOnPod: true,
-      };
-      const aclRef = extractAclRef(response, metadata.documentRef);
-      if (aclRef) {
-        updatedMetadata.aclRef = aclRef;
-      }
-      const webSocketRef = response.headers.get('Updates-Via');
-      if (webSocketRef) {
-        updatedMetadata.webSocketRef = webSocketRef;
-      }
-    } else if (hasKnownRef(metadata)) {
-      const response = await update(metadata.documentRef, allDeletions, allAdditions);
-      if (!response.ok) {
-        const message = await response.text();
-        throw new Error(message);
-      }
-      updatedMetadata = { ...metadata, existsOnPod: true };
-    } else {
-      const containerResponse = await createInContainer(metadata.containerRef, allAdditions);
-      const locationHeader = containerResponse.headers.get('Location');
-      if (!containerResponse.ok || locationHeader === null) {
-        const message = await containerResponse.text();
-        throw new Error(message);
-      }
-      const documentRef = new URL(locationHeader, new URL(metadata.containerRef).origin).href;
-      updatedMetadata = {
-        ...metadata,
-        containerRef: undefined,
-        documentRef: documentRef,
-        existsOnPod: true,
-      };
-      const documentResponse = await head(documentRef);
-      const aclRef = extractAclRef(documentResponse, documentRef);
-      if (aclRef) {
-        updatedMetadata.aclRef = aclRef;
-      }
-      const webSocketRef = documentResponse.headers.get('Updates-Via');
-      if (webSocketRef) {
-        updatedMetadata.webSocketRef = webSocketRef;
-      }
-    }
-
-    // Instantiate a new TripleDocument that includes the updated Triples:
-    return instantiateDocument(newTriples, updatedMetadata);
-  };
-
-  const getStore = () => dataset;
-  const getTriples = () => dataset.toArray();
 
   const bareTripleDocument: BareTripleDocument = {
     addSubject: addSubject,
-    save: save,
   };
 
-
-  if (!hasKnownRef(metadata)) {
-    return bareTripleDocument;
-  }
-
-  // By making a copy of `metadata` in this scope,
-  // TypeScript can verify that `metadata.documentRef` won't be unset before `asRef` is called:
-  const metadataWithKnownRef = metadata;
-  const asRef = () => metadataWithKnownRef.documentRef;
-
-  const tripleDocumentWithRef: LocalTripleDocument = {
-    ...bareTripleDocument,
-    asRef: asRef,
-    // Deprecated alias:
-    asNodeRef: asRef,
-  };
-
-  if (!existsOnPod(metadata)) {
-    return tripleDocumentWithRef;
-  }
-
-  const getAclRef: () => Reference | null = () => {
-    return metadata.aclRef || null;
-  };
-  const getWebSocketRef: () => Reference | null = () => {
-    return metadata.webSocketRef || null;
-  };
-
-  const findSubject = (predicateRef: Reference, objectRef: Reference) => {
-    const findSubjectRef = withDocumentSingular(findSubjectInDataset, dataset);
-    const subjectRef = findSubjectRef(predicateRef, objectRef);
-    if (!subjectRef || !isReference(subjectRef)) {
-      return null;
-    }
-    return getSubject(subjectRef);
-  };
-
-  const findSubjects = (predicateRef: Reference, objectRef: Reference) => {
-    const findSubjectRefs = withDocumentPlural(findSubjectsInDataset, dataset);
-    const subjectRefs = findSubjectRefs(predicateRef, objectRef);
-    return subjectRefs.filter(isReference).map(getSubject);
-  };
-  const getSubjectsOfType = (typeRef: Reference) => {
-    return findSubjects('http://www.w3.org/1999/02/22-rdf-syntax-ns#type', typeRef);
-  };
-
-
-  const tripleDocument: TripleDocument = {
-    ...tripleDocumentWithRef,
-    removeSubject: removeSubject,
-    getSubject: getSubject,
-    getSubjectsOfType: getSubjectsOfType,
-    findSubject: findSubject,
-    findSubjects: findSubjects,
-    getAclRef: getAclRef,
-    getWebSocketRef: getWebSocketRef,
-    getStore: getStore,
-    getTriples: getTriples,
-    // Deprecated aliases, included for backwards compatibility:
-    getAcl: getAclRef,
-    getStatements: getTriples,
-  };
-  return tripleDocument;
+  return bareTripleDocument;
 }
 
-const withDocumentSingular = (
-  getEntityFromTriples: FindEntityInDataset,
+/**
+ * @ignore For internal use only
+ */
+export function getPendingChanges(
+  subjects: TripleSubject[],
+  document: BareTripleDocument,
   dataset: Dataset,
-) => {
-  return (knownEntity1: Reference, knownEntity2: Reference) =>
-    getEntityFromTriples(dataset, knownEntity1, knownEntity2);
-};
-const withDocumentPlural = (
-  getEntitiesFromTriples: FindEntitiesInDataset,
-  dataset: Dataset,
-) => {
-  return (knownEntity1: Reference, knownEntity2: Reference) =>
-    getEntitiesFromTriples(dataset, knownEntity1, knownEntity2);
-};
+) {
+  const relevantSubjects = subjects.filter((subject) => subject.getDocument() === document);
+  type UpdateTriples = [Quad[], Quad[]];
+  const [allDeletions, allAdditions] = relevantSubjects.reduce<UpdateTriples>(
+    ([deletionsSoFar, additionsSoFar], subject) => {
+      const [deletions, additions] = subject.getPendingTriples();
+      return [deletionsSoFar.concat(deletions), additionsSoFar.concat(additions)];
+    },
+    [[], []],
+  );
+
+  let newTriples: Quad[] = dataset.toArray()
+    .concat(allAdditions)
+    .filter(tripleToDelete => allDeletions.findIndex((triple) => triple.equals(tripleToDelete)) === -1);
+
+  return {
+    allAdditions,
+    allDeletions,
+    newTriples,
+  };
+}
 
 /**
  * Generate a string that can be used as the unique identifier for a Subject
