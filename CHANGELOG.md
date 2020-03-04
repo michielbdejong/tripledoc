@@ -4,6 +4,16 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+## [4.2.2] - 2020-03-04
+
+### Changed
+
+- This release should not contain any functional changes, but quite a bit of refactoring has gone on ([#36](https://gitlab.com/vincenttunru/tripledoc/issues/36), [#41](https://gitlab.com/vincenttunru/tripledoc/issues/41)). The goal was to make it easier to support other libraries than N3.js if needed, and to make it easier to contribute. They're published as a separate point release so that anyone reporting problems can easily revert back to the previous versions while the problem is being resolved.
+
+### Breaking changes
+
+- Two exported TypeScript interfaces have been renamed (BareTripleDocument to LocalTripleDocumentForContainer and LocalTripleDocument to LocalTripleDocumentWithRef). This is technically a breaking change, although it doesn't seem like any external code was using these, so to minimise the upgrade burden for in practice 100% of users, I decided to push this out as a patch release.
+
 ## [4.2.1] - 2020-02-13
 
 ### Bugs fixed
