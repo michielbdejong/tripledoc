@@ -1,11 +1,11 @@
 import { Reference } from '..';
 import { create } from '../pod';
 import { Dataset } from '../n3dataset';
-import { SubjectCache, DocumentMetadata, LocalTripleDocument, instantiateBareTripleDocument, getPendingChanges, extractAclRef, instantiateDocument } from '../document';
+import { SubjectCache, DocumentMetadata, LocalTripleDocumentWithRef, instantiateBareTripleDocument, getPendingChanges, extractAclRef, instantiateDocument } from '../document';
 
 export function instantiateLocalTripleDocument(dataset: Dataset, subjectCache: SubjectCache, metadata: DocumentMetadata & {
   documentRef: Reference;
-}): LocalTripleDocument {
+}): LocalTripleDocumentWithRef {
   const bareTripleDocument = instantiateBareTripleDocument(subjectCache, metadata);
 
   const asRef = () => metadata.documentRef;
@@ -43,7 +43,7 @@ export function instantiateLocalTripleDocument(dataset: Dataset, subjectCache: S
     return instantiateDocument(pendingChanges.newTriples, updatedMetadata);
   };
 
-  const tripleDocumentWithRef: LocalTripleDocument = {
+  const tripleDocumentWithRef: LocalTripleDocumentWithRef = {
     ...bareTripleDocument,
     save: save,
     asRef: asRef,

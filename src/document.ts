@@ -68,7 +68,7 @@ export interface LocalTripleDocumentForContainer extends BareTripleDocument {
  * [[TripleDocument]], some methods relating to manipulating existing values on the Pod are not
  * available yet. They will be available on the [[TripleDocument]] returned when you call [[save]].
  */
-export interface LocalTripleDocument extends LocalTripleDocumentForContainer {
+export interface LocalTripleDocumentWithRef extends LocalTripleDocumentForContainer {
   /**
    * @returns The IRI of this Document.
    */
@@ -83,8 +83,8 @@ export interface LocalTripleDocument extends LocalTripleDocumentForContainer {
 /**
  * @ignore For internal use only
  */
-export function hasRef(document: BareTripleDocument): document is LocalTripleDocument {
-  return typeof (document as LocalTripleDocument).asRef === 'function';
+export function hasRef(document: BareTripleDocument): document is LocalTripleDocumentWithRef {
+  return typeof (document as LocalTripleDocumentWithRef).asRef === 'function';
 }
 
 /**
@@ -98,7 +98,7 @@ export function hasRef(document: BareTripleDocument): document is LocalTripleDoc
  * Note that these changes can not be _read_ from this TripleDocument; they will be available
  * on the TripleDocument that is returned when you call [[save]].
  */
-export interface TripleDocument extends LocalTripleDocument {
+export interface TripleDocument extends LocalTripleDocumentWithRef {
   /**
    * Remove a Subject - note that it is not removed from the Pod until you call [[save]].
    *
@@ -191,7 +191,7 @@ export function isSavedToPod(document: BareTripleDocument): document is TripleDo
  *
  * @param ref URL where this document should live
  */
-export function createDocument(ref: Reference): LocalTripleDocument {
+export function createDocument(ref: Reference): LocalTripleDocumentWithRef {
   return instantiateDocument([], { documentRef: ref, existsOnPod: false });
 }
 
@@ -276,12 +276,12 @@ function existsOnPod<Metadata extends DocumentMetadata>(metadata: Metadata): met
  * @ignore For internal use only
  */
 export function instantiateDocument(triples: Quad[], metadata: DocumentMetadata & {existsOnPod: true, documentRef: Reference}): TripleDocument;
-export function instantiateDocument(triples: Quad[], metadata: DocumentMetadata & {documentRef: Reference}): LocalTripleDocument;
+export function instantiateDocument(triples: Quad[], metadata: DocumentMetadata & {documentRef: Reference}): LocalTripleDocumentWithRef;
 export function instantiateDocument(triples: Quad[], metadata: DocumentMetadata): LocalTripleDocumentForContainer;
 export function instantiateDocument(
   triples: Quad[],
   metadata: DocumentMetadata,
-): LocalTripleDocumentForContainer | LocalTripleDocument | TripleDocument {
+): LocalTripleDocumentForContainer | LocalTripleDocumentWithRef | TripleDocument {
   const dataset = initialiseDataset();
   dataset.addAll(triples);
 
