@@ -5,6 +5,9 @@ import { Dataset } from '../n3dataset';
 import { SubjectCache, DocumentMetadata, TripleDocument, getPendingChanges, instantiateDocument } from '../document';
 import { instantiateLocalTripleDocument } from "./local";
 
+/**
+ * @ignore Internal API.
+ */
 export function instantiateFullTripleDocument(dataset: Dataset, subjectCache: SubjectCache, metadata: DocumentMetadata & {
   existsOnPod: true;
   documentRef: Reference;

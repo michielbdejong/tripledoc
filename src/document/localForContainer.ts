@@ -3,6 +3,9 @@ import { head, createInContainer } from '../pod';
 import { Dataset } from '../n3dataset';
 import { SubjectCache, DocumentMetadata, LocalTripleDocumentForContainer, instantiateBareTripleDocument, getPendingChanges, extractAclRef, instantiateDocument } from '../document';
 
+/**
+ * @ignore Internal API.
+ */
 export function instantiateLocalTripleDocumentForContainer(dataset: Dataset, subjectCache: SubjectCache, metadata: DocumentMetadata & {
   containerRef: Reference;
 }): LocalTripleDocumentForContainer {
