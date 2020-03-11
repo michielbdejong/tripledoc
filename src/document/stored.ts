@@ -43,9 +43,12 @@ export function instantiateFullTripleDocument(dataset: Dataset, subjectCache: Su
   };
 
   const getAllSubjects = () => {
-    return findEntitiesInDataset(dataset, 'subject', null, null, null)
-      .filter(isReference)
-      .map(subjectRef => subjectCache.getSubject(subjectRef));
+    const allSubjectRefsInTriples = findEntitiesInDataset(dataset, 'subject', null, null, null)
+      .filter(isReference);
+
+    const uniqueSubjectRefs = Array.from(new Set(allSubjectRefsInTriples));
+
+    return uniqueSubjectRefs.map(subjectRef => subjectCache.getSubject(subjectRef));
   };
 
   const getAllSubjectsOfType = (typeRef: Reference) => {

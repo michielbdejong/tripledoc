@@ -5,7 +5,7 @@ import { DataFactory } from './n3dataset';
 import { createDocument, fetchDocument, createDocumentInContainer } from './document';
 import { triplesToTurtle } from './turtle';
 
-const { namedNode, triple, blankNode } = DataFactory;
+const { namedNode, literal, triple, blankNode } = DataFactory;
 
 const mockDocument = 'https://document.com/';
 const mockContainer = 'https://pod.com/some-container/';
@@ -20,6 +20,7 @@ const mockBlankNode = 'arbitrary-blank-node';
 const mockUnusedObject= 'https://mock-unused-object.com/';
 const mockTriples = [
   triple(namedNode(mockSubjectOfTypeMovie1), namedNode(rdf.type), namedNode(schema.Movie)),
+  triple(namedNode(mockSubjectOfTypeMovie1), namedNode(schema.title), literal('Arbitrary title')),
   triple(namedNode(mockSubjectOfTypeMovie2), namedNode(rdf.type), namedNode(schema.Movie)),
   triple(namedNode(mockSubject), namedNode(mockPredicate), namedNode(mockObject)),
   triple(namedNode(mockSubject2), namedNode(mockPredicate), namedNode(mockObject)),
