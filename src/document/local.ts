@@ -4,7 +4,7 @@ import { Dataset } from '../n3dataset';
 import { SubjectCache, DocumentMetadata, LocalTripleDocumentWithRef, instantiateBareTripleDocument, getPendingChanges, extractAclRef, instantiateDocument } from '../document';
 
 /**
- * @ignore Internal API.
+ * @internal
  */
 export function instantiateLocalTripleDocument(dataset: Dataset, subjectCache: SubjectCache, metadata: DocumentMetadata & {
   documentRef: Reference;

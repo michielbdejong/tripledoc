@@ -8,7 +8,7 @@ import { Reference } from '.';
  *
  * @param url Location of the Document contains the Triples.
  * @returns Promise that resolves with the Triples
- * @ignore Should not be used by library consumers directly.
+ * @internal Should not be used by library consumers directly.
  */
 /* istanbul ignore next Just a thin wrapper around solid-auth-client, yet cumbersome to test due to side effects */
 export async function get(url: string) {
@@ -26,7 +26,7 @@ export async function get(url: string) {
  *
  * @param url Location of the Document to get the metadata of
  * @returns Promise that resolves with the Response
- * @ignore Should not be used by library consumers directly.
+ * @internal Should not be used by library consumers directly.
  */
 /* istanbul ignore next Just a thin wrapper around solid-auth-client, yet cumbersome to test due to side effects */
 export async function head(url: string) {
@@ -44,7 +44,7 @@ export async function head(url: string) {
  * @param triplesToDelete Triples currently present on the Pod that should be deleted.
  * @param triplesToAdd Triples not currently present on the Pod that should be added.
  * @returns Promise that resolves when the update was executed successfully, and rejects if not.
- * @ignore Should not be used by library consumers directly.
+ * @internal Should not be used by library consumers directly.
  */
 /* istanbul ignore next Just a thin wrapper around solid-auth-client, yet cumbersome to test due to side effects */
 export async function update(url: Reference, triplesToDelete: Quad[], triplesToAdd: Quad[]) {
@@ -72,7 +72,7 @@ export async function update(url: Reference, triplesToDelete: Quad[], triplesToA
  * @param url URL of the Document that should be created.
  * @param triplesToAdd Triples that should be added to the Document.
  * @returns Promise that resolves with the response when the Document was created successfully, and rejects if not.
- * @ignore Should not be used by library consumers directly.
+ * @internal Should not be used by library consumers directly.
  */
 /* istanbul ignore next Just a thin wrapper around solid-auth-client, yet cumbersome to test due to side effects */
 export async function create(url: Reference, triplesToAdd: Quad[]): Promise<Response> {
@@ -94,7 +94,7 @@ export async function create(url: Reference, triplesToAdd: Quad[]): Promise<Resp
  * @param containerUrl URL of the Container in which the Document should be created.
  * @param triplesToAdd Triples that should be added to the Document.
  * @returns Promise that resolves with the response when the Document was created successfully, and rejects if not.
- * @ignore Should not be used by library consumers directly.
+ * @internal Should not be used by library consumers directly.
  */
 /* istanbul ignore next Just a thin wrapper around solid-auth-client, yet cumbersome to test due to side effects */
 export async function createInContainer(

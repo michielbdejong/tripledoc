@@ -10,7 +10,7 @@ import { Reference, isLiteral } from './index';
  */
 
 /**
- * @ignore This is a utility type for other parts of the code, and not part of the public API.
+ * @internal This is a utility type for other parts of the code, and not part of the public API.
  */
 export type FindEntityInDataset = (
   dataset: Dataset,
@@ -18,7 +18,7 @@ export type FindEntityInDataset = (
   knownEntity2: Reference,
 ) => Reference | Literal | BlankNode | null;
 /**
- * @ignore This is a utility type for other parts of the code, and not part of the public API.
+ * @internal This is a utility type for other parts of the code, and not part of the public API.
  */
 export type FindEntitiesInDataset = (
   dataset: Dataset,
@@ -27,46 +27,46 @@ export type FindEntitiesInDataset = (
 ) => Array<Reference | Literal | BlankNode>;
 
 /**
- * @ignore This is a utility method for other parts of the code, and not part of the public API.
+ * @internal This is a utility method for other parts of the code, and not part of the public API.
  */
 export const findSubjectInDataset: FindEntityInDataset = (dataset, predicateRef, objectRef) => {
   return findEntityInDataset(dataset, 'subject', null, predicateRef, objectRef);
 }
 /**
- * @ignore This is a utility method for other parts of the code, and not part of the public API.
+ * @internal This is a utility method for other parts of the code, and not part of the public API.
  */
 export const findSubjectsInDataset: FindEntitiesInDataset = (dataset, predicateRef, objectRef) => {
   return findEntitiesInDataset(dataset, 'subject', null, predicateRef, objectRef);
 }
 
 /**
- * @ignore This is a utility method for other parts of the code, and not part of the public API.
+ * @internal This is a utility method for other parts of the code, and not part of the public API.
  */
 export const findPredicateInDataset: FindEntityInDataset = (dataset, subjectRef, objectRef) => {
   return findEntityInDataset(dataset, 'predicate', subjectRef, null, objectRef);
 }
 /**
- * @ignore This is a utility method for other parts of the code, and not part of the public API.
+ * @internal This is a utility method for other parts of the code, and not part of the public API.
  */
 export const findPredicatesInDataset: FindEntitiesInDataset = (dataset, subjectRef, objectRef) => {
   return findEntitiesInDataset(dataset, 'predicate', subjectRef, null, objectRef);
 }
 
 /**
- * @ignore This is a utility method for other parts of the code, and not part of the public API.
+ * @internal This is a utility method for other parts of the code, and not part of the public API.
  */
 export const findObjectInDataset: FindEntityInDataset = (dataset, subjectRef, predicateRef) => {
   return findEntityInDataset(dataset, 'object', subjectRef, predicateRef, null);
 }
 /**
- * @ignore This is a utility method for other parts of the code, and not part of the public API.
+ * @internal This is a utility method for other parts of the code, and not part of the public API.
  */
 export const findObjectsInDataset: FindEntitiesInDataset = (dataset, subjectRef, predicateRef) => {
   return findEntitiesInDataset(dataset, 'object', subjectRef, predicateRef, null);
 }
 
 /**
- * @ignore This is a utility method for other parts of the code, and not part of the public API.
+ * @internal This is a utility method for other parts of the code, and not part of the public API.
  */
 export function findEntityInDataset(
   dataset: Dataset,
@@ -85,7 +85,7 @@ export function findEntityInDataset(
 }
 
 /**
- * @ignore This is a utility method for other parts of the code, and not part of the public API.
+ * @internal This is a utility method for other parts of the code, and not part of the public API.
  */
 export function findEntitiesInDataset(
   dataset: Dataset,
@@ -126,16 +126,16 @@ function isEntity(node: Reference | Literal | BlankNode | null): node is Referen
 }
 
 /**
- * @ignore Utility function for working with N3, which the library consumer should not need to
- *         be exposed to.
+ * @internal Utility function for working with N3, which the library consumer should not need to
+ *           be exposed to.
  */
 function isNamedNode(node: Term): node is NamedNode {
   return node.termType === 'NamedNode';
 }
 
 /**
- * @ignore Utility function for working with rdflib, which the library consumer should not need to
- *         be exposed to.
+ * @internal Utility function for working with rdflib, which the library consumer should not need to
+ *           be exposed to.
  */
 function isBlankNode(node: Term): node is BlankNode {
   return node.termType === 'BlankNode';

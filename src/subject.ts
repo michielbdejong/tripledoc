@@ -408,12 +408,12 @@ export interface TripleSubject {
   /**
    * Unset all values for all Predicates of this Subject.
    *
-   * @ignore Currently an internal API for use by [[TripleDocument]].
+   * @internal Currently an internal API for use by [[TripleDocument]].
    */
   clear: () => void;
   /**
-   * @ignore Pending Triples are only provided so the Document can access them in order to save
-   *         them - this is not part of the public API and can thus break in a minor release.
+   * @internal Pending Triples are only provided so the Document can access them in order to save
+   *           them - this is not part of the public API and can thus break in a minor release.
    * @returns A tuple with the first element being a list of Triples that should be deleted from
    *          the store, and the second element a list of Triples that should be added to it.
    */
@@ -432,7 +432,7 @@ export interface TripleSubject {
 };
 
 /**
- * @ignore Only to be called by the Document containing this subject; not a public API.
+ * @internal Only to be called by the Document containing this subject; not a public API.
  * @param document The Document this Subject is defined in.
  * @param subjectRef The URL that identifies this subject.
  */

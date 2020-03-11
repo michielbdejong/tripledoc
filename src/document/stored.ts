@@ -6,7 +6,7 @@ import { SubjectCache, DocumentMetadata, TripleDocument, getPendingChanges, inst
 import { instantiateLocalTripleDocument } from "./local";
 
 /**
- * @ignore Internal API.
+ * @internal
  */
 export function instantiateFullTripleDocument(dataset: Dataset, subjectCache: SubjectCache, metadata: DocumentMetadata & {
   existsOnPod: true;

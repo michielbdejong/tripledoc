@@ -4,6 +4,10 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+### Changed
+
+- Internal API's are no longer included in the TypeScript type declarations. They were not publicly documented on the website and hence should not be used if you rely on semantic versioning to tell you when an upgrade will be breaking, but having one's editor autocomplete it might still tempt people into using them. Therefore, they are now specifically excluded. (Note that the type definitions for deprecated and experimental API's are still included, but those, too, should generally not be relied on.)
+
 ## [4.2.2] - 2020-03-04
 
 ### Changed
