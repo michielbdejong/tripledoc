@@ -97,10 +97,10 @@ describe('getAllSubjects', () => {
   });
 });
 
-describe('getSubjectsOfType', () => {
+describe('getAllSubjectsOfType', () => {
   it('should return all Subjects that are of a specific type', async () => {
     const mockTripleDocument = await getMockTripleDocument();
-    const movies = mockTripleDocument.getSubjectsOfType(schema.Movie);
+    const movies = mockTripleDocument.getAllSubjectsOfType(schema.Movie);
     expect(movies.map(subject => subject.asNodeRef()))
       .toEqual([mockSubjectOfTypeMovie1, mockSubjectOfTypeMovie2]);
   });

@@ -48,7 +48,7 @@ export function instantiateFullTripleDocument(dataset: Dataset, subjectCache: Su
       .map(subjectRef => subjectCache.getSubject(subjectRef));
   };
 
-  const getSubjectsOfType = (typeRef: Reference) => {
+  const getAllSubjectsOfType = (typeRef: Reference) => {
     return findSubjects('http://www.w3.org/1999/02/22-rdf-syntax-ns#type', typeRef);
   };
 
@@ -79,7 +79,7 @@ export function instantiateFullTripleDocument(dataset: Dataset, subjectCache: Su
     save: save,
     removeSubject: removeSubject,
     getSubject: subjectCache.getSubject,
-    getSubjectsOfType: getSubjectsOfType,
+    getAllSubjectsOfType: getAllSubjectsOfType,
     findSubject: findSubject,
     findSubjects: findSubjects,
     getAclRef: getAclRef,
@@ -92,6 +92,7 @@ export function instantiateFullTripleDocument(dataset: Dataset, subjectCache: Su
     // Deprecated aliases, included for backwards compatibility:
     getAcl: getAclRef,
     getStatements: getTriples,
+    getSubjectsOfType: getAllSubjectsOfType,
   };
 
   // Make sure that when TripleSubjects get initialised for this Document,

@@ -4,9 +4,14 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+### Deprecations
+
+- For consistency's sake, `getSubjectsOfType` is now deprecated in favour of `getAllSubjectsOfType`. `getSubjectsOfType` will be removed in a future major release.
+
 ### New features
 
 - An experimental method `experimental_getAllSubjects()` has been added to `TripleDocument`s. Whereas previously, you had to know the type of Subjects you wanted to access by calling `getSubjectsOfType()`, you can now simply access all of them, unfiltered. Note that this is still an experimental API, so it might change in a minor or patch release. If you have a use case for this method, please leave a comment at https://gitlab.com/vincenttunru/tripledoc/-/issues/27 so we can make sure this API works for you.
+- `getAllSubjectsOfType` has been added to replace `getSubjectsOfType`. This is essentially a rename to make this method consistent with other methods that return multiple results. It has the same type signature as `getSubjectsOfType`.
 
 ## [4.2.3] - 2020-03-11
 
