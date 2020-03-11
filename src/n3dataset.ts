@@ -6,7 +6,7 @@
  * serialisation formats. Thus, we wrap N3.js in this standardised interface, at least in so far we
  * use it.
  *
- * @ignore For internal use only.
+ * @internal
  */
 
 import { Dataset as RdfjsDataset, DataFactory as RdfJsDataFactory } from 'rdf-js';
@@ -17,7 +17,7 @@ import { N3Store, Store, DataFactory as N3DataFactory } from 'n3';
  *
  * Everywhere this data type is expected, a full-blown RDF/JS Dataset will also be accepted.
  *
- * @ignore For internal use only.
+ * @internal
  */
 export type Dataset = {
   addAll: (...params: Parameters<RdfjsDataset['addAll']>) => Dataset;
@@ -62,13 +62,13 @@ function toRdfjsDataset(store: N3Store): Dataset {
 }
 
 /**
- * @ignore For internal use only.
+ * @internal
  */
 export function initialiseDataset() {
   return toRdfjsDataset(new Store());
 }
 
 /**
- * @ignore For internal use only.
+ * @internal
  */
 export const DataFactory: RdfJsDataFactory = N3DataFactory;
