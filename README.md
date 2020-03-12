@@ -38,6 +38,10 @@ fetchDocument('https://www.w3.org/People/Berners-Lee/card')
 
 [Full documentation](https://vincenttunru.gitlab.io/tripledoc/)
 
+# Browser support
+
+Tripledoc uses relatively modern Javascript features that will work in all commonly-used browsers, except Internet Explorer. If you need support for Internet Explorer, it is recommended to pass it through a tool like [Babel](https://babeljs.io).
+
 # Changelog
 
 See the [release notes](https://vincenttunru.gitlab.io/tripledoc/docs/changelog).

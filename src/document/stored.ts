@@ -1,6 +1,6 @@
 import { Reference, isReference } from '..';
 import { update } from '../pod';
-import { findSubjectInDataset, findSubjectsInDataset, FindEntityInDataset, FindEntitiesInDataset } from '../getEntities';
+import { findSubjectInDataset, findSubjectsInDataset, FindEntityInDataset, FindEntitiesInDataset, findEntitiesInDataset } from '../getEntities';
 import { Dataset } from '../n3dataset';
 import { SubjectCache, DocumentMetadata, TripleDocument, getPendingChanges, instantiateDocument } from '../document';
 import { instantiateLocalTripleDocument } from "./local";
@@ -42,7 +42,16 @@ export function instantiateFullTripleDocument(dataset: Dataset, subjectCache: Su
     return subjectRefs.filter(isReference).map(subjectCache.getSubject);
   };
 
-  const getSubjectsOfType = (typeRef: Reference) => {
+  const getAllSubjects = () => {
+    const allSubjectRefsInTriples = findEntitiesInDataset(dataset, 'subject', null, null, null)
+      .filter(isReference);
+
+    const uniqueSubjectRefs = Array.from(new Set(allSubjectRefsInTriples));
+
+    return uniqueSubjectRefs.map(subjectRef => subjectCache.getSubject(subjectRef));
+  };
+
+  const getAllSubjectsOfType = (typeRef: Reference) => {
     return findSubjects('http://www.w3.org/1999/02/22-rdf-syntax-ns#type', typeRef);
   };
 
@@ -73,17 +82,20 @@ export function instantiateFullTripleDocument(dataset: Dataset, subjectCache: Su
     save: save,
     removeSubject: removeSubject,
     getSubject: subjectCache.getSubject,
-    getSubjectsOfType: getSubjectsOfType,
+    getAllSubjectsOfType: getAllSubjectsOfType,
     findSubject: findSubject,
     findSubjects: findSubjects,
     getAclRef: getAclRef,
     getWebSocketRef: getWebSocketRef,
-    // Experimental methods that should not be necessary:
+    // Experimental methods:
+    experimental_getAllSubjects: getAllSubjects,
+    // Escape hatches, should not be necessary:
     getStore: getStore,
     getTriples: getTriples,
     // Deprecated aliases, included for backwards compatibility:
     getAcl: getAclRef,
     getStatements: getTriples,
+    getSubjectsOfType: getAllSubjectsOfType,
   };
 
   // Make sure that when TripleSubjects get initialised for this Document,
