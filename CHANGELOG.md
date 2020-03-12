@@ -4,6 +4,8 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+## [4.3.0] - 2020-03-12
+
 ### Deprecations
 
 - For consistency's sake, `getSubjectsOfType` is now deprecated in favour of `getAllSubjectsOfType`. `getSubjectsOfType` will be removed in a future major release.
