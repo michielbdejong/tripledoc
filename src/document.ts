@@ -22,7 +22,7 @@ export interface NewSubjectOptions {
  * Note that this does not include the `.save()` method, because that method is implemented
  * separately for every Document state.
  *
- * @internal For internal use only, to combine with the other Document types.
+ * @ignore For internal use only, to combine with the other Document types.
  */
 export interface BareTripleDocument {
   /**
@@ -271,7 +271,7 @@ export function extractAclRef(response: Response, documentRef: Reference) {
 
 type DocOrContainerMetadata = { documentRef: Reference } | { containerRef: Reference };
 /**
- * @internal
+ * @ignore For internal use only.
  */
 export type DocumentMetadata = DocOrContainerMetadata & {
   aclRef?: Reference;
