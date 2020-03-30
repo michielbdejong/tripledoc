@@ -17,7 +17,7 @@ import { N3Store, Store, DataFactory as N3DataFactory } from 'n3';
  *
  * Everywhere this data type is expected, a full-blown RDF/JS Dataset will also be accepted.
  *
- * @internal
+ * @ignore For internal use only, although it's exposed as an escape hatch through TripleDocument.getStore().
  */
 export type Dataset = {
   addAll: (...params: Parameters<RdfjsDataset['addAll']>) => Dataset;
