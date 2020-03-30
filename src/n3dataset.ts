@@ -5,10 +5,7 @@
  * that interface to be able to potentially use different RDF libraries, supporting e.g. different
  * serialisation formats. Thus, we wrap N3.js in this standardised interface, at least in so far we
  * use it.
- *
- * @internal
  */
-
 import { Dataset as RdfjsDataset, DataFactory as RdfJsDataFactory } from 'rdf-js';
 import { N3Store, Store, DataFactory as N3DataFactory } from 'n3';
 
