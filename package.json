@@ -1,6 +1,6 @@
 {
   "name": "tripledoc",
-  "version": "4.3.0",
+  "version": "4.3.1",
   "description": "Library to read, create and update documents on a Solid Pod",
   "scripts": {
     "test": "jest",

@@ -4,6 +4,8 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+## [4.3.1] - 2020-03-31
+
 ### Bugs fixed
 
 - A couple of types were removed from the type definitions in version 4.2.3 - although they were internal types, they still formed the basis of types that _were_ used externally, leading to problems for people trying to use TypeScript with TripleDoc. The relevant types are now exported again.
