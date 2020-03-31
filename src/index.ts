@@ -27,8 +27,8 @@ export type Reference = string;
 export type NodeRef = Reference;
 
 /**
- * @internal Tripledoc's methods should be explicit about whether they return or accept a Literal, so
- *           this is merely an internal utility function, rather than a public API.
+ * @ignore Tripledoc's methods should be explicit about whether they return or accept a Literal, so
+ *         this is merely an internal utility function, rather than a public API.
  * @param param A value that might or might not be an N3 Literal.
  * @returns Whether `param` is an N3 Literal.
  */
@@ -136,8 +136,8 @@ export function isDateTimeLiteral<T>(param: T | Literal): param is DateTimeLiter
 export const isNodeRef = isReference;
 
 /**
- * @internal Tripledoc's methods should be explicit about whether they return or accept a [[Reference]],
- *           so this is merely an internal utility function, rather than a public API.
+ * @ignore Tripledoc's methods should be explicit about whether they return or accept a [[Reference]],
+ *         so this is merely an internal utility function, rather than a public API.
  * @param param A value that might or might not be a reference to a node in the Linked Data graph.
  * @returns Whether `param` is a reference to a node in the Linked Data graph.
  */
