@@ -7,6 +7,8 @@ export {
   createDocument,
   createDocumentInContainer,
   fetchDocument,
+  isSavedToPod,
+  hasRef,
 } from './document';
 export {
   TripleSubject,
