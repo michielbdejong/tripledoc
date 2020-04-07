@@ -4,6 +4,8 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+## [4.3.2] - 2020-03-31
+
 ### Bugs fixed
 
 - Although not part of the publicly documented API, the functions `isSavedToPod` and `hasRef` were no longer exported even though they were before, breaking code that relied on them. They are now exported again.
