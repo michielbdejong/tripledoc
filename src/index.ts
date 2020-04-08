@@ -1,6 +1,7 @@
 import { Literal, BlankNode, NamedNode } from 'rdf-js';
 
 export {
+  BareTripleDocument,
   LocalTripleDocumentWithRef,
   LocalTripleDocumentForContainer,
   TripleDocument,
